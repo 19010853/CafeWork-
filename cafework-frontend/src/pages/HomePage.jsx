@@ -1,17 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import MapArea from '../components/MapArea';
-import SearchBar from '../components/Search/SearchBar'; 
+import SearchBar from '../components/Search/SearchBar';
 
 const HomePage = () => {
   const [cafes, setCafes] = useState([]);
   // KHO LƯU TRỮ CHỈ ĐƯỜNG: Nếu có dữ liệu thì hiện bảng chỉ đường, nếu null thì hiện SearchBar
   const [routeData, setRouteData] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  const [searchParams] = useSearchParams();
+  const keywordFromUrl = searchParams.get('keyword');
+  useEffect(() => {
+        if (!keywordFromUrl) return;
+
+        setSearchKeyword(keywordFromUrl);
+  }, [keywordFromUrl]);
+
+
 
   // Phép thuật dịch thuật: Dịch lệnh của máy chủ (tiếng Anh) sang tiếng Nhật chuẩn
   const translateStep = (step) => {
     if (step.maneuver.type === 'depart') return '出発';
     if (step.maneuver.type === 'arrive') return '目的地に到着';
-    
+
     switch(step.maneuver.modifier) {
         case 'left': return '左折する';
         case 'right': return '右折する';
@@ -27,17 +39,13 @@ const HomePage = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', fontFamily: 'sans-serif' }}>
-      
-      <div style={{ padding: '0 20px', borderBottom: '1px solid #eaeaea', backgroundColor: '#fff' }}>
-        <div style={{ display: 'inline-block', padding: '10px 15px', borderBottom: '3px solid #8b5a2b', fontWeight: 'bold', color: '#333' }}>ホーム</div>
-      </div>
 
       {/* PHẦN THÂN CHIA 2 CỘT */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        
+
         {/* CỘT TRÁI: SIDEBAR */}
         <div style={{ width: '400px', backgroundColor: '#fff', borderRight: '1px solid #ccc', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
-          
+
           {/* ==========================================
               1. BẢNG CHỈ ĐƯỜNG (Chỉ sinh ra khi có routeData)
               ========================================== */}
@@ -49,7 +57,7 @@ const HomePage = () => {
                     </button>
                     <h3 style={{ margin: 0, fontSize: '16px' }}>ルート案内</h3>
                 </div>
-                
+
                 <div style={{ padding: '20px', borderBottom: '5px solid #f5f5f5' }}>
                     <h2 style={{ margin: '0 0 10px 0', fontSize: '24px', color: '#0066ff' }}>
                         {routeData.distance} km <span style={{ fontSize: '16px', color: '#555' }}>/ {routeData.duration} 分</span>
@@ -80,7 +88,10 @@ const HomePage = () => {
               (Luôn tồn tại để giữ danh sách, nhưng dùng CSS để ẨN đi khi đang xem Chỉ đường)
               ========================================== */}
           <div style={{ display: routeData ? 'none' : 'block', height: '100%', overflow: 'hidden' }}>
-            <SearchBar onSearchData={setCafes} />
+              <SearchBar
+                  onSearchData={setCafes}
+                  initialKeyword={searchKeyword}
+              />
           </div>
 
         </div>
