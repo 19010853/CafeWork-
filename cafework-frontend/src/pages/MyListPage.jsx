@@ -48,7 +48,6 @@ const MyListPage = () => {
 
     return (
         <div style={{ minHeight: 'calc(100vh - 64px)', backgroundColor: '#fdf8f5' }}>
-            <TopNavTabs />
 
             <div className={styles.page}>
                 <div className={styles.container} style={{ display: 'block' }}>
