@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styles from './Header.module.css';
 import { getLang, setLang as persistLang } from '../../utils/userLocalStore';
 
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [langOpen, setLangOpen] = useState(false);
 
   const lang = useMemo(() => getLang(), []);
@@ -27,6 +28,7 @@ const Header = () => {
       logout: 'ログアウト',
     };
   }, [lang]);
+  const isActive = (path) => location.pathname === path;
 
   // 1. Lấy token và thông tin user từ localStorage
   const token = localStorage.getItem('token');
@@ -61,6 +63,7 @@ const Header = () => {
   };
 
   return (
+      <>
     <header className={styles.header}>
       {/* Left: Language Selection */}
       <div className={styles.leftSection}>
@@ -142,6 +145,31 @@ const Header = () => {
         )}
       </div>
     </header>
+
+        {/* GLOBAL NAVIGATION */}
+        <nav className={styles.navTabs}>
+          <button
+              className={isActive('/') ? styles.activeTab : styles.navTab}
+              onClick={() => navigate('/')}
+          >
+            ホーム
+          </button>
+
+          <button
+              className={isActive('/my-list') ? styles.activeTab : styles.navTab}
+              onClick={() => navigate('/my-list')}
+          >
+            マイリスト
+          </button>
+
+          <button
+              className={isActive('/search-history') ? styles.activeTab : styles.navTab}
+              onClick={() => navigate('/search-history')}
+          >
+            検索履歴
+          </button>
+        </nav>
+      </>
   );
 };
 
