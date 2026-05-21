@@ -60,4 +60,20 @@ export const addSearchHistory = (keyword) => {
     writeJson(historyKey(), next);
 };
 
+export const removeSearchHistory = (keyword, at) => {
+    const current = getSearchHistory();
+
+    const updated = current.filter(
+        item => !(item.keyword === keyword && item.at === at)
+    );
+
+    localStorage.setItem(
+        'search_history',
+        JSON.stringify(updated)
+    );
+};
+
+export const clearSearchHistory = () => {
+    localStorage.removeItem('search_history');
+};
 export const getSearchHistory = () => readJson(historyKey(), []);
