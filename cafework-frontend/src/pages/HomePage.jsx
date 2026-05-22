@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MapArea from '../components/MapArea';
 import SearchBar from '../components/Search/SearchBar'; 
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
+  const navigation = useNavigate();
+  useEffect(() => {
+    const userRole = localStorage.getItem('role');
+    if(userRole === 'OWNER') {
+      navigation('/owner/dashboard');
+    }
+  }, [navigation]);
   const [cafes, setCafes] = useState([]);
   // KHO LƯU TRỮ CHỈ ĐƯỜNG: Nếu có dữ liệu thì hiện bảng chỉ đường, nếu null thì hiện SearchBar
   const [routeData, setRouteData] = useState(null);
