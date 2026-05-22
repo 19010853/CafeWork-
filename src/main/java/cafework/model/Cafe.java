@@ -1,5 +1,6 @@
 package cafework.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,4 +56,7 @@ public class Cafe {
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "cafe_id", referencedColumnName = "id", insertable = false, updatable = false)
     private List<CafeImage> images;
+
+    @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Seat> seats = new ArrayList<>();
 }
