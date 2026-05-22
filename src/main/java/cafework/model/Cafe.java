@@ -57,6 +57,6 @@ public class Cafe {
     @JoinColumn(name = "cafe_id", referencedColumnName = "id", insertable = false, updatable = false)
     private List<CafeImage> images;
 
-    @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "cafeId", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Seat> seats = new ArrayList<>();
 }

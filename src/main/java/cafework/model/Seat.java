@@ -6,13 +6,15 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-
+import jakarta.persistence.Id;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.util.UUID;
 
 @Entity
 @Table(name = "seats")
 public class Seat {
+    
+    @Id
     @Column(name = "id")
     private UUID id;
     @Column(name = "cafe_id")
