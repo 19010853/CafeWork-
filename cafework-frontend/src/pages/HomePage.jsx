@@ -3,8 +3,6 @@ import MapArea from '../components/MapArea';
 import SearchBar from '../components/Search/SearchBar'; 
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
-import MapArea from '../components/MapArea';
-import SearchBar from '../components/Search/SearchBar';
 const HomePage = () => {
   const navigation = useNavigate();
   useEffect(() => {
