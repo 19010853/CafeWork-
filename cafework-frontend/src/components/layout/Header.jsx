@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styles from './Header.module.css';
 import { getLang, setLang as persistLang } from '../../utils/userLocalStore';
-
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,6 +61,7 @@ const Header = () => {
     window.location.reload();
   };
 
+  const userRole = localStorage.getItem('role');
   return (
       <>
     <header className={styles.header}>
@@ -148,26 +148,50 @@ const Header = () => {
 
         {/* GLOBAL NAVIGATION */}
         <nav className={styles.navTabs}>
-          <button
-              className={isActive('/') ? styles.activeTab : styles.navTab}
-              onClick={() => navigate('/')}
-          >
-            ホーム
-          </button>
+          
+          {userRole === 'OWNER' ? (
+            /* --- 👑 GIAO DIỆN DÀNH RIÊNG CHO CHỦ QUÁN (OWNER) --- */
+            <>
+              <button
+                  className={isActive('/owner/dashboard') ? styles.activeTab : styles.navTab}
+                  onClick={() => navigate('/owner/dashboard')}
+              >
+                ダッシュボード
+              </button>
 
-          <button
-              className={isActive('/my-list') ? styles.activeTab : styles.navTab}
-              onClick={() => navigate('/my-list')}
-          >
-            マイリスト
-          </button>
+              <button
+                  className={isActive('/owner/management') ? styles.activeTab : styles.navTab}
+                  onClick={() => navigate('/owner/management')} // Ngài có thể đổi link này tùy ý
+              >
+                店舗管理
+              </button>
+            </>
+          ) : (
+            /* --- 🧑‍🌾 GIAO DIỆN DÀNH CHO KHÁCH HÀNG (USER / KHÁCH VÃNG LAI) --- */
+            <>
+              <button
+                  className={isActive('/') ? styles.activeTab : styles.navTab}
+                  onClick={() => navigate('/')}
+              >
+                ホーム
+              </button>
 
-          <button
-              className={isActive('/search-history') ? styles.activeTab : styles.navTab}
-              onClick={() => navigate('/search-history')}
-          >
-            検索履歴
-          </button>
+              <button
+                  className={isActive('/my-list') ? styles.activeTab : styles.navTab}
+                  onClick={() => navigate('/my-list')}
+              >
+                マイリスト
+              </button>
+
+              <button
+                  className={isActive('/search-history') ? styles.activeTab : styles.navTab}
+                  onClick={() => navigate('/search-history')}
+              >
+                検索履歴
+              </button>
+            </>
+          )}
+
         </nav>
       </>
   );

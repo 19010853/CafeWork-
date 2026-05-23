@@ -1,6 +1,61 @@
-import React from 'react';
-
+import React, { useState } from 'react';
+import axios from 'axios';
 const OwnerDashboardPage = () => {
+  const [cafeStatus, setCafeStatus] = useState('AVAILABLE');
+  const handleStatusUpdate = async (newStatus) => {
+    // Đổi màu nút trên màn hình ngay lập tức cho mượt mà
+    setCafeStatus(newStatus);
+
+    try {
+      // 1. Lấy thẻ bài (Token) từ trong tay nải (localStorage) ra
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert("Bệ hạ chưa đăng nhập hoặc đã mất thẻ bài!");
+        return;
+      }
+
+      // 2. Lấy ID của quán cafe (Tùy thuộc vào việc ngài đang lưu nó ở đâu)
+      // Thường thì khi đăng nhập xong, ta lưu luôn cafeId vào localStorage, hoặc lấy từ API profile
+      const cafeId = '30000000-0000-0000-0000-000000000002'; 
+
+      // 3. Phái sứ giả Axios mang lệnh đi (Dùng phương thức PUT hoặc PATCH để cập nhật)
+      const response = await axios.patch(
+        `http://localhost:8080/api/cafes/${cafeId}/seat-status`, // Lộ trình tới phủ CafeController
+        {
+          seatStatus: newStatus // Khối hành lý mang theo (Payload)
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // Giơ thẻ bài ra cho lính gác Spring Security
+          }
+        }
+      );
+
+      // 4. Nếu sứ giả về bình an (HTTP Status 200 OK)
+      console.log('Báo cáo từ Backend:', response.data);
+      // alert('Đã cập nhật trạng thái quán thành công!'); 
+      // (Ngài có thể dùng toast notification thay cho alert để giao diện sang trọng hơn)
+
+    } catch (error) {
+      // 5. Nếu sứ giả bị chặn đánh hoặc lạc đường
+      console.error("Truyền lệnh thất bại!", error);
+      
+      // Xử lý báo lỗi chi tiết để dễ bắt bệnh
+      if (error.response) {
+        // Backend có nhận được thư nhưng từ chối (Ví dụ: Lỗi 403, 404, 400)
+        alert(`Bẩm, triều đình từ chối lệnh: ${error.response.data.message || 'Lỗi không xác định'}`);
+      } else if (error.request) {
+        // Sứ giả đi không thấy về (Chưa bật máy chủ Spring Boot)
+        alert("Bẩm, không thể kết nối đến máy chủ. Xin kiểm tra lại Spring Boot!");
+      } else {
+        // Lỗi do bóp méo phép thuật ngay tại React
+        alert("Bẩm, có lỗi nội bộ xảy ra!");
+      }
+      setCafeStatus('TRẠNG_THÁI_CŨ'); 
+    }
+  };
   // Tạo giả lập 30 ghế ngồi để hiển thị giao diện
   const seats = Array.from({ length: 30 }, (_, i) => ({
     id: i + 1,
@@ -10,11 +65,6 @@ const OwnerDashboardPage = () => {
   return (
     <div style={styles.container}>
 
-      {/* --- PHẦN 2: THANH ĐIỀU HƯỚNG (Mục 5, 6) --- */}
-      <div style={styles.tabs}>
-        <div style={{ ...styles.tab, ...styles.activeTab }}>ダッシュボード</div>
-        <div style={styles.tab}>店舗管理</div>
-      </div>
 
       {/* --- PHẦN 3: NỘI DUNG CHÍNH --- */}
       <main style={styles.main}>
@@ -24,15 +74,40 @@ const OwnerDashboardPage = () => {
         <div style={styles.card}>
           <h2 style={styles.sectionTitle}>空席・混雑状況の更新</h2>
           <div style={styles.statusCardsContainer}>
-            <button style={{ ...styles.statusCard, ...styles.activeStatusCard }}>
+            
+            {/* Nút 1: Còn trống (AVAILABLE) */}
+            <button 
+              style={{ 
+                ...styles.statusCard, 
+                ...(cafeStatus === 'AVAILABLE' ? styles.activeStatusCard : {}) 
+              }}
+              onClick={() => handleStatusUpdate('AVAILABLE')}
+            >
               <span style={{ ...styles.dot, backgroundColor: '#34a853' }}></span> 空席あり
             </button>
-            <button style={styles.statusCard}>
+
+            {/* Nút 2: Sắp hết chỗ (ALMOST_FULL) */}
+            <button 
+              style={{ 
+                ...styles.statusCard, 
+                ...(cafeStatus === 'ALMOST_FULL' ? styles.activeStatusCard : {}) 
+              }}
+              onClick={() => handleStatusUpdate('ALMOST_FULL')}
+            >
               <span style={{ ...styles.dot, backgroundColor: '#fbbc04' }}></span> 残りわずか
             </button>
-            <button style={styles.statusCard}>
+
+            {/* Nút 3: Kín chỗ (FULL) */}
+            <button 
+              style={{ 
+                ...styles.statusCard, 
+                ...(cafeStatus === 'FULL' ? styles.activeStatusCard : {}) 
+              }}
+              onClick={() => handleStatusUpdate('FULL')}
+            >
               <span style={{ ...styles.dot, backgroundColor: '#ea4335' }}></span> 満席
             </button>
+
           </div>
         </div>
 
