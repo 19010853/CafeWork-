@@ -7,7 +7,8 @@ const OwnerDashboardPage = () => {
   // ==========================================
   const [cafeStatus, setCafeStatus] = useState('AVAILABLE');
   const [seats, setSeats] = useState([]);
-
+  const [showAddPopup, setShowAddPopup] = useState(false);
+  const [addAmount, setAddAmount] = useState(1);
   // ==========================================
   // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
   // ==========================================
@@ -99,11 +100,19 @@ const OwnerDashboardPage = () => {
       const cafeId = localStorage.getItem('cafeId');
       
       if (!cafeId) return;
-
+      const seatsToSend = seats.map(seat => {
+        if (String(seat.id).startsWith('temp-')) {
+          return {
+            ...seat,
+            id: null // Gửi null sang để Backend biết đường mà INSERT
+          };
+        }
+        return seat;
+      });
       // Phái sứ giả mang CẢ MẢNG SEATS về báo cáo
       await axios.put(
         `http://localhost:8080/api/cafes/${cafeId}/seats`, 
-        seats, // Gửi nguyên mảng 30 cái ghế đi
+        seatsToSend, // Gửi mảng đã được xử lý
         {
           headers: {
             'Content-Type': 'application/json',
@@ -119,7 +128,38 @@ const OwnerDashboardPage = () => {
       alert("Bẩm, có lỗi xảy ra khi lưu trạng thái ghế!");
     }
   };
+  const handleAddNewSeats = () => {
+    const amount = parseInt(addAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      alert("Bẩm, số lượng ghế phải lớn hơn 0!");
+      return;
+    }
 
+    // 1. Tìm xem cái ghế có số to nhất hiện tại đang là số mấy (để đánh số tiếp theo)
+    let maxSeatNum = 0;
+    seats.forEach(s => {
+      const num = parseInt(s.seatNumber, 10);
+      if (!isNaN(num) && num > maxSeatNum) {
+        maxSeatNum = num;
+      }
+    });
+    // 2. Tạo ra các chiếc ghế ảo (tạm thời)
+    const newSeats = [];
+    for (let i = 1; i <= amount; i++) {
+      newSeats.push({
+        id: `temp-${Date.now()}-${i}`, // Dùng thời gian làm ID ảo tạm thời để React không báo lỗi
+        seatNumber: (maxSeatNum + i).toString(), // Đánh số thứ tự tiếp nối
+        status: 'AVAILABLE' // Mặc định ghế mới là ghế trống
+      });
+    }
+
+    // 3. Đổ thêm ghế mới vào kho chứa trên màn hình
+    setSeats([...seats, ...newSeats]);
+    
+    // 4. Giấu Pop-up đi và reset số lượng về 1
+    setShowAddPopup(false);
+    setAddAmount(1);
+  };
   // ==========================================
   // 4. TÍNH TOÁN DỮ LIỆU CHUẨN BỊ CHO GIAO DIỆN
   // ==========================================
@@ -222,7 +262,32 @@ const OwnerDashboardPage = () => {
               </span>
             </div>
             <div style={styles.controls}>
-              <button style={styles.controlButton}>+ 1席追加</button>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                
+                {/* Cái Pop-up nhỏ xíu sẽ hiện lên khi showAddPopup = true */}
+                {showAddPopup && (
+                  <div style={styles.popup}>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      value={addAmount} 
+                      onChange={(e) => setAddAmount(e.target.value)} 
+                      style={styles.popupInput} 
+                    />
+                    <button onClick={handleAddNewSeats} style={styles.popupBtn}>
+                      追加
+                    </button>
+                  </div>
+                )}
+
+                {/* Nút bật/tắt Pop-up */}
+                <button 
+                  style={styles.controlButton} 
+                  onClick={() => setShowAddPopup(!showAddPopup)}
+                >
+                  + 座席追加
+                </button>
+              </div>
               <button style={styles.controlButton}>- 1席削除</button>
             </div>
           </div>
@@ -311,6 +376,38 @@ const styles = {
     padding: '6px 16px', backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '4px',
     fontSize: '14px', cursor: 'pointer', color: '#333',
   },
+  popup: {
+    position: 'absolute',
+    bottom: '120%', // Đẩy pop-up bay lên trên cái nút
+    left: '50%',
+    transform: 'translateX(-50%)', // Căn giữa pop-up với nút
+    backgroundColor: '#fff',
+    border: '1px solid #ccc',
+    borderRadius: '4px',
+    padding: '8px',
+    display: 'flex',
+    gap: '8px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    zIndex: 10,
+    whiteSpace: 'nowrap'
+  },
+  popupInput: {
+    width: '60px',
+    padding: '6px',
+    border: '1px solid #ccc',
+    borderRadius: '4px',
+    fontSize: '14px'
+  },
+  popupBtn: {
+    padding: '6px 12px',
+    backgroundColor: '#34a853', // Màu xanh hoàng gia
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold'
+  }
 };
 
 export default OwnerDashboardPage;

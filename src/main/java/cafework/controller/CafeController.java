@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import cafework.model.User;
 import cafework.repository.UserRepository;
 import cafework.service.CafeService;
 import cafework.repository.SeatRepository;
+import cafework.repository.CafeRepository;
 
 @RestController
 @RequestMapping("/api/cafes")
@@ -32,6 +34,9 @@ public class CafeController {
 
     @Autowired
     private SeatRepository seatRepository;
+
+    @Autowired
+    private CafeRepository cafeRepository;
 
     @GetMapping
     public List<Cafe> getAllCafes() {
@@ -115,20 +120,39 @@ public class CafeController {
     @PutMapping("/{id}/seats")
     public ResponseEntity<?> updateCafeSeats(@PathVariable UUID id, @RequestBody List<Seat> updatedSeats) {
         
-        // Duyệt qua từng chiếc ghế mà React gửi tới
+        // 1. Tìm thực thể quán cafe hiện tại để làm điểm tựa khóa ngoại
+        Cafe cafe = cafeRepository.findById(id).orElse(null);
+        if (cafe == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy quán cafe này!");
+        }
+
+        // 2. Duyệt qua từng chiếc ghế từ mật sớ Frontend gửi lên
         for (Seat incomingSeat : updatedSeats) {
-            // Tìm cái ghế cũ dưới hầm ngục lên
-            Seat existingSeat = seatRepository.findById(incomingSeat.getId()).orElse(null);
             
-            if (existingSeat != null) {
-                // Cập nhật trạng thái mới
-                existingSeat.setStatus(incomingSeat.getStatus());
+            if (incomingSeat.getId() == null) {
+                // ------------ CHẾ ĐỘ 1: INSERT (GHẾ MỚI TINH) ------------
+                Seat newSeat = new Seat();
                 
-                // Nhát kiếm này sẽ tự động kích hoạt @PreUpdate để sửa updated_at
-                seatRepository.save(existingSeat); 
+                // 👇 CHÉM THÊM NHÁT NÀY ĐỂ CẤP ID TRỰC TIẾP CHO CHIẾC GHẾ 👇
+                newSeat.setId(java.util.UUID.randomUUID()); 
+                newSeat.setCafeId(cafe.getId()); 
+                newSeat.setSeatNumber(incomingSeat.getSeatNumber()); 
+                newSeat.setStatus(incomingSeat.getStatus());         
+                
+                seatRepository.save(newSeat);
+            } else {
+                // ------------ CHẾ ĐỘ 2: UPDATE (GHẾ CŨ ĐÃ CÓ) ------------
+                Seat existingSeat = seatRepository.findById(incomingSeat.getId()).orElse(null);
+                if (existingSeat != null) {
+                    existingSeat.setStatus(incomingSeat.getStatus()); // Cập nhật trạng thái
+                    // Nếu bệ hạ muốn cho phép đổi cả số ghế cũ thì bật dòng dưới:
+                    // existingSeat.setSeatNumber(incomingSeat.getSeatNumber());
+                    
+                    seatRepository.save(existingSeat); // Đúc lệnh UPDATE xuống DB
+                }
             }
         }
 
-        return ResponseEntity.ok().body("Đã cập nhật toàn bộ ghế!");
+        return ResponseEntity.ok().body("Vương quốc thái bình, toàn bộ ghế cũ và mới đã được ghi sổ!");
     }
 }
