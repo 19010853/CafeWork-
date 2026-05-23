@@ -33,6 +33,9 @@ const Header = () => {
   // 1. Lấy token và thông tin user từ localStorage
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
+  const role = localStorage.getItem('role');
+  const isOwner = role === 'OWNER';
+  const isUser = role === 'USER';
   let user = null;
 
   try {
@@ -147,28 +150,65 @@ const Header = () => {
     </header>
 
         {/* GLOBAL NAVIGATION */}
-        <nav className={styles.navTabs}>
-          <button
-              className={isActive('/') ? styles.activeTab : styles.navTab}
-              onClick={() => navigate('/')}
-          >
-            ホーム
-          </button>
 
-          <button
-              className={isActive('/my-list') ? styles.activeTab : styles.navTab}
-              onClick={() => navigate('/my-list')}
-          >
-            マイリスト
-          </button>
+        {isOwner && (
+            <nav className={styles.navTabs}>
+              <button
+                  className={
+                    isActive('/owner/dashboard')
+                        ? styles.activeTab
+                        : styles.navTab
+                  }
+                  onClick={() => navigate('/owner/dashboard')}
+              >
+                ダッシュボード
+              </button>
 
-          <button
-              className={isActive('/search-history') ? styles.activeTab : styles.navTab}
-              onClick={() => navigate('/search-history')}
-          >
-            検索履歴
-          </button>
-        </nav>
+              <button
+                  className={
+                    isActive('/owner/cafe-management')
+                        ? styles.activeTab
+                        : styles.navTab
+                  }
+                  onClick={() => navigate('/owner/cafe-management')}
+              >
+                店舗管理
+              </button>
+            </nav>
+        )}
+
+        {isUser && (
+            <nav className={styles.navTabs}>
+              <button
+                  className={isActive('/') ? styles.activeTab : styles.navTab}
+                  onClick={() => navigate('/')}
+              >
+                ホーム
+              </button>
+
+              <button
+                  className={
+                    isActive('/my-list')
+                        ? styles.activeTab
+                        : styles.navTab
+                  }
+                  onClick={() => navigate('/my-list')}
+              >
+                マイリスト
+              </button>
+
+              <button
+                  className={
+                    isActive('/search-history')
+                        ? styles.activeTab
+                        : styles.navTab
+                  }
+                  onClick={() => navigate('/search-history')}
+              >
+                検索履歴
+              </button>
+            </nav>
+        )}
       </>
   );
 };

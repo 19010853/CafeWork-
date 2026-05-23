@@ -258,6 +258,95 @@ const styles = {
     animation: 'spin 0.9s linear infinite',
   },
   loadingText: { color: '#8b5a2b', fontSize: '14px' },
+
+  couponCarouselWrap: {
+    position: 'relative',
+    overflow: 'hidden',
+  },
+
+  couponSlider: {
+    display: 'flex',
+    transition: 'transform 0.45s ease-in-out',
+  },
+
+  couponSlide: {
+    minWidth: '100%',
+    padding: '4px',
+  },
+
+  couponNavBtn: {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    width: '42px',
+    height: '42px',
+    borderRadius: '50%',
+    border: 'none',
+    background: 'rgba(255,255,255,0.92)',
+    backdropFilter: 'blur(8px)',
+    boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
+    cursor: 'pointer',
+    zIndex: 5,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    color: '#6b4b2a',
+    transition: 'all 0.2s ease',
+  },
+
+  couponNavBtnLeft: {
+    left: '-10px',
+  },
+
+  couponNavBtnRight: {
+    right: '-10px',
+  },
+
+  couponIndicatorWrap: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '6px',
+    marginTop: '10px',
+  },
+
+  couponIndicator: (active) => ({
+    width: active ? '18px' : '7px',
+    height: '7px',
+    borderRadius: '999px',
+    backgroundColor: active ? '#8b5a2b' : '#d6c6b8',
+    transition: 'all 0.25s ease',
+  }),
+  couponControls: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '14px',
+    marginTop: '12px',
+  },
+
+  couponBottomBtn: {
+    width: '32px',
+    height: '32px',
+
+    borderRadius: '50%',
+    border: '1px solid #e2d7c7',
+
+    backgroundColor: '#fff',
+    color: '#8b5a2b',
+
+    cursor: 'pointer',
+
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    fontSize: '18px',
+    fontWeight: 'bold',
+
+    transition: 'all 0.2s ease',
+  },
 };
 
 // ============================================================
@@ -308,6 +397,7 @@ const CafeDetailPage = () => {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [coupons, setCoupons] = useState([]);
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(Boolean(token));
@@ -404,10 +494,36 @@ const CafeDetailPage = () => {
       setReviewSubmitting(false);
     }
   };
+  const fetchCoupons = async () => {
+    try {
+      const res = await axios.get(
+          `http://localhost:8080/api/coupons/cafe/${id}`
+      );
+
+      setCoupons(res.data);
+    } catch (err) {
+      console.error('Coupon fetch error:', err);
+      setCoupons([]);
+    }
+  };
+
+  const [currentCouponIndex, setCurrentCouponIndex] = useState(0);
+  const nextCoupon = () => {
+    setCurrentCouponIndex((prev) =>
+        prev === coupons.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const prevCoupon = () => {
+    setCurrentCouponIndex((prev) =>
+        prev === 0 ? coupons.length - 1 : prev - 1
+    );
+  };
 
   useEffect(() => {
     fetchCafeDetails();
     fetchReviews();
+    fetchCoupons();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -638,14 +754,121 @@ const CafeDetailPage = () => {
             </div>
           </div>
 
-          {/* Coupon Banner */}
-          <div style={styles.couponBanner}>
-            <span style={styles.couponIcon}>🎫</span>
-            <div style={styles.couponText}>
-              <p style={styles.couponTitle}>ウェルカムクーポン：初回ドリンク 10% OFF</p>
-              <p style={styles.couponSub}>アプリ提示で割引適用 · 期間限定</p>
-            </div>
-          </div>
+          {/* Coupon Banner Carousel */}
+          {isLoggedIn && coupons.length > 0 && (
+              <div style={styles.couponCarouselWrap}>
+
+                {/* SLIDER */}
+                <div
+                    style={{
+                      ...styles.couponSlider,
+                      transform: `translateX(-${currentCouponIndex * 100}%)`,
+                    }}
+                >
+                  {coupons.map((coupon) => {
+                    const expired =
+                        new Date(coupon.validTo) < new Date();
+
+                    return (
+                        <div
+                            key={coupon.id}
+                            style={styles.couponSlide}
+                        >
+                          <div
+                              style={{
+                                ...styles.couponBanner,
+                                opacity: expired ? 0.6 : 1,
+                                border: expired
+                                    ? '1.5px dashed #ccc'
+                                    : '1.5px dashed #F6C90E',
+                                backgroundColor: expired
+                                    ? '#f5f5f5'
+                                    : '#FFF8E1',
+                                transition: 'all 0.25s ease',
+                                cursor: 'pointer',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform =
+                                    'translateY(-2px)';
+                                e.currentTarget.style.boxShadow =
+                                    '0 8px 22px rgba(0,0,0,0.12)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform =
+                                    'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
+                              }}
+                          >
+              <span style={styles.couponIcon}>
+                {expired ? '⏰' : '🎫'}
+              </span>
+
+                            <div style={styles.couponText}>
+                              <p style={styles.couponTitle}>
+                                {coupon.code}
+                                {' · '}
+                                {coupon.discountValue}% OFF
+                              </p>
+
+                              <p style={styles.couponSub}>
+                                {coupon.description}
+                              </p>
+
+                              <p
+                                  style={{
+                                    marginTop: '4px',
+                                    fontSize: '11px',
+                                    color: '#777',
+                                  }}
+                              >
+                                {new Date(
+                                    coupon.validFrom
+                                ).toLocaleDateString('ja-JP')}
+                                {' ~ '}
+                                {new Date(
+                                    coupon.validTo
+                                ).toLocaleDateString('ja-JP')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                    );
+                  })}
+                </div>
+
+                {/* CONTROLS */}
+                {coupons.length > 1 && (
+                    <div style={styles.couponControls}>
+
+                      <button
+                          onClick={prevCoupon}
+                          style={styles.couponBottomBtn}
+                      >
+                        ‹
+                      </button>
+
+                      <div style={styles.couponIndicatorWrap}>
+                        {coupons.map((_, index) => (
+                            <div
+                                key={index}
+                                style={styles.couponIndicator(
+                                    index === currentCouponIndex
+                                )}
+                            />
+                        ))}
+                      </div>
+
+                      <button
+                          onClick={nextCoupon}
+                          style={styles.couponBottomBtn}
+                      >
+                        ›
+                      </button>
+
+                    </div>
+                )}
+              </div>
+          )}
 
           {/* Details */}
           <div style={styles.sectionCard}>

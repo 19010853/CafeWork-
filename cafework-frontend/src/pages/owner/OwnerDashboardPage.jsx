@@ -1,20 +1,106 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axiosClient from '../../api/axiosClient';
+import toast from 'react-hot-toast';
 
 const OwnerDashboardPage = () => {
+  const [coupons, setCoupons] = useState([]);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+
+  const [couponForm, setCouponForm] = useState({
+    code: '',
+    description: '',
+    discountValue: '',
+    validFrom: '',
+    validTo: ''
+  });
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
+
+  const fetchCoupons = async () => {
+    try {
+      const response = await axiosClient.get('/coupons/my-coupons');
+      setCoupons(response.data);
+    } catch (error) {
+      console.error(error);
+      toast.error('クーポンの取得に失敗しました');
+    }
+  };
   // Tạo giả lập 30 ghế ngồi để hiển thị giao diện
   const seats = Array.from({ length: 30 }, (_, i) => ({
     id: i + 1,
     status: 'vacant' // Tạm thời để tất cả là trống (vacant)
   }));
 
-  return (
-    <div style={styles.container}>
+  const handleCouponChange = (e) => {
+    const { name, value } = e.target;
 
-      {/* --- PHẦN 2: THANH ĐIỀU HƯỚNG (Mục 5, 6) --- */}
-      <div style={styles.tabs}>
-        <div style={{ ...styles.tab, ...styles.activeTab }}>ダッシュボード</div>
-        <div style={styles.tab}>店舗管理</div>
-      </div>
+    setCouponForm((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const createCoupon = async () => {
+    try {
+
+      const payload = {
+        ...couponForm,
+        validFrom: `${couponForm.validFrom}T00:00:00`,
+        validTo: `${couponForm.validTo}T23:59:59`,
+      };
+
+      await axiosClient.post('/coupons', payload);
+
+      toast.success('クーポンを作成しました');
+
+      setShowCouponModal(false);
+
+      setCouponForm({
+        code: '',
+        description: '',
+        discountValue: '',
+        validFrom: '',
+        validTo: '',
+      });
+
+      fetchCoupons();
+    } catch (error) {
+      toast.error('クーポン作成失敗');
+    }
+  };
+
+  const handleDeleteCoupon = async (id) => {
+    if (!window.confirm('削除しますか？')) return;
+
+    try {
+      await axiosClient.delete(`/coupons/${id}`);
+
+      toast.success('削除しました');
+
+      fetchCoupons();
+    } catch (error) {
+      console.error(error);
+      toast.error('削除に失敗しました');
+    }
+  };
+
+  const getCouponStatus = (validTo) => {
+    return new Date(validTo) > new Date();
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+
+    return new Date(dateString)
+        .toISOString()
+        .split('T')[0]
+        .replace(/-/g, '/');
+  };
+
+  return (
+
+    <div style={styles.container}>
 
       {/* --- PHẦN 3: NỘI DUNG CHÍNH --- */}
       <main style={styles.main}>
@@ -76,6 +162,170 @@ const OwnerDashboardPage = () => {
               <button style={styles.controlButton}>+ 1席追加</button>
               <button style={styles.controlButton}>- 1席削除</button>
             </div>
+          </div>
+        </div>
+        {/* Coupon Management */}
+        <div style={styles.card}>
+
+          <div style={styles.couponHeader}>
+            <h2 style={styles.sectionTitle}>割引・プロモーション一覧</h2>
+
+            <button
+                style={styles.createCouponButton}
+                onClick={() => setShowCouponModal(true)}
+            >
+              + クーポン作成
+            </button>
+          </div>
+
+          {/* FORM */}
+        {showCouponModal && (
+            <div style={styles.modalOverlay}>
+              <div style={styles.modalContent}>
+
+                <div style={styles.modalHeader}>
+                  <h3 style={{ margin: 0 }}>クーポン作成</h3>
+
+                  <button
+                      onClick={() => setShowCouponModal(false)}
+                      style={styles.closeModalButton}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      createCoupon();
+                    }}
+                    style={styles.couponForm}
+                >
+                  <input
+                      type="text"
+                      name="code"
+                      placeholder="コード"
+                      value={couponForm.code}
+                      onChange={handleCouponChange}
+                      style={styles.couponInput}
+                  />
+
+                  <input
+                      type="text"
+                      name="description"
+                      placeholder="説明"
+                      value={couponForm.description}
+                      onChange={handleCouponChange}
+                      style={styles.couponInput}
+                  />
+
+                  <input
+                      type="number"
+                      name="discountValue"
+                      placeholder="割引％"
+                      value={couponForm.discountValue}
+                      onChange={handleCouponChange}
+                      style={styles.couponInput}
+                  />
+
+                  <div style={styles.dateGroup}>
+                    <label style={styles.inputLabel}>
+                      開始日
+                    </label>
+
+                    <input
+                        type="date"
+                        name="validFrom"
+                        value={couponForm.validFrom}
+                        onChange={handleCouponChange}
+                        style={styles.couponInput}
+                    />
+                  </div>
+
+                  <div style={styles.dateGroup}>
+                    <label style={styles.inputLabel}>
+                      終了日
+                    </label>
+
+                    <input
+                        type="date"
+                        name="validTo"
+                        value={couponForm.validTo}
+                        onChange={handleCouponChange}
+                        style={styles.couponInput}
+                    />
+                  </div>
+
+                  <button
+                      type="submit"
+                      style={styles.createCouponButton}
+                  >
+                    + 作成
+                  </button>
+                </form>
+
+              </div>
+            </div>
+        )}
+
+          {/* LIST */}
+          <div style={{ marginTop: '20px' }}>
+            {coupons.length === 0 ? (
+                <p style={{ color: '#777' }}>
+                  クーポンがありません
+                </p>
+            ) : (
+                coupons.map((coupon) => {
+                  const active = getCouponStatus(coupon.validTo);
+
+                  return (
+                      <div key={coupon.id} style={styles.couponItem}>
+                        <div>
+                          <div style={styles.couponCode}>
+                            {coupon.code}
+                          </div>
+
+                          <div style={styles.couponDescription}>
+                            {coupon.description}
+                          </div>
+
+                          <div style={styles.couponDate}>
+                            {formatDate(coupon.validFrom)} ~ {formatDate(coupon.validTo)}
+                          </div>
+                        </div>
+
+                        <div style={{
+                          display: 'flex',
+                          gap: '12px',
+                          alignItems: 'center'
+                        }}>
+                          <div
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '999px',
+                                fontSize: '12px',
+                                fontWeight: 'bold',
+                                backgroundColor: active ? '#e6f4ea' : '#fce8e6',
+                                color: active ? '#34a853' : '#ea4335',
+                                border: active
+                                    ? '1px solid #ceead6'
+                                    : '1px solid #fad2cf',
+                              }}
+                          >
+                            {active ? '有効' : '期限切れ'}
+                          </div>
+
+                          <button
+                              onClick={() => handleDeleteCoupon(coupon.id)}
+                              style={styles.deleteCouponButton}
+                          >
+                            削除
+                          </button>
+                        </div>
+                      </div>
+                  );
+                })
+            )}
           </div>
         </div>
       </main>
@@ -161,6 +411,118 @@ const styles = {
   controlButton: {
     padding: '6px 16px', backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '4px',
     fontSize: '14px', cursor: 'pointer', color: '#333',
+  },
+  couponHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '20px'
+  },
+
+  couponForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+
+  couponInput: {
+    padding: '10px',
+    borderRadius: '6px',
+    border: '1px solid #ddd',
+    fontSize: '14px'
+  },
+
+  createCouponButton: {
+    padding: '10px',
+    border: 'none',
+    borderRadius: '6px',
+    backgroundColor: '#333',
+    color: 'white',
+    cursor: 'pointer',
+    fontWeight: 'bold'
+  },
+
+  couponItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px',
+    border: '1px solid #eee',
+    borderRadius: '8px',
+    marginBottom: '12px',
+    backgroundColor: '#fafafa'
+  },
+
+  couponCode: {
+    fontSize: '16px',
+    fontWeight: 'bold',
+    marginBottom: '4px'
+  },
+
+  couponDescription: {
+    fontSize: '13px',
+    color: '#666',
+    marginBottom: '4px'
+  },
+
+  couponDate: {
+    fontSize: '12px',
+    color: '#999'
+  },
+
+  deleteCouponButton: {
+    border: 'none',
+    backgroundColor: '#ea4335',
+    color: 'white',
+    padding: '8px 12px',
+    borderRadius: '6px',
+    cursor: 'pointer'
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999
+  },
+
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: '24px',
+    borderRadius: '12px',
+    width: '500px',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+  },
+
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '20px'
+  },
+
+  closeModalButton: {
+    border: 'none',
+    background: 'transparent',
+    fontSize: '18px',
+    cursor: 'pointer',
+    color: '#666'
+  },
+  dateGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+
+  inputLabel: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#555'
   },
 };
 

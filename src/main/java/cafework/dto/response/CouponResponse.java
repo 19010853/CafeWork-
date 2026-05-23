@@ -1,46 +1,26 @@
-package cafework.model;
-
-import jakarta.persistence.*;
+package cafework.dto.response;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
-@Entity
-@Table(name = "coupons")
-public class Coupon {
+public class CouponResponse {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+    private String cafeId;
 
-    @Column(name = "cafe_id", nullable = false)
-    private UUID cafeId;
-
-    @Column(nullable = false, unique = true)
     private String code;
-
     private String description;
 
-    @Column(name = "discount_value", nullable = false)
     private Integer discountValue;
 
-    @Column(name = "valid_from")
     private LocalDateTime validFrom;
-
-    @Column(name = "valid_to")
     private LocalDateTime validTo;
 
-    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public Coupon() {
-    }
+    private boolean active;
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+    public CouponResponse() {
     }
-
 
     public String getId() {
         return id;
@@ -50,11 +30,11 @@ public class Coupon {
         this.id = id;
     }
 
-    public UUID getCafeId() {
+    public String getCafeId() {
         return cafeId;
     }
 
-    public void setCafeId(UUID cafeId) {
+    public void setCafeId(String cafeId) {
         this.cafeId = cafeId;
     }
 
@@ -70,16 +50,16 @@ public class Coupon {
         return description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public Integer getDiscountValue() {
         return discountValue;
     }
 
     public void setDiscountValue(Integer discountValue) {
         this.discountValue = discountValue;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public LocalDateTime getValidFrom() {
@@ -104,5 +84,13 @@ public class Coupon {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
