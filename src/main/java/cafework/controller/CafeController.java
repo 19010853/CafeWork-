@@ -111,4 +111,24 @@ public class CafeController {
         List<Seat> seats = seatRepository.findByCafeIdOrderBySeatNumberAsc(id);
         return ResponseEntity.ok(seats);
     }
+
+    @PutMapping("/{id}/seats")
+    public ResponseEntity<?> updateCafeSeats(@PathVariable UUID id, @RequestBody List<Seat> updatedSeats) {
+        
+        // Duyệt qua từng chiếc ghế mà React gửi tới
+        for (Seat incomingSeat : updatedSeats) {
+            // Tìm cái ghế cũ dưới hầm ngục lên
+            Seat existingSeat = seatRepository.findById(incomingSeat.getId()).orElse(null);
+            
+            if (existingSeat != null) {
+                // Cập nhật trạng thái mới
+                existingSeat.setStatus(incomingSeat.getStatus());
+                
+                // Nhát kiếm này sẽ tự động kích hoạt @PreUpdate để sửa updated_at
+                seatRepository.save(existingSeat); 
+            }
+        }
+
+        return ResponseEntity.ok().body("Đã cập nhật toàn bộ ghế!");
+    }
 }

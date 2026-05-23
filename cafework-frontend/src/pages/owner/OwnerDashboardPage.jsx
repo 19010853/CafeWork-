@@ -77,6 +77,48 @@ const OwnerDashboardPage = () => {
   useEffect(() => {
     fetchSeats();
   }, []);
+  // Chiêu 3: Lật trạng thái của 1 chiếc ghế trên giao diện
+  const toggleSeatStatus = (seatId) => {
+    setSeats(prevSeats => 
+      prevSeats.map(seat => {
+        if (seat.id === seatId) {
+          // Bấm vào thì Trống thành Có người, Có người thành Trống
+          return {
+            ...seat,
+            status: seat.status === 'AVAILABLE' ? 'OCCUPIED' : 'AVAILABLE'
+          };
+        }
+        return seat;
+      })
+    );
+  };
+  // Chiêu 4: Lưu toàn bộ trạng thái ghế hiện tại về Database
+  const saveSeats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const cafeId = localStorage.getItem('cafeId');
+      
+      if (!cafeId) return;
+
+      // Phái sứ giả mang CẢ MẢNG SEATS về báo cáo
+      await axios.put(
+        `http://localhost:8080/api/cafes/${cafeId}/seats`, 
+        seats, // Gửi nguyên mảng 30 cái ghế đi
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      alert("Bẩm, đã lưu trạng thái ghế thành công!");
+      fetchSeats(); // Lưu xong thì gọi lại API để làm mới lại dữ liệu cho chắc ăn
+    } catch (error) {
+      console.error("Lưu ghế thất bại:", error);
+      alert("Bẩm, có lỗi xảy ra khi lưu trạng thái ghế!");
+    }
+  };
 
   // ==========================================
   // 4. TÍNH TOÁN DỮ LIỆU CHUẨN BỊ CHO GIAO DIỆN
@@ -149,11 +191,10 @@ const OwnerDashboardPage = () => {
               </p>
             </div>
             {/* Tích hợp nút refresh gọi lại API lấy ghế mới nhất */}
-            <button style={styles.autoUpdateButton} onClick={fetchSeats}>
+            <button style={styles.autoUpdateButton} onClick={saveSeats}>
               🔄 最新に更新
             </button>
           </div>
-
           {/* Lưới hiển thị 30 ghế ngồi */}
           <div style={styles.seatGridBox}>
             <div style={styles.seatGrid}>
@@ -162,6 +203,7 @@ const OwnerDashboardPage = () => {
                   key={seat.id} 
                   // Dựa vào chữ AVAILABLE hay OCCUPIED để tô màu xanh hay đỏ
                   style={seat.status === 'AVAILABLE' ? styles.seatVacant : styles.seatOccupied}
+                  onClick={() => toggleSeatStatus(seat.id)} // Bấm vào để đổi trạng thái
                 >
                   {seat.seatNumber}
                 </div>
