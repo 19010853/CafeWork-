@@ -13,9 +13,11 @@ import cafework.dto.SeatStatusUpdateRequest;
 import cafework.dto.SeatStatusUpdateResponse;
 import cafework.dto.request.CafeRequest;
 import cafework.model.Cafe;
+import cafework.model.Seat;
 import cafework.model.User;
 import cafework.repository.UserRepository;
 import cafework.service.CafeService;
+import cafework.repository.SeatRepository;
 
 @RestController
 @RequestMapping("/api/cafes")
@@ -27,6 +29,9 @@ public class CafeController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private SeatRepository seatRepository;
 
     @GetMapping
     public List<Cafe> getAllCafes() {
@@ -99,5 +104,11 @@ public class CafeController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("System error: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/{id}/seats")
+    public ResponseEntity<List<Seat>> getCafeSeats(@PathVariable UUID id) {
+        List<Seat> seats = seatRepository.findByCafeIdOrderBySeatNumberAsc(id);
+        return ResponseEntity.ok(seats);
     }
 }

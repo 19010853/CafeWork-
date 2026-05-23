@@ -17,7 +17,11 @@ const OwnerDashboardPage = () => {
 
       // 2. Lấy ID của quán cafe (Tùy thuộc vào việc ngài đang lưu nó ở đâu)
       // Thường thì khi đăng nhập xong, ta lưu luôn cafeId vào localStorage, hoặc lấy từ API profile
-      const cafeId = '30000000-0000-0000-0000-000000000002'; 
+      const cafeId = localStorage.getItem('cafeId'); // Giả sử ta đã lưu cafeId khi đăng nhập
+      if (!cafeId) {
+        alert("Bệ hạ chưa chọn quán cafe nào để quản lý!");
+        return;
+      }
 
       // 3. Phái sứ giả Axios mang lệnh đi (Dùng phương thức PUT hoặc PATCH để cập nhật)
       const response = await axios.patch(
