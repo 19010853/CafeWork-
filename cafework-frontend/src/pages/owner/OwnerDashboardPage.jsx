@@ -1,71 +1,92 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useEffect } from 'react';
 const OwnerDashboardPage = () => {
+  // ==========================================
+  // 1. KHO CHỨA (STATE)
+  // ==========================================
   const [cafeStatus, setCafeStatus] = useState('AVAILABLE');
+  const [seats, setSeats] = useState([]);
+
+  // ==========================================
+  // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
+  // ==========================================
+  const fetchSeats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      // Lấy cafeId từ localStorage hoặc dùng tạm ID để test
+      const cafeId = localStorage.getItem('cafeId') || '30000000-0000-0000-0000-000000000001'; 
+      
+      const response = await axios.get(`http://localhost:8080/api/cafes/${cafeId}/seats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Cất danh sách ghế lấy được vào kho React
+      setSeats(response.data);
+    } catch (error) {
+      console.error("Không thể lấy danh sách ghế:", error);
+    }
+  };
+
   const handleStatusUpdate = async (newStatus) => {
     // Đổi màu nút trên màn hình ngay lập tức cho mượt mà
     setCafeStatus(newStatus);
 
     try {
-      // 1. Lấy thẻ bài (Token) từ trong tay nải (localStorage) ra
       const token = localStorage.getItem('token');
-      
       if (!token) {
         alert("Bệ hạ chưa đăng nhập hoặc đã mất thẻ bài!");
         return;
       }
 
-      // 2. Lấy ID của quán cafe (Tùy thuộc vào việc ngài đang lưu nó ở đâu)
-      // Thường thì khi đăng nhập xong, ta lưu luôn cafeId vào localStorage, hoặc lấy từ API profile
-      const cafeId = localStorage.getItem('cafeId'); // Giả sử ta đã lưu cafeId khi đăng nhập
+      const cafeId = localStorage.getItem('cafeId'); 
       if (!cafeId) {
         alert("Bệ hạ chưa chọn quán cafe nào để quản lý!");
         return;
       }
 
-      // 3. Phái sứ giả Axios mang lệnh đi (Dùng phương thức PUT hoặc PATCH để cập nhật)
       const response = await axios.patch(
-        `http://localhost:8080/api/cafes/${cafeId}/seat-status`, // Lộ trình tới phủ CafeController
-        {
-          seatStatus: newStatus // Khối hành lý mang theo (Payload)
-        },
+        `http://localhost:8080/api/cafes/${cafeId}/seat-status`, 
+        { seatStatus: newStatus },
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` // Giơ thẻ bài ra cho lính gác Spring Security
+            'Authorization': `Bearer ${token}`
           }
         }
       );
 
-      // 4. Nếu sứ giả về bình an (HTTP Status 200 OK)
       console.log('Báo cáo từ Backend:', response.data);
-      // alert('Đã cập nhật trạng thái quán thành công!'); 
-      // (Ngài có thể dùng toast notification thay cho alert để giao diện sang trọng hơn)
 
     } catch (error) {
-      // 5. Nếu sứ giả bị chặn đánh hoặc lạc đường
       console.error("Truyền lệnh thất bại!", error);
-      
-      // Xử lý báo lỗi chi tiết để dễ bắt bệnh
       if (error.response) {
-        // Backend có nhận được thư nhưng từ chối (Ví dụ: Lỗi 403, 404, 400)
         alert(`Bẩm, triều đình từ chối lệnh: ${error.response.data.message || 'Lỗi không xác định'}`);
       } else if (error.request) {
-        // Sứ giả đi không thấy về (Chưa bật máy chủ Spring Boot)
         alert("Bẩm, không thể kết nối đến máy chủ. Xin kiểm tra lại Spring Boot!");
       } else {
-        // Lỗi do bóp méo phép thuật ngay tại React
         alert("Bẩm, có lỗi nội bộ xảy ra!");
       }
-      setCafeStatus('TRẠNG_THÁI_CŨ'); 
+      // setCafeStatus('TRẠNG_THÁI_CŨ'); // Tạm khóa dòng này lại để khỏi lỗi
     }
   };
-  // Tạo giả lập 30 ghế ngồi để hiển thị giao diện
-  const seats = Array.from({ length: 30 }, (_, i) => ({
-    id: i + 1,
-    status: 'vacant' // Tạm thời để tất cả là trống (vacant)
-  }));
 
+  // ==========================================
+  // 3. LÍNH CANH (USE EFFECT) - GỌI CHIÊU KHI VỪA VÀO PHÒNG
+  // ==========================================
+  useEffect(() => {
+    fetchSeats();
+  }, []);
+
+  // ==========================================
+  // 4. TÍNH TOÁN DỮ LIỆU CHUẨN BỊ CHO GIAO DIỆN
+  // ==========================================
+  const totalSeats = seats.length;
+  const availableSeats = seats.filter(seat => seat.status === 'AVAILABLE').length;
+  const occupiedSeats = seats.filter(seat => seat.status === 'OCCUPIED').length;
+
+  // 👇 DƯỚI NÀY LÀ KHÚC RETURN CỦA BỆ HẠ 👇
+  
   return (
     <div style={styles.container}>
 
@@ -117,25 +138,32 @@ const OwnerDashboardPage = () => {
 
         {/* Khối 2: Quản lý chi tiết ghế ngồi (Mục 12 đến 17) */}
         <div style={styles.card}>
-          {/* Tiêu đề & Thống kê ghế (Mục 12, 13) */}
+          {/* Tiêu đề & Thống kê ghế THEO DỮ LIỆU THẬT */}
           <div style={styles.seatHeader}>
             <div>
               <h2 style={styles.sectionTitle}>座席管理</h2>
               <p style={styles.seatStats}>
-                合計: <strong>30席</strong> &nbsp;|&nbsp; 
-                <span style={{ color: '#34a853' }}> 空席: 30</span> &nbsp;|&nbsp; 
-                <span style={{ color: '#ea4335' }}> 使用中: 0</span>
+                合計: <strong>{totalSeats}席</strong> &nbsp;|&nbsp; 
+                <span style={{ color: '#34a853' }}> 空席: {availableSeats}</span> &nbsp;|&nbsp; 
+                <span style={{ color: '#ea4335' }}> 使用中: {occupiedSeats}</span>
               </p>
             </div>
-            <button style={styles.autoUpdateButton}>自動ステータス更新</button>
+            {/* Tích hợp nút refresh gọi lại API lấy ghế mới nhất */}
+            <button style={styles.autoUpdateButton} onClick={fetchSeats}>
+              🔄 最新に更新
+            </button>
           </div>
 
           {/* Lưới hiển thị 30 ghế ngồi */}
           <div style={styles.seatGridBox}>
             <div style={styles.seatGrid}>
               {seats.map((seat) => (
-                <div key={seat.id} style={styles.seatVacant}>
-                  {seat.id}
+                <div 
+                  key={seat.id} 
+                  // Dựa vào chữ AVAILABLE hay OCCUPIED để tô màu xanh hay đỏ
+                  style={seat.status === 'AVAILABLE' ? styles.seatVacant : styles.seatOccupied}
+                >
+                  {seat.seatNumber}
                 </div>
               ))}
             </div>
