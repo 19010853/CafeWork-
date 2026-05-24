@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useEffect } from 'react';
-import { useRef } from 'react';
 const OwnerDashboardPage = () => {
   // ==========================================
   // 1. KHO CHỨA (STATE)
@@ -17,7 +16,6 @@ const OwnerDashboardPage = () => {
   const [images, setImages] = useState([]);
   const [coupons, setCoupons] = useState([]);
 
-  const imageInputRef = useRef(null);
   // ==========================================
   // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
   // ==========================================
@@ -97,47 +95,6 @@ const OwnerDashboardPage = () => {
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}/${month}/${day}`;
-  };
-  
-  // Chiêu thức 7: Chọn và đẩy ảnh lên triều đình (Backend)
-  const handleImageUpload = async (event) => {
-    // 1. Chộp lấy bức ảnh bệ hạ vừa chọn
-    const file = event.target.files[0];
-    if (!file) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      const cafeId = localStorage.getItem('cafeId');
-      if (!cafeId) return;
-
-      // 2. Xếp ảnh vào cỗ xe ngựa FormData
-      const formData = new FormData();
-      formData.append('imageFile', file); // 'imageFile' là tên gói hàng, lát nữa Backend phải hứng đúng tên này
-
-      // 3. Phái sứ giả mang cỗ xe đi (Dùng axios.post với header đặc biệt)
-      await axios.post(
-        `http://localhost:8080/api/cafes/${cafeId}/images`, // Đường dẫn đổi thành images
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data', // 👈 Lá bùa bắt buộc để đi qua cổng thành chở file
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      alert("Bẩm, đã treo ảnh mới lên tường thành công!");
-      
-      // 4. Gọi lại hàm tải dữ liệu để ảnh mới hiện hình trên màn hình
-      fetchAllCafeData(); 
-
-    } catch (error) {
-      console.error("Lỗi khi tải ảnh lên:", error);
-      alert("Bẩm, tải ảnh thất bại!");
-    } finally {
-      // 5. Lau sạch cơ quan ngầm để lần sau có thể chọn lại đúng bức ảnh đó nếu muốn
-      event.target.value = null;
-    }
   };
 
   // ==========================================
@@ -433,19 +390,10 @@ const OwnerDashboardPage = () => {
           <h2 style={styles.sectionTitle}>写真管理</h2>
           
           <div style={styles.imageContainer}>
-            <input 
-              type="file" 
-              ref={imageInputRef} 
-              style={{ display: 'none' }} 
-              accept="image/*" // Chỉ cho phép chọn file ảnh
-              onChange={handleImageUpload} 
-            />
             {/* Nút thêm ảnh */}
-            <div style={styles.addImageBox}
-              onClick={() => imageInputRef.current.click()} // Bấm vào là kích hoạt input file ẩn
-            >
+            <div style={styles.addImageBox}>
               <span style={styles.addImageIcon}>+</span>
-              <span style={styles.addImageText}>写真を追加</span>
+              <span style={styles.addImageText}>画像を追加</span>
             </div>
 
             {/* Danh sách ảnh đã tải lên */}

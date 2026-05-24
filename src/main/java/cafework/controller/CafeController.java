@@ -25,12 +25,6 @@ import cafework.repository.CafeRepository;
 import cafework.repository.CouponRepository;
 import cafework.repository.CafeImageRepository;
 
-import org.springframework.web.multipart.MultipartFile;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import org.springframework.util.StringUtils;
 @RestController
 @RequestMapping("/api/cafes")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
