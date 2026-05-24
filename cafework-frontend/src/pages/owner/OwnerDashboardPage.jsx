@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 const OwnerDashboardPage = () => {
   // ==========================================
   // 1. KHO CHỨA (STATE)
@@ -15,7 +15,10 @@ const OwnerDashboardPage = () => {
 
   const [images, setImages] = useState([]);
   const [coupons, setCoupons] = useState([]);
-
+  const imageInputRef = useRef(null);
+  const [hoveredImageId, setHoveredImageId] = useState(null);
+  const [zoomedImageUrl, setZoomedImageUrl] = useState(null);
+  const [imageScale, setImageScale] = useState(1);
   // ==========================================
   // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
   // ==========================================
@@ -96,7 +99,99 @@ const OwnerDashboardPage = () => {
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}/${month}/${day}`;
   };
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
+    try {
+      // BƯỚC 1: ĐÓNG GÓI VÀ NÉM ẢNH LÊN MÂY CLOUDINARY
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'CafeWork'); // Bắt buộc phải là preset Unsigned
+
+      // Gửi thẳng sang server của Cloudinary (Không gửi kèm token của ngài nhé)
+      const cloudinaryRes = await axios.post(
+        `https://api.cloudinary.com/v1_1/dcc0jvcs5/image/upload`,
+        formData
+      );
+
+      // Cloudinary trả về một đường link xịn xò bảo mật
+      const uploadedImageUrl = cloudinaryRes.data.secure_url; 
+      console.log("👉 Đã ném lên mây, lấy được link:", uploadedImageUrl);
+
+      // BƯỚC 2: CẦM ĐƯỜNG LINK VỀ NỘP CHO SPRING BOOT
+      const token = localStorage.getItem('token');
+      const cafeId = localStorage.getItem('cafeId');
+      
+      await axios.post(
+        `http://localhost:8080/api/cafes/${cafeId}/images`, 
+        { imageUrl: uploadedImageUrl }, // Chỉ gửi một cục JSON chứa URL
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      alert("Bẩm bệ hạ, ảnh đã được treo lên tường thành công!");
+      fetchAllCafeData(); // Tải lại trang để ảnh hiện ra
+
+    } catch (error) {
+      console.error("Lỗi tải ảnh:", error);
+      alert("Bẩm, phép thuật tải ảnh đã thất bại!");
+    } finally {
+      event.target.value = null; // Dọn dẹp cơ quan ngầm
+    }
+  };
+  // Chiêu thức: Đóng cảnh giới hư không và reset tỷ lệ
+  const handleCloseZoomModal = () => {
+    setZoomedImageUrl(null);
+    setImageScale(1); 
+  };
+
+  // Chiêu thức: Nhận diện vòng quay của con lăn chuột
+  const handleWheelZoom = (e) => {
+    if (e.deltaY < 0) {
+      // Lăn chuột lên (deltaY âm) -> Phóng to thêm 15%, giới hạn to tối đa 5 lần
+      setImageScale(prev => Math.min(prev + 0.15, 5));
+    } else {
+      // Lăn chuột xuống (deltaY dương) -> Thu nhỏ đi 15%, giới hạn nhỏ tối thiểu 0.3 lần
+      setImageScale(prev => Math.max(prev - 0.15, 0.3));
+    }
+  };
+  // Chiêu thức 8: Ban lệnh chém ảnh
+  const handleDeleteImage = async (imageId) => {
+    // Hỏi lại một câu cho chắc chắn trước khi ra tay
+    const confirmDelete = window.confirm("Bệ hạ có chắc chắn muốn thiêu rụi bức ảnh này không?");
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const cafeId = localStorage.getItem('cafeId');
+      if (!cafeId) return;
+
+      // Phái sứ giả mang lệnh chém xuống Spring Boot
+      await axios.delete(
+        `http://localhost:8080/api/cafes/${cafeId}/images/${imageId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      // Cập nhật lại giao diện: Lọc bỏ bức ảnh vừa bị chém ra khỏi mảng images
+      setImages(prevImages => prevImages.filter(img => img.id !== imageId));
+      
+      // Giấu luôn lớp mặt nạ đi kẻo nó bị kẹt lại
+      setHoveredImageId(null); 
+
+    } catch (error) {
+      console.error("Lỗi khi xóa ảnh:", error);
+      alert("Bẩm, xóa ảnh thất bại do sự cố kỹ thuật!");
+    }
+  };
   // ==========================================
   // 3. LÍNH CANH (USE EFFECT) - GỌI CHIÊU KHI VỪA VÀO PHÒNG
   // ==========================================
@@ -390,15 +485,53 @@ const OwnerDashboardPage = () => {
           <h2 style={styles.sectionTitle}>写真管理</h2>
           
           <div style={styles.imageContainer}>
+            <input 
+              type="file" 
+              ref={imageInputRef} 
+              style={{ display: 'none' }} 
+              accept="image/*" 
+              onChange={handleImageUpload} 
+            />
             {/* Nút thêm ảnh */}
-            <div style={styles.addImageBox}>
+            <div style={styles.addImageBox} onClick={() => imageInputRef.current.click()}>
               <span style={styles.addImageIcon}>+</span>
               <span style={styles.addImageText}>画像を追加</span>
             </div>
 
             {/* Danh sách ảnh đã tải lên */}
             {images.map(image => (
-              <img key={image.id} src={image.imageUrl} alt="Cafe" style={styles.imageItem} />
+              <div 
+                key={image.id} 
+                style={styles.imageWrapper}
+                onMouseEnter={() => setHoveredImageId(image.id)}
+                onMouseLeave={() => setHoveredImageId(null)}
+              >
+                {/* Bức ảnh gốc */}
+                <img 
+                  src={image.imageUrl} 
+                  alt="Cafe" 
+                  style={styles.imageItem} 
+                />
+                
+                {/* Lớp mặt nạ và 2 nút bấm (Chỉ hiện khi lính canh nhận diện đúng ID) */}
+                {hoveredImageId === image.id && (
+                  <div style={styles.imageOverlay}>
+                    {/* Nút phóng to (Ký hiệu ⛶) */}
+                    <button style={styles.imageActionBtn}
+                      onClick={() => setZoomedImageUrl(image.imageUrl)}
+                    >
+                      ⛶
+                    </button>
+
+                    {/* Nút Xóa (Ký hiệu ✖, chữ đỏ cho nguy hiểm) */}
+                    <button style={{ ...styles.imageActionBtn, color: '#ea4335' }}
+                      onClick={() => handleDeleteImage(image.id)}
+                    >
+                      ✖
+                    </button>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -441,6 +574,27 @@ const OwnerDashboardPage = () => {
           </div>
         </div>
       </main>
+      {zoomedImageUrl && (
+        <div 
+          style={styles.fullscreenModal} 
+          onClick={handleCloseZoomModal} 
+          onWheel={handleWheelZoom} // 👈 Bùa chú bắt tín hiệu lăn chuột
+        >
+          {/* Nút X thoát */}
+          <button style={styles.closeModalBtn}>✖</button>
+          
+          <img 
+            src={zoomedImageUrl} 
+            alt="Zoomed Cafe" 
+            style={{ 
+              ...styles.zoomedImage, 
+              transform: `scale(${imageScale})`, // 👈 Ép kích thước theo biến imageScale
+              transition: 'transform 0.1s ease-out' // 👈 Thêm hiệu ứng đàn hồi cho mượt
+            }} 
+            onClick={(e) => e.stopPropagation()} 
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -663,7 +817,90 @@ const styles = {
     cursor: 'pointer',
     fontSize: '16px',
     color: '#999'
-  }
+  },
+  // 👇 THÊM/SỬA CÁC STYLE CHO ẢNH TẠI ĐÂY 👇
+
+  // Khung chứa ảnh: Đóng vai trò làm mỏ neo để lớp mặt nạ bám vào
+  imageWrapper: {
+    position: 'relative', 
+    width: '150px',
+    height: '150px',
+    flexShrink: 0,
+    borderRadius: '8px',
+    overflow: 'hidden', // Để mặt nạ không bị tràn ra ngoài góc bo tròn
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  },
+  // Lớp rèm đen mờ phủ lên trên bức ảnh
+  imageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Màu đen độ trong suốt 50%
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '12px', // Khoảng cách giữa 2 nút bấm
+    transition: 'all 0.3s ease' // Hiệu ứng xuất hiện mượt mà
+  },
+  
+  // Hình dáng của 2 nút bấm trên mặt nạ
+  imageActionBtn: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Nút màu trắng trong
+    color: '#333',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+  },
+  // 👇 THÊM STYLES CHO MODAL PHÓNG TO ẢNH 👇
+
+  // Phủ đen toàn bộ màn hình, luôn nằm trên cùng (zIndex: 9999)
+  fullscreenModal: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)', // Đen mờ 85%
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999, 
+    cursor: 'zoom-out' // Chuột biến thành kính lúp dấu trừ khi trỏ ra ngoài
+  },
+  
+  // Nút X thoát ở góc phải
+  closeModalBtn: {
+    position: 'absolute',
+    top: '30px',
+    right: '40px',
+    background: 'none',
+    border: 'none',
+    color: '#fff',
+    fontSize: '40px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    transition: 'color 0.2s'
+  },
+  
+  // Bức ảnh trung tâm
+  zoomedImage: {
+    maxWidth: '90%', // Chiều rộng tối đa 90% màn hình
+    maxHeight: '90%', // Chiều cao tối đa 90% màn hình
+    objectFit: 'contain', // Đảm bảo ảnh không bị méo
+    borderRadius: '8px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+    cursor: 'default' // Trỏ vào ảnh thì chuột trở lại bình thường
+  },
 };
 
 export default OwnerDashboardPage;
