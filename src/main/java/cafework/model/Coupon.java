@@ -1,48 +1,63 @@
 package cafework.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
+import jakarta.persistence.*;
+import java.util.UUID;
+import java.time.LocalDateTime;
+import org.hibernate.validator.constraints.br.CNPJ;
 @Entity
 @Table(name = "coupons")
 public class Coupon {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @Column(name = "id")
+    private UUID id;
 
-    private String cafeId;
-    private String title;
+    @Column(name = "cafe_id")
+    private UUID cafeId;
+
+    @Column(name = "code")
+    private String code;
+
+    @Column(name = "description")
     private String description;
-    private String discountPercent;
+
+    @Column(name = "discount_value")
+    private String discountValue;
+
+    @Column(name = "valid_from")
+    private LocalDateTime validFrom;
+
+    @Column(name = "valid_to")
+    private LocalDateTime validTo;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     public Coupon() {
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
-    public String getCafeId() {
+    public UUID getCafeId() {
         return cafeId;
     }
 
-    public void setCafeId(String cafeId) {
+    public void setCafeId(UUID cafeId) {
         this.cafeId = cafeId;
     }
 
-    public String getTitle() {
-        return title;
+    public String getCode() {
+        return code;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getDescription() {
@@ -53,11 +68,35 @@ public class Coupon {
         this.description = description;
     }
 
-    public String getDiscountPercent() {
-        return discountPercent;
+    public String getDiscountValue() {
+        return discountValue;
     }
 
-    public void setDiscountPercent(String discountPercent) {
-        this.discountPercent = discountPercent;
+    public void setDiscountValue(String discountValue) {
+        this.discountValue = discountValue;
+    }
+
+    public LocalDateTime getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(LocalDateTime validFrom) {
+        this.validFrom = validFrom;
+    }
+
+    public LocalDateTime getValidTo() {
+        return validTo;
+    }
+
+    public void setValidTo(LocalDateTime validTo) {
+        this.validTo = validTo;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

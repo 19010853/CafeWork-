@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useEffect } from 'react';
+import { useRef } from 'react';
 const OwnerDashboardPage = () => {
   // ==========================================
   // 1. KHO CHỨA (STATE)
@@ -12,33 +13,36 @@ const OwnerDashboardPage = () => {
   const [showDeletePopup, setShowDeletePopup] = useState(false); // Ẩn/hiện pop-up xóa
   const [deleteAmount, setDeleteAmount] = useState(1);           // Số lượng ghế muốn xóa
   const [blacklistIds, setBlacklistIds] = useState([]); // Kho lưu ID ghế đã chọn để xóa (nếu có)
-  // 👇 CÁC BIẾN DÀNH CHO QUẢN LÝ ẢNH & KHUYẾN MÃI (Dữ liệu ảo để test UI) 👇
-  const [photos, setPhotos] = useState([
-    { id: 1, url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=200&h=200' },
-    { id: 2, url: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=200&h=200' }
-  ]);
 
-  const [coupons, setCoupons] = useState([
-    { id: 1, title: 'ランチタイム20%オフ', date: '2024/04/01 - 2024/04/30', status: '有効' },
-    { id: 2, title: '初回訪問10%オフ', date: '2024/05/01 - 2024/05/30', status: '有効' }
-  ]);
+  const [images, setImages] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+
+  const imageInputRef = useRef(null);
   // ==========================================
   // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
   // ==========================================
-  const fetchSeats = async () => {
+  const fetchAllCafeData = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Lấy cafeId từ localStorage hoặc dùng tạm ID để test
-      const cafeId = localStorage.getItem('cafeId') || '30000000-0000-0000-0000-000000000001'; 
+      const cafeId = localStorage.getItem('cafeId'); 
+      if (!cafeId) return;
+
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Cử 3 đạo quân đi lấy dữ liệu cùng một lúc cho nhanh (Promise.all)
+      const [seatsRes, imagesRes, couponsRes] = await Promise.all([
+        axios.get(`http://localhost:8080/api/cafes/${cafeId}/seats`, { headers }),
+        axios.get(`http://localhost:8080/api/cafes/${cafeId}/images`, { headers }),
+        axios.get(`http://localhost:8080/api/cafes/${cafeId}/coupons`, { headers })
+      ]);
       
-      const response = await axios.get(`http://localhost:8080/api/cafes/${cafeId}/seats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Cất danh sách ghế lấy được vào kho React
-      setSeats(response.data);
+      // Nhận hàng về và cất vào kho
+      setSeats(seatsRes.data);
+      setImages(imagesRes.data);
+      setCoupons(couponsRes.data);
+
     } catch (error) {
-      console.error("Không thể lấy danh sách ghế:", error);
+      console.error("Lỗi khi tải tài sản quán:", error);
     }
   };
 
@@ -85,11 +89,62 @@ const OwnerDashboardPage = () => {
     }
   };
 
+  // Chiêu thức phụ: Gọt dũa ngày tháng cho đẹp (từ 2026-05-06T... thành 2026/05/06)
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Chưa có hạn';
+    const d = new Date(dateString);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  };
+  
+  // Chiêu thức 7: Chọn và đẩy ảnh lên triều đình (Backend)
+  const handleImageUpload = async (event) => {
+    // 1. Chộp lấy bức ảnh bệ hạ vừa chọn
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const cafeId = localStorage.getItem('cafeId');
+      if (!cafeId) return;
+
+      // 2. Xếp ảnh vào cỗ xe ngựa FormData
+      const formData = new FormData();
+      formData.append('imageFile', file); // 'imageFile' là tên gói hàng, lát nữa Backend phải hứng đúng tên này
+
+      // 3. Phái sứ giả mang cỗ xe đi (Dùng axios.post với header đặc biệt)
+      await axios.post(
+        `http://localhost:8080/api/cafes/${cafeId}/images`, // Đường dẫn đổi thành images
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data', // 👈 Lá bùa bắt buộc để đi qua cổng thành chở file
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      alert("Bẩm, đã treo ảnh mới lên tường thành công!");
+      
+      // 4. Gọi lại hàm tải dữ liệu để ảnh mới hiện hình trên màn hình
+      fetchAllCafeData(); 
+
+    } catch (error) {
+      console.error("Lỗi khi tải ảnh lên:", error);
+      alert("Bẩm, tải ảnh thất bại!");
+    } finally {
+      // 5. Lau sạch cơ quan ngầm để lần sau có thể chọn lại đúng bức ảnh đó nếu muốn
+      event.target.value = null;
+    }
+  };
+
   // ==========================================
   // 3. LÍNH CANH (USE EFFECT) - GỌI CHIÊU KHI VỪA VÀO PHÒNG
   // ==========================================
   useEffect(() => {
-    fetchSeats();
+    fetchAllCafeData();
   }, []);
   // Chiêu 3: Lật trạng thái của 1 chiếc ghế trên giao diện
   const toggleSeatStatus = (seatId) => {
@@ -142,7 +197,7 @@ const OwnerDashboardPage = () => {
       );
 
       alert("Bẩm bệ hạ, toàn bộ thay đổi (Thêm/Xóa/Đổi màu) đã ghim chặt vào Database!");
-      fetchSeats(); // Tải lại dữ liệu chuẩn từ DB
+      fetchAllCafeData(); // Tải lại dữ liệu chuẩn từ DB
     } catch (error) {
       console.error("Lưu thất bại:", error);
       alert("Bẩm, có lỗi xảy ra khi lưu!");
@@ -377,16 +432,25 @@ const OwnerDashboardPage = () => {
         <div style={styles.card}>
           <h2 style={styles.sectionTitle}>写真管理</h2>
           
-          <div style={styles.photoContainer}>
+          <div style={styles.imageContainer}>
+            <input 
+              type="file" 
+              ref={imageInputRef} 
+              style={{ display: 'none' }} 
+              accept="image/*" // Chỉ cho phép chọn file ảnh
+              onChange={handleImageUpload} 
+            />
             {/* Nút thêm ảnh */}
-            <div style={styles.addPhotoBox}>
-              <span style={styles.addPhotoIcon}>+</span>
-              <span style={styles.addPhotoText}>写真を追加</span>
+            <div style={styles.addImageBox}
+              onClick={() => imageInputRef.current.click()} // Bấm vào là kích hoạt input file ẩn
+            >
+              <span style={styles.addImageIcon}>+</span>
+              <span style={styles.addImageText}>写真を追加</span>
             </div>
 
             {/* Danh sách ảnh đã tải lên */}
-            {photos.map(photo => (
-              <img key={photo.id} src={photo.url} alt="Cafe" style={styles.photoItem} />
+            {images.map(image => (
+              <img key={image.id} src={image.imageUrl} alt="Cafe" style={styles.imageItem} />
             ))}
           </div>
         </div>
@@ -403,18 +467,27 @@ const OwnerDashboardPage = () => {
           <div style={styles.couponList}>
             {coupons.map(coupon => (
               <div key={coupon.id} style={styles.couponCard}>
-                {/* Cột trái: Tên & Ngày tháng */}
+                
+                {/* Cột trái: Tên, Mô tả & Ngày tháng */}
                 <div style={styles.couponInfo}>
-                  <p style={styles.couponTitle}>{coupon.title}</p>
-                  <p style={styles.couponDate}>{coupon.date}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <p style={styles.couponTitle}>{coupon.code || 'SALE'}</p>
+                    {/* Giả sử ngài có trường description, nếu tên trường khác ngài tự đổi nhé */}
+                    <span style={{ fontSize: '14px', color: '#666' }}>
+                      {coupon.description || 'Giảm giá cho khách hàng'}
+                    </span>
+                  </div>
+                  <p style={styles.couponDate}>
+                    {formatDate(coupon.validFrom)} - {formatDate(coupon.validTo)}
+                  </p>
                 </div>
                 
                 {/* Cột phải: Trạng thái & Nút xóa */}
                 <div style={styles.couponActions}>
-                  <span style={styles.validBadge}>{coupon.status}</span>
+                  <span style={styles.validBadge}>{coupon.status || '有効'}</span>
                   <button style={styles.deleteCouponBtn}>🗑️</button> 
-                  {/* Ngài có thể dùng icon FontAwesome/MaterialUI thay cho 🗑️ sau này */}
                 </div>
+                
               </div>
             ))}
           </div>
@@ -538,13 +611,13 @@ const styles = {
   // 👇 THÊM CÁC STYLE NÀY VÀO CUỐI ĐỐI TƯỢNG styles 👇
   
   // -- Style cho Quản lý Ảnh --
-  photoContainer: {
+  imageContainer: {
     display: 'flex',
     gap: '16px',
     overflowX: 'auto',
     padding: '10px 0'
   },
-  addPhotoBox: {
+  addImageBox: {
     width: '150px',
     height: '150px',
     border: '2px dashed #ff4d4f', // Viền nét đứt màu đỏ đô
@@ -557,17 +630,17 @@ const styles = {
     backgroundColor: '#fffaf8',
     flexShrink: 0 // Chống bị bóp méo khi màn hình nhỏ
   },
-  addPhotoIcon: {
+  addImageIcon: {
     fontSize: '32px',
     color: '#ff4d4f',
     fontWeight: 'bold'
   },
-  addPhotoText: {
+  addImageText: {
     fontSize: '14px',
     color: '#666',
     marginTop: '8px'
   },
-  photoItem: {
+  imageItem: {
     width: '150px',
     height: '150px',
     borderRadius: '8px',
