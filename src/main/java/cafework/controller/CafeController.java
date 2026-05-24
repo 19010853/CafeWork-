@@ -14,12 +14,16 @@ import cafework.dto.SeatStatusUpdateRequest;
 import cafework.dto.SeatStatusUpdateResponse;
 import cafework.dto.request.CafeRequest;
 import cafework.model.Cafe;
+import cafework.model.CafeImage;
+import cafework.model.Coupon;
 import cafework.model.Seat;
 import cafework.model.User;
 import cafework.repository.UserRepository;
 import cafework.service.CafeService;
 import cafework.repository.SeatRepository;
 import cafework.repository.CafeRepository;
+import cafework.repository.CouponRepository;
+import cafework.repository.CafeImageRepository;
 
 @RestController
 @RequestMapping("/api/cafes")
@@ -38,6 +42,11 @@ public class CafeController {
     @Autowired
     private CafeRepository cafeRepository;
 
+    @Autowired
+    private CafeImageRepository cafeImageRepository;
+
+    @Autowired
+    private CouponRepository couponRepository;
     @GetMapping
     public List<Cafe> getAllCafes() {
         // Keeping as is, but ensuring service handles it
@@ -168,6 +177,80 @@ public class CafeController {
             return ResponseEntity.ok().body("Cấm vệ quân báo cáo: Đã dọn dẹp các ghế cũ thành công!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa ghế: " + e.getMessage());
+        }
+    }
+    // ==========================================
+    // 👇 2. CÁC LỘ TRÌNH CHO ẢNH VÀ KHUYẾN MÃI 👇
+    // ==========================================
+
+    // Lộ trình 1: Lấy danh sách Ảnh của quán
+    @GetMapping("/{id}/images")
+    public ResponseEntity<?> getCafeImages(@PathVariable UUID id) {
+        return ResponseEntity.ok(cafeImageRepository.findByCafeId(id));
+    }
+
+    // Lộ trình 2: Lấy danh sách Khuyến mãi
+    @GetMapping("/{id}/coupons")
+    public ResponseEntity<?> getCafeCoupons(@PathVariable UUID id) {
+        return ResponseEntity.ok(couponRepository.findByCafeId(id));
+    }
+
+    // Lộ trình 3: Tạo Khuyến mãi mới
+    @PostMapping("/{id}/coupons")
+    public ResponseEntity<?> addCoupon(@PathVariable UUID id, @RequestBody Coupon coupon) {
+        Cafe cafe = cafeRepository.findById(id).orElse(null);
+        if (cafe == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy quán cafe!");
+        }
+        
+        coupon.setCafeId(cafe.getId());
+        Coupon savedCoupon = couponRepository.save(coupon);
+        return ResponseEntity.ok(savedCoupon);
+    }
+
+    // Lộ trình 4: Xóa Khuyến mãi
+    @DeleteMapping("/{cafeId}/coupons/{couponId}")
+    public ResponseEntity<?> deleteCoupon(@PathVariable UUID cafeId, @PathVariable UUID couponId) {
+        if (couponRepository.existsById(couponId)) {
+            couponRepository.deleteById(couponId);
+            return ResponseEntity.ok().body("Đã hủy vé khuyến mãi thành công!");
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy vé này!");
+    }
+
+    // Lộ trình lưu đường link ảnh vào DB
+    @PostMapping("/{id}/images")
+    public ResponseEntity<?> addCafeImage(@PathVariable UUID id, @RequestBody CafeImage imageRequest) {
+        try {
+            Cafe cafe = cafeRepository.findById(id).orElse(null);
+            if (cafe == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy quán cafe!");
+            }
+            
+            // Ép thẻ quán cafe vào bức ảnh
+            imageRequest.setCafeId(cafe.getId());
+            
+            // Lưu xuống Database
+            CafeImage savedImage = cafeImageRepository.save(imageRequest);
+            return ResponseEntity.ok(savedImage);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi: " + e.getMessage());
+        }
+    }
+    // Lộ trình trảm ảnh: Xóa ảnh khỏi Database
+    @DeleteMapping("/{cafeId}/images/{imageId}")
+    public ResponseEntity<?> deleteCafeImage(@PathVariable UUID cafeId, @PathVariable UUID imageId) {
+        try {
+            if (cafeImageRepository.existsById(imageId)) {
+                cafeImageRepository.deleteById(imageId);
+                return ResponseEntity.ok().body("Đã thiêu rụi bức ảnh thành công!");
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Bẩm, không tìm thấy bức ảnh này!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa ảnh: " + e.getMessage());
         }
     }
 }
