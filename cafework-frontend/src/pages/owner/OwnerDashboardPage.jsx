@@ -19,6 +19,15 @@ const OwnerDashboardPage = () => {
   const [hoveredImageId, setHoveredImageId] = useState(null);
   const [zoomedImageUrl, setZoomedImageUrl] = useState(null);
   const [imageScale, setImageScale] = useState(1);
+
+  const [showCouponModal, setShowCouponModal] = useState(false); // Ẩn/hiện pop-up
+  const [couponForm, setCouponForm] = useState({
+    code: '',
+    description: '',
+    discountValue: '',
+    validFrom: '',
+    validTo: ''    
+  });
   // ==========================================
   // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
   // ==========================================
@@ -190,6 +199,73 @@ const OwnerDashboardPage = () => {
     } catch (error) {
       console.error("Lỗi khi xóa ảnh:", error);
       alert("Bẩm, xóa ảnh thất bại do sự cố kỹ thuật!");
+    }
+  };
+  
+  // Chiêu thức 9: Gửi lệnh đúc Coupon xuống Database
+  const handleCreateCoupon = async () => {
+    if (!couponForm.code || !couponForm.discountValue || !couponForm.validFrom || !couponForm.validTo) {
+      alert("Bẩm bệ hạ, xin hãy điền đầy đủ các thông tin bắt buộc!");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const cafeId = localStorage.getItem('cafeId');
+      
+      // 👇 CHÉM NHÁT KIẾM NÀY VÀO ĐÂY: Đắp thêm cái đuôi thời gian 👇
+      const submitData = {
+        ...couponForm,
+        validFrom: `${couponForm.validFrom}T00:00:00`, // Ép thành 0 giờ 0 phút sáng
+        validTo: `${couponForm.validTo}T23:59:59`      // Ép thành 11 giờ 59 phút đêm
+      };
+
+      // Sứ giả mang tờ khai chuẩn (submitData) xuống Spring Boot
+      await axios.post(
+        `http://localhost:8080/api/cafes/${cafeId}/coupons`,
+        submitData, // 👈 Truyền submitData thay vì couponForm
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+
+      alert("Bẩm, vé khuyến mãi mới đã được phát hành thành công!");
+      
+      setShowCouponModal(false);
+      setCouponForm({ code: '', description: '', discountValue: '', validFrom: '', validTo: '' });
+      fetchAllCafeData();
+
+    } catch (error) {
+      console.error("Lỗi khi đúc vé:", error);
+      alert("Bẩm, có lỗi xảy ra khi tạo vé khuyến mãi!");
+    }
+  };
+
+  // Chiêu thức 10: Xé bỏ vé khuyến mãi
+  const handleDeleteCoupon = async (couponId) => {
+    // Hỏi lại thánh ý một lần cho chắc chắn
+    const confirmDelete = window.confirm("Bệ hạ có chắc chắn muốn xé bỏ tấm vé khuyến mãi này không?");
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const cafeId = localStorage.getItem('cafeId');
+      if (!cafeId) return;
+
+      // Phái Sứ giả mang lệnh hành quyết xuống Spring Boot
+      await axios.delete(
+        `http://localhost:8080/api/cafes/${cafeId}/coupons/${couponId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      // Cập nhật lại giao diện: Lọc bỏ tấm vé vừa bị xé ra khỏi danh sách
+      setCoupons(prevCoupons => prevCoupons.filter(coupon => coupon.id !== couponId));
+
+    } catch (error) {
+      console.error("Lỗi khi xé vé:", error);
+      alert("Bẩm, lệnh tiêu hủy vé gặp trục trặc kỹ thuật!");
     }
   };
   // ==========================================
@@ -542,7 +618,9 @@ const OwnerDashboardPage = () => {
         <div style={styles.card}>
           <div style={styles.couponHeader}>
             <h2 style={styles.sectionTitle}>割引・プロモーション管理</h2>
-            <button style={styles.createCouponBtn}>+ クーポン作成</button>
+            <button style={styles.createCouponBtn} onClick={() => setShowCouponModal(true)}>
+              + クーポン作成
+            </button>
           </div>
 
           <div style={styles.couponList}>
@@ -566,7 +644,11 @@ const OwnerDashboardPage = () => {
                 {/* Cột phải: Trạng thái & Nút xóa */}
                 <div style={styles.couponActions}>
                   <span style={styles.validBadge}>{coupon.status || '有効'}</span>
-                  <button style={styles.deleteCouponBtn}>🗑️</button> 
+                  <button style={styles.deleteCouponBtn}
+                    onClick={() => handleDeleteCoupon(coupon.id)}
+                  >
+                    🗑️
+                  </button>
                 </div>
                 
               </div>
@@ -593,6 +675,76 @@ const OwnerDashboardPage = () => {
             }} 
             onClick={(e) => e.stopPropagation()} 
           />
+        </div>
+      )}
+      {showCouponModal && (
+        <div style={styles.fullscreenModal}>
+          <div style={styles.formModalCard}>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>クーポン作成 (Tạo Khuyến Mãi)</h3>
+            
+            <label style={styles.formLabel}>Mã Code (Code)*</label>
+            <input 
+              style={styles.formInput} 
+              type="text" 
+              placeholder="VD: SUMMER2026"
+              value={couponForm.code} 
+              onChange={e => setCouponForm({...couponForm, code: e.target.value})} 
+            />
+
+            <label style={styles.formLabel}>Mô tả (Description)</label>
+            <input 
+              style={styles.formInput} 
+              type="text" 
+              placeholder="VD: Giảm giá mùa hè cho thức uống"
+              value={couponForm.description} 
+              onChange={e => setCouponForm({...couponForm, description: e.target.value})} 
+            />
+
+            <label style={styles.formLabel}>Giá trị giảm (Discount Value)*</label>
+            <input 
+              style={styles.formInput} 
+              type="number" 
+              placeholder="VD: 20000"
+              value={couponForm.discountValue} 
+              onChange={e => setCouponForm({...couponForm, discountValue: e.target.value})} 
+            />
+
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={styles.formLabel}>Từ ngày (Valid From)*</label>
+                <input 
+                  style={styles.formInput} 
+                  type="date" 
+                  value={couponForm.validFrom} 
+                  onChange={e => setCouponForm({...couponForm, validFrom: e.target.value})} 
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={styles.formLabel}>Đến ngày (Valid To)*</label>
+                <input 
+                  style={styles.formInput} 
+                  type="date" 
+                  value={couponForm.validTo} 
+                  onChange={e => setCouponForm({...couponForm, validTo: e.target.value})} 
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+              <button 
+                style={{ ...styles.popupBtn, backgroundColor: '#ccc', color: '#333' }} 
+                onClick={() => setShowCouponModal(false)}
+              >
+                Hủy
+              </button>
+              <button 
+                style={styles.popupBtn} 
+                onClick={handleCreateCoupon}
+              >
+                Tạo Vé
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -900,6 +1052,31 @@ const styles = {
     borderRadius: '8px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
     cursor: 'default' // Trỏ vào ảnh thì chuột trở lại bình thường
+  },
+  // 👇 STYLES CHO FORM TẠO KHUYẾN MÃI 👇
+  formModalCard: {
+    backgroundColor: '#fff',
+    padding: '24px',
+    borderRadius: '12px',
+    width: '400px',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  formLabel: {
+    fontSize: '14px',
+    fontWeight: 'bold',
+    color: '#555',
+    marginBottom: '6px'
+  },
+  formInput: {
+    padding: '10px 12px',
+    borderRadius: '6px',
+    border: '1px solid #ddd',
+    marginBottom: '16px',
+    fontSize: '14px',
+    width: '100%',
+    boxSizing: 'border-box' // Đảm bảo input không bị tràn lề
   },
 };
 
