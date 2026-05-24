@@ -4,6 +4,7 @@ import cafework.dto.request.LoginRequest;
 import cafework.dto.request.RegisterRequest;
 import cafework.dto.request.VerifyOtpRequest;
 import cafework.dto.response.AuthResponse;
+import cafework.model.Cafe;
 import cafework.model.Otp;
 import cafework.model.User;
 import cafework.repository.OtpRepository;
@@ -14,10 +15,10 @@ import cafework.util.EmailUtil;
 import cafework.util.OtpUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import cafework.repository.CafeRepository;
 import java.time.LocalDateTime;
 import java.util.Optional;
-
+import java.util.UUID;
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -35,6 +36,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private CafeRepository cafeRepository;
 
     @Override
     public void initiateRegistration(RegisterRequest request) throws Exception {
@@ -118,12 +122,21 @@ public class AuthServiceImpl implements AuthService {
 
         System.out.println("Login thành công cho user: " + user.getEmail());
         String token = jwtUtil.generateToken(user.getEmail());
+
+        UUID myCafeId = null;
+        if (user.getRole() == User.Role.OWNER) {
+            Optional<Cafe> cafeOpt = cafeRepository.findByOwnerId(user.getId());
+            if (cafeOpt.isPresent()) {
+                myCafeId = cafeOpt.get().getId();
+            }
+        }
         return AuthResponse.builder()
                 .token(token)
                 .id(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .cafeId(myCafeId) // Trả về ID quán cà phê nếu người dùng là chủ quán
                 .build();
     }
 }
