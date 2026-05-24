@@ -5,9 +5,9 @@ import L from 'leaflet'; // Bổ sung Leaflet để tính khoảng cách
 import { addSearchHistory } from '../../utils/userLocalStore';
 import './SearchBar.css';
 
-const SearchBar = ({ onSearchData }) => {
+const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
     const navigate = useNavigate();
-    const [keyword, setKeyword] = useState('');
+    const [keyword, setKeyword] = useState(initialKeyword);
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -40,6 +40,12 @@ const SearchBar = ({ onSearchData }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+    useEffect(() => {
+        if (initialKeyword && initialKeyword !== keyword) {
+            setKeyword(initialKeyword);
+            handleSearchEvent(initialKeyword);
+        }
+    }, [initialKeyword]);
 
     const handleSearchEvent = async (searchKeyword) => {
         setShowDropdown(false);
