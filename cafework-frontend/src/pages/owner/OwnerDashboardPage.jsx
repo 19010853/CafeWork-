@@ -12,6 +12,16 @@ const OwnerDashboardPage = () => {
   const [showDeletePopup, setShowDeletePopup] = useState(false); // Ẩn/hiện pop-up xóa
   const [deleteAmount, setDeleteAmount] = useState(1);           // Số lượng ghế muốn xóa
   const [blacklistIds, setBlacklistIds] = useState([]); // Kho lưu ID ghế đã chọn để xóa (nếu có)
+  // 👇 CÁC BIẾN DÀNH CHO QUẢN LÝ ẢNH & KHUYẾN MÃI (Dữ liệu ảo để test UI) 👇
+  const [photos, setPhotos] = useState([
+    { id: 1, url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=200&h=200' },
+    { id: 2, url: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=200&h=200' }
+  ]);
+
+  const [coupons, setCoupons] = useState([
+    { id: 1, title: 'ランチタイム20%オフ', date: '2024/04/01 - 2024/04/30', status: '有効' },
+    { id: 2, title: '初回訪問10%オフ', date: '2024/05/01 - 2024/05/30', status: '有効' }
+  ]);
   // ==========================================
   // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
   // ==========================================
@@ -361,6 +371,54 @@ const OwnerDashboardPage = () => {
             </div>
           </div>
         </div>
+        {/* ========================================= */}
+        {/* KHỐI 3: QUẢN LÝ ẢNH (写真管理) */}
+        {/* ========================================= */}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>写真管理</h2>
+          
+          <div style={styles.photoContainer}>
+            {/* Nút thêm ảnh */}
+            <div style={styles.addPhotoBox}>
+              <span style={styles.addPhotoIcon}>+</span>
+              <span style={styles.addPhotoText}>写真を追加</span>
+            </div>
+
+            {/* Danh sách ảnh đã tải lên */}
+            {photos.map(photo => (
+              <img key={photo.id} src={photo.url} alt="Cafe" style={styles.photoItem} />
+            ))}
+          </div>
+        </div>
+
+        {/* ========================================= */}
+        {/* KHỐI 4: QUẢN LÝ KHUYẾN MÃI (割引・プロモーション管理) */}
+        {/* ========================================= */}
+        <div style={styles.card}>
+          <div style={styles.couponHeader}>
+            <h2 style={styles.sectionTitle}>割引・プロモーション管理</h2>
+            <button style={styles.createCouponBtn}>+ クーポン作成</button>
+          </div>
+
+          <div style={styles.couponList}>
+            {coupons.map(coupon => (
+              <div key={coupon.id} style={styles.couponCard}>
+                {/* Cột trái: Tên & Ngày tháng */}
+                <div style={styles.couponInfo}>
+                  <p style={styles.couponTitle}>{coupon.title}</p>
+                  <p style={styles.couponDate}>{coupon.date}</p>
+                </div>
+                
+                {/* Cột phải: Trạng thái & Nút xóa */}
+                <div style={styles.couponActions}>
+                  <span style={styles.validBadge}>{coupon.status}</span>
+                  <button style={styles.deleteCouponBtn}>🗑️</button> 
+                  {/* Ngài có thể dùng icon FontAwesome/MaterialUI thay cho 🗑️ sau này */}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </main>
     </div>
   );
@@ -476,6 +534,114 @@ const styles = {
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: 'bold'
+  },
+  // 👇 THÊM CÁC STYLE NÀY VÀO CUỐI ĐỐI TƯỢNG styles 👇
+  
+  // -- Style cho Quản lý Ảnh --
+  photoContainer: {
+    display: 'flex',
+    gap: '16px',
+    overflowX: 'auto',
+    padding: '10px 0'
+  },
+  addPhotoBox: {
+    width: '150px',
+    height: '150px',
+    border: '2px dashed #ff4d4f', // Viền nét đứt màu đỏ đô
+    borderRadius: '8px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    backgroundColor: '#fffaf8',
+    flexShrink: 0 // Chống bị bóp méo khi màn hình nhỏ
+  },
+  addPhotoIcon: {
+    fontSize: '32px',
+    color: '#ff4d4f',
+    fontWeight: 'bold'
+  },
+  addPhotoText: {
+    fontSize: '14px',
+    color: '#666',
+    marginTop: '8px'
+  },
+  photoItem: {
+    width: '150px',
+    height: '150px',
+    borderRadius: '8px',
+    objectFit: 'cover',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    flexShrink: 0
+  },
+
+  // -- Style cho Quản lý Khuyến mãi --
+  couponHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px'
+  },
+  createCouponBtn: {
+    backgroundColor: '#6b5744', // Màu nâu cà phê sang trọng
+    color: '#fff',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold'
+  },
+  couponList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+  couponCard: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px',
+    border: '1px solid #eaeaea',
+    borderRadius: '8px',
+    backgroundColor: '#fff'
+  },
+  couponInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px'
+  },
+  couponTitle: {
+    fontWeight: 'bold',
+    fontSize: '16px',
+    color: '#333',
+    margin: 0
+  },
+  couponDate: {
+    fontSize: '12px',
+    color: '#999',
+    margin: 0
+  },
+  couponActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  },
+  validBadge: {
+    backgroundColor: '#e6f4ea', // Nền xanh nhạt
+    color: '#34a853',           // Chữ xanh đậm
+    padding: '4px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: 'bold'
+  },
+  deleteCouponBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '16px',
+    color: '#999'
   }
 };
 
