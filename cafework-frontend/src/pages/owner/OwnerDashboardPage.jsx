@@ -9,6 +9,9 @@ const OwnerDashboardPage = () => {
   const [seats, setSeats] = useState([]);
   const [showAddPopup, setShowAddPopup] = useState(false);
   const [addAmount, setAddAmount] = useState(1);
+  const [showDeletePopup, setShowDeletePopup] = useState(false); // Ẩn/hiện pop-up xóa
+  const [deleteAmount, setDeleteAmount] = useState(1);           // Số lượng ghế muốn xóa
+  const [blacklistIds, setBlacklistIds] = useState([]); // Kho lưu ID ghế đã chọn để xóa (nếu có)
   // ==========================================
   // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
   // ==========================================
@@ -97,22 +100,29 @@ const OwnerDashboardPage = () => {
   const saveSeats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const cafeId = localStorage.getItem('cafeId');
+      const cafeId = localStorage.getItem('cafeId') || '30000000-0000-0000-0000-000000000001';
       
-      if (!cafeId) return;
+      // 👉 BƯỚC MỚI: Nếu có ghế trong danh sách đen, bắt Backend xóa trước!
+      if (blacklistIds.length > 0) {
+        await axios.post(
+          `http://localhost:8080/api/cafes/${cafeId}/seats/batch-delete`, 
+          blacklistIds, // Gửi mảng các ID cần xóa đi
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setBlacklistIds([]); // Xóa xong thì làm sạch danh sách đen
+      }
+
+      // Xử lý gửi mảng ghế hiện tại (Giữ nguyên logic cũ của bệ hạ)
       const seatsToSend = seats.map(seat => {
         if (String(seat.id).startsWith('temp-')) {
-          return {
-            ...seat,
-            id: null // Gửi null sang để Backend biết đường mà INSERT
-          };
+          return { ...seat, id: null };
         }
         return seat;
       });
-      // Phái sứ giả mang CẢ MẢNG SEATS về báo cáo
+
       await axios.put(
         `http://localhost:8080/api/cafes/${cafeId}/seats`, 
-        seatsToSend, // Gửi mảng đã được xử lý
+        seatsToSend, 
         {
           headers: {
             'Content-Type': 'application/json',
@@ -121,11 +131,11 @@ const OwnerDashboardPage = () => {
         }
       );
 
-      alert("Bẩm, đã lưu trạng thái ghế thành công!");
-      fetchSeats(); // Lưu xong thì gọi lại API để làm mới lại dữ liệu cho chắc ăn
+      alert("Bẩm bệ hạ, toàn bộ thay đổi (Thêm/Xóa/Đổi màu) đã ghim chặt vào Database!");
+      fetchSeats(); // Tải lại dữ liệu chuẩn từ DB
     } catch (error) {
-      console.error("Lưu ghế thất bại:", error);
-      alert("Bẩm, có lỗi xảy ra khi lưu trạng thái ghế!");
+      console.error("Lưu thất bại:", error);
+      alert("Bẩm, có lỗi xảy ra khi lưu!");
     }
   };
   const handleAddNewSeats = () => {
@@ -159,6 +169,42 @@ const OwnerDashboardPage = () => {
     // 4. Giấu Pop-up đi và reset số lượng về 1
     setShowAddPopup(false);
     setAddAmount(1);
+  };
+  // Chiêu 6: Xóa tạm thời các ghế có số lớn nhất trên màn hình
+  const handleDeleteLastSeats = () => {
+    console.log("🚩 ĐÃ VÀO BÊN TRONG HÀM XÓA GHẾ!");
+    const amount = parseInt(deleteAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      alert("Bẩm, số lượng ghế cần xóa phải lớn hơn 0!");
+      return;
+    }
+    if (amount > seats.length) {
+      alert(`Bẩm, quán chỉ còn ${seats.length} ghế, không thể xóa đến ${amount} ghế!`);
+      return;
+    }
+
+    // 1. Sắp xếp danh sách ghế theo số ghế giảm dần để tìm những ông lớn nhất
+    const sortedSeats = [...seats].sort((a, b) => parseInt(b.seatNumber, 10) - parseInt(a.seatNumber, 10));
+
+    // 2. Lấy ra N chiếc ghế sẽ bị khai tử
+    const seatsToKill = sortedSeats.slice(0, amount);
+    console.log("👉 [Kính chiếu yêu] Các ghế chuẩn bị xóa:", seatsToKill);
+    // 3. Lọc ra những ID thật (không phải mã temp-) để chốc nữa bắt Backend xóa trong DB
+    const realIdsToKill = seatsToKill
+      .map(s => s.id)
+      .filter(id => id && !String(id).startsWith('temp-'));
+    console.log("👉 [Kính chiếu yêu] Danh sách ID đen gửi xuống Backend:", realIdsToKill);
+
+    // 4. Cập nhật lại màn hình: Chỉ giữ lại những ghế KHÔNG nằm trong danh sách bị khai tử
+    const remainingSeats = seats.filter(s => !seatsToKill.some(kill => kill.id === s.id));
+    setSeats(remainingSeats);
+
+    // 5. Cất ID thật vào danh sách đen để chờ bấm nút Lưu
+    setBlacklistIds([...blacklistIds, ...realIdsToKill]);
+
+    // 6. Đóng pop-up và đặt lại số lượng về 1
+    setShowDeletePopup(false);
+    setDeleteAmount(1);
   };
   // ==========================================
   // 4. TÍNH TOÁN DỮ LIỆU CHUẨN BỊ CHO GIAO DIỆN
@@ -288,7 +334,30 @@ const OwnerDashboardPage = () => {
                   + 座席追加
                 </button>
               </div>
-              <button style={styles.controlButton}>- 1席削除</button>
+              {/* --- KHỐI XÓA GHẾ MỚI TOANH --- */}
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                {showDeletePopup && (
+                  <div style={styles.popup}>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      value={deleteAmount} 
+                      onChange={(e) => setDeleteAmount(e.target.value)} 
+                      style={styles.popupInput} 
+                    />
+                    {/* Nút bấm thực hiện lệnh xóa tạm, dùng màu đỏ cảnh báo */}
+                    <button onClick={() => {
+                      alert("Bẩm, chức năng xóa ghế đang trong giai đoạn thử nghiệm, chưa thể kích hoạt!");
+                      handleDeleteLastSeats();
+                      }} style={{ ...styles.popupBtn, backgroundColor: '#ea4335' }}>
+                      削除
+                    </button>
+                  </div>
+                )}
+                <button style={styles.controlButton} onClick={() => setShowDeletePopup(!showDeletePopup)}>
+                  - 座席削除
+                </button>
+              </div>
             </div>
           </div>
         </div>

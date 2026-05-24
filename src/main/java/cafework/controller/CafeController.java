@@ -155,4 +155,19 @@ public class CafeController {
 
         return ResponseEntity.ok().body("Vương quốc thái bình, toàn bộ ghế cũ và mới đã được ghi sổ!");
     }
+    // Lộ trình tiếp nhận danh sách đen để xóa ghế hàng loạt
+    @PostMapping("/{id}/seats/batch-delete")
+    public ResponseEntity<?> batchDeleteSeats(@PathVariable UUID id, @RequestBody List<UUID> seatIds) {
+        try {
+            // Duyệt qua từng cái ID trong danh sách đen và cho bay đầu khỏi DB
+            for (UUID seatId : seatIds) {
+                if (seatRepository.existsById(seatId)) {
+                    seatRepository.deleteById(seatId);
+                }
+            }
+            return ResponseEntity.ok().body("Cấm vệ quân báo cáo: Đã dọn dẹp các ghế cũ thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa ghế: " + e.getMessage());
+        }
+    }
 }
