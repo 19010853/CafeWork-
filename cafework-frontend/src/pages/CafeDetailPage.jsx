@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { isBookmarked, toggleBookmark } from '../utils/userLocalStore';
@@ -82,6 +82,11 @@ const styles = {
   },
 
   // ── HERO IMAGE GALLERY ──
+  galleryWrap: {
+    maxWidth: '1100px',
+    margin: '0 auto',
+    padding: '0 20px',
+  },
   gallery: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
@@ -445,6 +450,12 @@ const CafeDetailPage = () => {
   const images = cafe.images && cafe.images.length > 0 ? cafe.images : [];
   const lat = cafe.latitude || 21.028511;
   const lng = cafe.longitude || 105.804817;
+
+  const goToDirectionsPage = () => {
+    if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return;
+    const destName = cafe?.name ? `&destName=${encodeURIComponent(cafe.name)}` : '';
+    navigate(`/?destLat=${encodeURIComponent(lat)}&destLng=${encodeURIComponent(lng)}${destName}`);
+  };
   const handleTranslate = async (reviewId, text) => {
     // 1. Kính chiếu yêu: Báo cáo xem có nhận được lệnh bấm nút chưa
     console.log("🚨 Lệnh dịch thuật đã phát ra! ID:", reviewId, "Nội dung:", text);
@@ -505,87 +516,89 @@ const CafeDetailPage = () => {
       </div>
 
       {/* ── HERO GALLERY ── */}
-      <div className="gallery-grid" style={styles.gallery}>
-        {images.length === 0 ? (
-          // No images — placeholder
-          <div style={{
-            gridColumn: '1 / -1', height: '300px',
-            backgroundColor: '#e9e0d5',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            gap: '8px', color: '#a08070',
-          }}>
-            <span style={{ fontSize: '40px' }}>📷</span>
-            <span style={{ fontSize: '14px' }}>画像なし</span>
-          </div>
-        ) : images.length === 1 ? (
-          // 1 image — full width
-          <div style={{ gridColumn: '1 / -1', position: 'relative', cursor: 'pointer' }}
-            onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
-            <img
-              src={images[0].imageUrl}
-              alt={cafe.name}
-              style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block' }}
-              onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.style.display = 'none'; }}
-            />
-          </div>
-        ) : (
-          // 2+ images — grid layout
-          <>
-            {/* Main image */}
-            <div className="gallery-main" style={styles.galleryMain}
+      <div style={styles.galleryWrap}>
+        <div className="gallery-grid" style={styles.gallery}>
+          {images.length === 0 ? (
+            // No images — placeholder
+            <div style={{
+              gridColumn: '1 / -1', height: '300px',
+              backgroundColor: '#e9e0d5',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: '8px', color: '#a08070',
+            }}>
+              <span style={{ fontSize: '40px' }}>📷</span>
+              <span style={{ fontSize: '14px' }}>画像なし</span>
+            </div>
+          ) : images.length === 1 ? (
+            // 1 image — full width
+            <div style={{ gridColumn: '1 / -1', position: 'relative', cursor: 'pointer' }}
               onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
               <img
                 src={images[0].imageUrl}
                 alt={cafe.name}
-                style={{ ...styles.galleryMainImg, cursor: 'pointer' }}
-                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block' }}
+                onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.style.display = 'none'; }}
               />
             </div>
-
-            {/* Sub images — slot 1 */}
-            {images[1] && (
-              <div style={{ ...styles.gallerySub, position: 'relative' }}
-                onClick={() => { setSelectedPhotoIndex(1); setShowPhotoModal(true); }}>
+          ) : (
+            // 2+ images — grid layout
+            <>
+              {/* Main image */}
+              <div className="gallery-main" style={styles.galleryMain}
+                onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
                 <img
-                  src={images[1].imageUrl}
-                  alt={`${cafe.name} 2`}
-                  style={{ ...styles.gallerySubImg, cursor: 'pointer' }}
+                  src={images[0].imageUrl}
+                  alt={cafe.name}
+                  style={{ ...styles.galleryMainImg, cursor: 'pointer' }}
                   onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
                 />
               </div>
-            )}
 
-            {/* Sub images — slot 2, with "see more" overlay if there are more */}
-            {images[2] && (
-              <div style={{ ...styles.gallerySub, position: 'relative', cursor: 'pointer' }}
-                onClick={() => { setSelectedPhotoIndex(2); setShowPhotoModal(true); }}>
-                <img
-                  src={images[2].imageUrl}
-                  alt={`${cafe.name} 3`}
-                  style={{ ...styles.gallerySubImg, cursor: 'pointer' }}
-                  onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                />
-                {/* "See more" overlay — only shown when there are 4+ images */}
-                {images.length > 3 && (
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    backgroundColor: 'rgba(0,0,0,0.52)',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center',
-                    gap: '4px', color: '#fff',
-                  }}>
-                    <span style={{ fontSize: '24px' }}>📷</span>
-                    <span style={{ fontSize: '15px', fontWeight: '700' }}>
-                      +{images.length - 3} 枚
-                    </span>
-                    <span style={{ fontSize: '11px', opacity: 0.85 }}>すべて見る</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
+              {/* Sub images — slot 1 */}
+              {images[1] && (
+                <div style={{ ...styles.gallerySub, position: 'relative' }}
+                  onClick={() => { setSelectedPhotoIndex(1); setShowPhotoModal(true); }}>
+                  <img
+                    src={images[1].imageUrl}
+                    alt={`${cafe.name} 2`}
+                    style={{ ...styles.gallerySubImg, cursor: 'pointer' }}
+                    onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                  />
+                </div>
+              )}
+
+              {/* Sub images — slot 2, with "see more" overlay if there are more */}
+              {images[2] && (
+                <div style={{ ...styles.gallerySub, position: 'relative', cursor: 'pointer' }}
+                  onClick={() => { setSelectedPhotoIndex(2); setShowPhotoModal(true); }}>
+                  <img
+                    src={images[2].imageUrl}
+                    alt={`${cafe.name} 3`}
+                    style={{ ...styles.gallerySubImg, cursor: 'pointer' }}
+                    onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                  />
+                  {/* "See more" overlay — only shown when there are 4+ images */}
+                  {images.length > 3 && (
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      backgroundColor: 'rgba(0,0,0,0.52)',
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center',
+                      gap: '4px', color: '#fff',
+                    }}>
+                      <span style={{ fontSize: '24px' }}>📷</span>
+                      <span style={{ fontSize: '15px', fontWeight: '700' }}>
+                        +{images.length - 3} 枚
+                      </span>
+                      <span style={{ fontSize: '11px', opacity: 0.85 }}>すべて見る</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* ── MAIN CONTENT ── */}
@@ -638,7 +651,7 @@ const CafeDetailPage = () => {
               </button>
               <button
                 style={styles.btnDirections}
-                onClick={() => window.open(`https://maps.google.com/maps?q=${lat},${lng}`, '_blank')}
+                onClick={goToDirectionsPage}
               >
                 🧭 現在地からの道案内
               </button>
@@ -788,9 +801,9 @@ const CafeDetailPage = () => {
             <div style={{ padding: '12px 18px' }}>
               <button
                 style={{ ...styles.btnDirections, width: '100%', justifyContent: 'center' }}
-                onClick={() => window.open(`https://maps.google.com/maps?q=${lat},${lng}`, '_blank')}
+                onClick={goToDirectionsPage}
               >
-                🧭 Google マップで開く
+                🧭 アプリで道案内を見る
               </button>
             </div>
           </div>

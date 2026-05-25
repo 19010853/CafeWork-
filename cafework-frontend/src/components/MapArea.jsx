@@ -1,30 +1,48 @@
-import React, { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import customPinImage from '../assets/my-custom-pin.png'; 
+import customPinImage from '../assets/my-custom-pin.png';
 import defaultShadow from 'leaflet/dist/images/marker-shadow.png';
 
 // Sửa lỗi icon marker (giữ nguyên)
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// Chỉnh icon marker màu đỏ để phân biệt với vị trí cafe (mặc định là xanh)
+const myCustomIcon = L.icon({
+  iconUrl: customPinImage,
+  shadowUrl: defaultShadow,
+  iconSize: [24, 36],
+  iconAnchor: [12, 36],
+  popupAnchor: [0, -32],
+  shadowSize: [41, 41]
+});
 
 
-const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
+
+const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersLayerRef = useRef(null);
-  
+  const [mapReady, setMapReady] = useState(false);
+
+  const destMarkerRef = useRef(null);
+
   // 1. KHO LƯU TRỮ VỊ TRÍ HIỆN TẠI VÀ ĐƯỜNG ĐI
   const userCoordsRef = useRef(null);
-  const routingControlRef = useRef(null);
+
+  // Route request coming from outside (e.g., CafeDetailPage -> HomePage)
+  const pendingRouteTargetRef = useRef(null);
+  const lastRequestedRouteKeyRef = useRef(null);
+
+  const drawRouteRef = useRef(null);
 
   // ----------------------------------------------------
   // HÀM VẼ ĐƯỜNG MÀU XANH TỪ VỊ TRÍ HIỆN TẠI ĐẾN QUÁN
@@ -33,12 +51,16 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
   const polylineRef = useRef(null);
   useEffect(() => {
     if (!isRouting && polylineRef.current && mapInstanceRef.current) {
-        mapInstanceRef.current.removeLayer(polylineRef.current);
-        polylineRef.current = null;
+      mapInstanceRef.current.removeLayer(polylineRef.current);
+      polylineRef.current = null;
     }
   }, [isRouting]);
-  const drawRoute = async (destLat, destLng) => {
+  const drawRoute = useCallback(async (destLat, destLng, options = {}) => {
     if (!userCoordsRef.current) {
+      if (options.silentIfNoUserCoords) {
+        pendingRouteTargetRef.current = [destLat, destLng];
+        return;
+      }
       alert("Bệ hạ vui lòng cho phép định vị trước!");
       return;
     }
@@ -51,7 +73,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
     try {
       // ĐÃ THÊM MẬT LỆNH &steps=true VÀO CUỐI URL ĐỂ MÁY CHỦ KHAI RA TỪNG BƯỚC ĐI
       const url = `https://router.project-osrm.org/route/v1/car/${userCoordsRef.current[1]},${userCoordsRef.current[0]};${destLng},${destLat}?overview=full&geometries=geojson&steps=true`;
-      
+
       const response = await fetch(url);
       const data = await response.json();
       if (data.code !== 'Ok') return;
@@ -68,20 +90,15 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
 
       // PHÓNG MŨI TÊN CHUYỂN DỮ LIỆU VỀ CHO HOMEPAGE (ĐỂ NÓ HIỆN LÊN CỘT TRÁI)
       if (onRouteCalculated) {
-          onRouteCalculated({ distance, duration, steps });
+        onRouteCalculated({ distance, duration, steps });
       }
 
     } catch (error) { console.error("Lỗi vẽ đường:", error); }
-  };
-  // Chỉnh icon marker màu đỏ để phân biệt với vị trí cafe (mặc định là xanh)
-  const myCustomIcon = L.icon({
-      iconUrl: customPinImage, // <--- Nhát kiếm quyết định: Truyền thẳng biến ảnh vào đây!
-      shadowUrl: defaultShadow,
-      iconSize: [24, 36], // Ví dụ ảnh của ngài vuông 32x32 pixel
-      iconAnchor: [12, 36], // Điểm cắm cờ (thường là điểm chính giữa ở viền dưới cùng của ảnh)
-      popupAnchor: [0, -32], // Vị trí hiện hộp thoại so với điểm cắm
-      shadowSize: [41, 41]
-  });
+  }, [onRouteCalculated]);
+
+  useEffect(() => {
+    drawRouteRef.current = drawRoute;
+  }, [drawRoute]);
   // ----------------------------------------------------
   // PHÉP THUẬT 1: KHỞI TẠO BẢN ĐỒ VÀ ĐỊNH VỊ BỆ HẠ
   // ----------------------------------------------------
@@ -93,8 +110,9 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
       }).addTo(map);
 
       mapInstanceRef.current = map;
+      setMapReady(true);
       markersLayerRef.current = L.layerGroup().addTo(map);
-      
+
       // Định vị bệ hạ
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
@@ -103,17 +121,24 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
               const lat = parseFloat(position.coords.latitude);
               const lng = parseFloat(position.coords.longitude);
               if (!isNaN(lat) && !isNaN(lng)) {
-                userCoordsRef.current = [lat, lng]; 
-                mapInstanceRef.current.setView(userCoordsRef.current, 16); 
-                
+                userCoordsRef.current = [lat, lng];
+                mapInstanceRef.current.setView(userCoordsRef.current, 16);
+
                 L.marker(userCoordsRef.current, { icon: myCustomIcon }) // Hoặc redIcon tùy bệ hạ đang dùng
                   .addTo(mapInstanceRef.current)
                   .bindPopup('<b>あなたはここにいる!</b>')
                   .openPopup();
-                
+
                 L.circle(userCoordsRef.current, { radius: 100, color: 'blue', fillOpacity: 0.1 })
                   .addTo(mapInstanceRef.current);
-             }
+
+                // If there was a pending external route request, fulfill it now.
+                if (pendingRouteTargetRef.current) {
+                  const [destLat, destLng] = pendingRouteTargetRef.current;
+                  pendingRouteTargetRef.current = null;
+                  drawRouteRef.current?.(destLat, destLng, { silentIfNoUserCoords: false });
+                }
+              }
             }
           },
           (error) => console.error("位置情報の取得中にエラーが発生しました。", error),
@@ -128,7 +153,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
           routeBtn.onclick = () => {
             const lat = parseFloat(routeBtn.getAttribute('data-lat'));
             const lng = parseFloat(routeBtn.getAttribute('data-lng'));
-            drawRoute(lat, lng);
+            drawRouteRef.current?.(lat, lng);
             map.closePopup(); // Tự động đóng popup sau khi bấm để nhìn đường cho rõ
           };
         }
@@ -139,9 +164,55 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        setMapReady(false);
       }
     };
   }, []);
+
+  // Auto-route when a routeTarget is provided (e.g. from URL params)
+  useEffect(() => {
+    if (!routeTarget) return;
+    if (!mapReady) return;
+
+    const { lat, lng } = routeTarget;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    const key = `${lat},${lng}`;
+    if (lastRequestedRouteKeyRef.current === key) return;
+    lastRequestedRouteKeyRef.current = key;
+
+    drawRouteRef.current?.(lat, lng, { silentIfNoUserCoords: true });
+  }, [routeTarget, mapReady]);
+
+  // Show destination marker (useful when coming from CafeDetailPage where cafes list may be empty)
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current) return;
+
+    // Clear marker when leaving routing
+    if (!routeTarget) {
+      if (destMarkerRef.current) {
+        mapInstanceRef.current.removeLayer(destMarkerRef.current);
+        destMarkerRef.current = null;
+      }
+      return;
+    }
+
+    const { lat, lng, name } = routeTarget;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    if (destMarkerRef.current) {
+      mapInstanceRef.current.removeLayer(destMarkerRef.current);
+      destMarkerRef.current = null;
+    }
+
+    const label = name ? `🏁 ${name}` : '🏁 目的地';
+    destMarkerRef.current = L.marker([lat, lng])
+      .addTo(mapInstanceRef.current)
+      .bindPopup(`<b>${label}</b>`);
+
+    // Open immediately so the destination is obvious
+    destMarkerRef.current.openPopup();
+  }, [routeTarget, mapReady]);
 
   // ----------------------------------------------------
   // PHÉP THUẬT 2: ĐỘI QUÂN CẮM CỜ VÀ SỬA POPUP THEO THIẾT KẾ
@@ -152,9 +223,9 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
 
       cafes.forEach((cafe) => {
         if (cafe.latitude && cafe.longitude) {
-          const imageUrl = cafe.images && cafe.images.length > 0 
-              ? cafe.images[0].imageUrl 
-              : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=300&q=80';
+          const imageUrl = cafe.images && cafe.images.length > 0
+            ? cafe.images[0].imageUrl
+            : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=300&q=80';
 
           const marker = L.marker([cafe.latitude, cafe.longitude])
             .bindPopup(`
@@ -186,7 +257,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
                 </div>
               </div>
             `);
-          
+
           markersLayerRef.current.addLayer(marker);
         }
       });
@@ -196,7 +267,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
         mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
       }
     }
-  }, [cafes]); 
+  }, [cafes]);
 
   return (
     <>
@@ -230,10 +301,10 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
         /* Chém bỏ mấy cái nút vô dụng mặc định */
         .leaflet-routing-collapse-btn { display: none !important; }
       `}</style>
-      
-      <div 
-        ref={mapContainerRef} 
-        style={{ height: '100%', width: '100%', zIndex: 0 }} 
+
+      <div
+        ref={mapContainerRef}
+        style={{ height: '100%', width: '100%', zIndex: 0 }}
       />
     </>
   );
