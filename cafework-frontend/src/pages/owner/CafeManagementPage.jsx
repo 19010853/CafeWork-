@@ -1,7 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import styles from './CafeManagementPage.module.css';
 import axiosClient from '../../api/axiosClient';
+
+// Fix Leaflet marker icon issue
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 const CafeManagementPage = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +30,10 @@ const CafeManagementPage = () => {
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null);
 
   useEffect(() => {
     const fetchMyCafe = async () => {
@@ -36,11 +53,69 @@ const CafeManagementPage = () => {
     fetchMyCafe();
   }, []);
 
+  // Initialize Map
+  useEffect(() => {
+    if (!loading && mapRef.current && !mapInstanceRef.current) {
+      const initialLat = parseFloat(formData.latitude) || 21.0285;
+      const initialLng = parseFloat(formData.longitude) || 105.8542;
+
+      const map = L.map(mapRef.current).setView([initialLat, initialLng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      const marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(map);
+      
+      marker.on('dragend', (e) => {
+        const { lat, lng } = e.target.getLatLng();
+        setFormData(prev => ({ ...prev, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
+      });
+
+      map.on('click', (e) => {
+        const { lat, lng } = e.coords || e.latlng;
+        marker.setLatLng([lat, lng]);
+        setFormData(prev => ({ ...prev, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
+      });
+
+      mapInstanceRef.current = map;
+      markerRef.current = marker;
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [loading]);
+
+  // Update marker position when coordinates change manually
+  useEffect(() => {
+    if (mapInstanceRef.current && markerRef.current) {
+      const lat = parseFloat(formData.latitude);
+      const lng = parseFloat(formData.longitude);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const currentLatLng = markerRef.current.getLatLng();
+        if (currentLatLng.lat !== lat || currentLatLng.lng !== lng) {
+          markerRef.current.setLatLng([lat, lng]);
+          mapInstanceRef.current.panTo([lat, lng]);
+        }
+      }
+    }
+  }, [formData.latitude, formData.longitude]);
+
   const validate = () => {
     if (!formData.name?.trim()) return 'カフェ名を入力してください。';
     if (!formData.ownerName?.trim()) return '店主名を入力してください。';
-    if (!formData.address?.trim()) return '住所を入力してください。';
     
+    // Latitude & Longitude validation (Mandatory)
+    if (formData.latitude === '' || formData.latitude === null || isNaN(parseFloat(formData.latitude))) {
+        return 'Vĩ độ (Latitude) không được để trống và phải là số hợp lệ.';
+    }
+    if (formData.longitude === '' || formData.longitude === null || isNaN(parseFloat(formData.longitude))) {
+        return 'Kinh độ (Longitude) không được để trống và phải là số hợp lệ.';
+    }
+
     // Email regex
     if (!formData.email?.trim()) return 'メールアドレスを入力してください。';
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -100,7 +175,7 @@ const CafeManagementPage = () => {
       <form onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
           <div className={styles.formGroup}>
-            <label className={styles.label}>カフェ名</label>
+            <label className={styles.label}>カフェ名 <span className={styles.required}>*</span></label>
             <input
               type="text"
               name="name"
@@ -112,7 +187,7 @@ const CafeManagementPage = () => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>店主名</label>
+            <label className={styles.label}>店主名 <span className={styles.required}>*</span></label>
             <input
               type="text"
               name="ownerName"
@@ -124,7 +199,7 @@ const CafeManagementPage = () => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>メールアドレス</label>
+            <label className={styles.label}>メールアドレス <span className={styles.required}>*</span></label>
             <input
               type="email"
               name="email"
@@ -136,7 +211,7 @@ const CafeManagementPage = () => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>電話番号</label>
+            <label className={styles.label}>電話番号 <span className={styles.required}>*</span></label>
             <input
               type="text"
               name="phone"
@@ -159,20 +234,12 @@ const CafeManagementPage = () => {
             />
           </div>
 
-          <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-            <label className={styles.label}>住所</label>
-            <input
-              type="text"
-              name="address"
-              className={styles.input}
-              value={formData.address || ''}
-              onChange={handleChange}
-              placeholder="東京都渋谷区..."
-            />
+          <div className={styles.formGroup}>
+             {/* Empty space for grid alignment if needed, or move elements */}
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>緯度 (Latitude)</label>
+            <label className={styles.label}>Vĩ độ (Latitude) <span className={styles.required}>*</span></label>
             <input
               type="number"
               step="any"
@@ -185,7 +252,7 @@ const CafeManagementPage = () => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>経度 (Longitude)</label>
+            <label className={styles.label}>Kinh độ (Longitude) <span className={styles.required}>*</span></label>
             <input
               type="number"
               step="any"
@@ -197,6 +264,26 @@ const CafeManagementPage = () => {
             />
           </div>
 
+          <div className={styles.fullWidth}>
+            <label className={styles.label}>Bản đồ vị trí (Map Picker)</label>
+            <div ref={mapRef} className={styles.mapContainer}></div>
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              * Bạn có thể kéo thả Marker hoặc click trực tiếp lên bản đồ để chọn vị trí.
+            </p>
+          </div>
+
+          <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+            <label className={styles.label}>住所 (Địa chỉ bổ trợ)</label>
+            <input
+              type="text"
+              name="address"
+              className={styles.input}
+              value={formData.address || ''}
+              onChange={handleChange}
+              placeholder="東京都渋谷区..."
+            />
+          </div>
+
           <div className={`${styles.formGroup} ${styles.fullWidth}`}>
             <label className={styles.label}>説明</label>
             <textarea
@@ -204,7 +291,7 @@ const CafeManagementPage = () => {
               className={styles.textarea}
               value={formData.description || ''}
               onChange={handleChange}
-              placeholder="お店の特徴について教えてください..."
+              placeholder="お店の特徴 về vị trí hoặc không gian..."
             />
           </div>
         </div>

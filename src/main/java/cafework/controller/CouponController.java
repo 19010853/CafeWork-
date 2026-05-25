@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import java.util.UUID;
 import cafework.model.Coupon;
 import cafework.repository.CouponRepository;
 
@@ -28,7 +28,7 @@ public class CouponController {
     }
 
     @GetMapping("/{id}")
-    public Coupon getCouponById(@PathVariable String id) {
+    public Coupon getCouponById(@PathVariable UUID id) {
         return couponRepository.findById(id).orElse(null);
     }
 
@@ -38,13 +38,13 @@ public class CouponController {
     }
 
     @PutMapping("/{id}")
-    public Coupon updateCoupon(@PathVariable String id, @RequestBody Coupon coupon) {
+    public Coupon updateCoupon(@PathVariable UUID id, @RequestBody Coupon coupon) {
         coupon.setId(id);
         return couponRepository.save(coupon);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCoupon(@PathVariable String id) {
+    public void deleteCoupon(@PathVariable UUID id) {
         couponRepository.deleteById(id);
     }
 }

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchCafes } from '../../services/cafeService';
 import L from 'leaflet'; // Bổ sung Leaflet để tính khoảng cách
 import { addSearchHistory, isBookmarked, toggleBookmark } from '../../utils/userLocalStore';
 import './SearchBar.css';
 
-const SearchBar = ({ onSearchData }) => {
+const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
     const navigate = useNavigate();
-    const [keyword, setKeyword] = useState('');
+    const [keyword, setKeyword] = useState(initialKeyword);
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -28,41 +28,6 @@ const SearchBar = ({ onSearchData }) => {
     const typingTimeoutRef = useRef(null); // Debounce cho Autocomplete
     const didInitRef = useRef(false);
 
-    useEffect(() => {
-        // Xin quyền lấy GPS thực tế của trình duyệt
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude }),
-                (err) => console.warn("Lỗi lấy GPS, đang dùng tọa độ mặc định.", err)
-            );
-        }
-
-        const handleClickOutside = (event) => {
-            if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) setShowDropdown(false);
-            if (sortMenuRef.current && !sortMenuRef.current.contains(event.target)) setShowSortMenu(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-<<<<<<< Updated upstream
-=======
-
-    useEffect(() => {
-        // On first mount: show all cafes when input is empty
-        if (!didInitRef.current) {
-            didInitRef.current = true;
-            handleSearchEvent(initialKeyword || '');
-            return;
-        }
-
-        // If parent changes initialKeyword later (e.g., URL changes), re-search
-        if (initialKeyword !== keyword) {
-            setKeyword(initialKeyword);
-            handleSearchEvent(initialKeyword || '');
-        }
-    }, [initialKeyword]);
->>>>>>> Stashed changes
-
     const handleSearchEvent = async (searchKeyword) => {
         setShowDropdown(false);
         setLoading(true);
@@ -80,6 +45,36 @@ const SearchBar = ({ onSearchData }) => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        // Xin quyền lấy GPS thực tế của trình duyệt
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude }),
+                (err) => console.warn("Lỗi lấy GPS, đang dùng tọa độ mặc định.", err)
+            );
+        }
+
+        const handleClickOutside = (event) => {
+            if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) setShowDropdown(false);
+            if (sortMenuRef.current && !sortMenuRef.current.contains(event.target)) setShowSortMenu(false);
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        if (typeof initialKeyword === 'string' && initialKeyword !== keyword) {
+            setKeyword(initialKeyword);
+        }
+
+        if (didInitRef.current) return;
+        didInitRef.current = true;
+
+        const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
+        handleSearchEvent(kw);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialKeyword]);
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -196,6 +191,7 @@ const SearchBar = ({ onSearchData }) => {
 
             <div className="results-scroll-area" style={scrollAreaStyle}>
                 {loading && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>読み込み中...</p>}
+                {error && <p style={{ textAlign: 'center', color: '#D14343', fontSize: '13px' }}>{error}</p>}
                 {!loading && sortedResults.length === 0 && keyword && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>カフェが見つかりません</p>}
 
                 {sortedResults.map((cafe) => {
@@ -313,12 +309,6 @@ const getSortItemStyle = (isActive) => ({
     borderBottom: '1px solid #f5f5f5',
     display: 'flex', justifyContent: 'space-between'
 });
-
-const chipStyle = {
-    padding: '6px 12px', borderRadius: '20px', border: '1px solid #ddd',
-    backgroundColor: 'white', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap'
-};
-const chipActiveStyle = { ...chipStyle, backgroundColor: '#e6f2ff', borderColor: '#0066cc', color: '#0066cc', fontWeight: 'bold' };
 const scrollAreaStyle = { flex: 1, overflowY: 'auto', padding: '15px', backgroundColor: '#f5f5f5' };
 const cardStyle = {
     backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden',

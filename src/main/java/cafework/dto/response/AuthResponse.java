@@ -13,4 +13,5 @@ public class AuthResponse {
     private String email;
     private String fullName;
     private String role;
+    private UUID cafeId; // Thêm trường này để trả về ID quán cà phê nếu người dùng là chủ quán
 }

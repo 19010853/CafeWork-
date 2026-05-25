@@ -501,13 +501,6 @@ const CafeDetailPage = () => {
         }
       `}</style>
 
-      {/* ── NAV TABS ── */}
-      <nav style={styles.navBar}>
-        <span style={styles.navTabActive} onClick={() => navigate('/')}>ホーム</span>
-        <span style={styles.navTab} onClick={() => navigate('/my-list')}>マイリスト</span>
-        <span style={styles.navTab} onClick={() => navigate('/search-history')}>検索履歴</span>
-      </nav>
-
       {/* ── BACK BUTTON ── */}
       <div style={styles.backBar}>
         <button style={styles.backBtn} onClick={() => navigate(-1)}>

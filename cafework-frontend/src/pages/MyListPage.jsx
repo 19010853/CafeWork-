@@ -159,7 +159,6 @@ const MyListPage = () => {
 
     return (
         <div style={{ minHeight: 'calc(100vh - 64px)', backgroundColor: '#fdf8f5' }}>
-            <TopNavTabs />
 
             <style>{`
                 .mylist-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
