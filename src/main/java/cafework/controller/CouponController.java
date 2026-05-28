@@ -1,41 +1,50 @@
 package cafework.controller;
 
-import cafework.dto.request.CouponRequest;
-import cafework.dto.response.CouponResponse;
-import cafework.service.CouponService;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
+import cafework.model.Coupon;
+import cafework.repository.CouponRepository;
 
 @RestController
 @RequestMapping("/api/coupons")
 public class CouponController {
 
     @Autowired
-    private CouponService couponService;
+    private CouponRepository couponRepository;
 
-    @GetMapping("/my-coupons")
-    public List<CouponResponse> getMyCoupons() {
-        return couponService.getMyCoupons();
+    @GetMapping
+    public List<Coupon> getAllCoupons() {
+        return couponRepository.findAll();
     }
 
-    @GetMapping("/cafe/{cafeId}")
-    public List<CouponResponse> getCouponsByCafe(
-            @PathVariable UUID cafeId
-    ) {
-        return couponService.getCouponsByCafe(cafeId);
+    @GetMapping("/{id}")
+    public Coupon getCouponById(@PathVariable UUID id) {
+        return couponRepository.findById(id).orElse(null);
     }
 
     @PostMapping
-    public CouponResponse createCoupon(@RequestBody CouponRequest request) {
-        return couponService.createCoupon(request);
+    public Coupon createCoupon(@RequestBody Coupon coupon) {
+        return couponRepository.save(coupon);
+    }
+
+    @PutMapping("/{id}")
+    public Coupon updateCoupon(@PathVariable UUID id, @RequestBody Coupon coupon) {
+        coupon.setId(id);
+        return couponRepository.save(coupon);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCoupon(@PathVariable String id) {
-        couponService.deleteCoupon(id);
+    public void deleteCoupon(@PathVariable UUID id) {
+        couponRepository.deleteById(id);
     }
 }

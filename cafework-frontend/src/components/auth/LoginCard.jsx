@@ -49,9 +49,14 @@ const LoginCard = ({ onSwitchToSignup }) => {
         localStorage.setItem('role', data.role);
         localStorage.setItem('fullName', data.fullName);
         localStorage.setItem('user', JSON.stringify(data));
-        
-        // Redirect to Home
-        navigate('/');
+        if(response.data.cafeId) {
+          localStorage.setItem('cafeId', response.data.cafeId);
+        }
+        if (data.role === 'OWNER') {
+          navigate('/owner/dashboard'); // Cổng VIP phi thẳng vào Điện điều hành
+        } else {
+          navigate('/'); // Cổng thường dành cho bách tính
+        }
       }
     } catch (err) {
       const errorMsg = err.response?.data || 'ログインに失敗しました。';

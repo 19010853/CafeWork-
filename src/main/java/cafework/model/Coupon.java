@@ -1,28 +1,28 @@
 package cafework.model;
 
 import jakarta.persistence.*;
-
-import java.time.LocalDateTime;
 import java.util.UUID;
-
+import java.time.LocalDateTime;
+import org.hibernate.validator.constraints.br.CNPJ;
 @Entity
 @Table(name = "coupons")
 public class Coupon {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @Column(name = "id")
+    private UUID id;
 
-    @Column(name = "cafe_id", nullable = false)
+    @Column(name = "cafe_id")
     private UUID cafeId;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "code")
     private String code;
 
+    @Column(name = "description")
     private String description;
 
-    @Column(name = "discount_value", nullable = false)
-    private Integer discountValue;
+    @Column(name = "discount_value")
+    private String discountValue;
 
     @Column(name = "valid_from")
     private LocalDateTime validFrom;
@@ -36,17 +36,11 @@ public class Coupon {
     public Coupon() {
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -70,16 +64,16 @@ public class Coupon {
         return description;
     }
 
-    public Integer getDiscountValue() {
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getDiscountValue() {
         return discountValue;
     }
 
-    public void setDiscountValue(Integer discountValue) {
+    public void setDiscountValue(String discountValue) {
         this.discountValue = discountValue;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public LocalDateTime getValidFrom() {
