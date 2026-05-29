@@ -50,7 +50,20 @@ const OwnerDashboardPage = () => {
       setSeats(seatsRes.data);
       setImages(imagesRes.data);
       setCoupons(couponsRes.data);
-
+      const fetchedSeats = seatsRes.data;
+      if (fetchedSeats && fetchedSeats.length > 0) {
+        const total = fetchedSeats.length;
+        const available = fetchedSeats.filter(s => s.status === 'AVAILABLE').length;
+        
+        let initialStatus = 'AVAILABLE';
+        if (available === 0) {
+          initialStatus = 'FULL';
+        } else if ((available / total) * 100 <= 30) {
+          initialStatus = 'ALMOST_FULL';
+        }
+        // Thắp sáng đúng màu nút trạng thái dựa theo số liệu thực
+        handleStatusUpdate(initialStatus);
+      }
     } catch (error) {
       console.error("Lỗi khi tải tài sản quán:", error);
     }
@@ -427,7 +440,6 @@ const OwnerDashboardPage = () => {
                 ...styles.statusCard, 
                 ...(cafeStatus === 'AVAILABLE' ? styles.activeStatusCard : {}) 
               }}
-              onClick={() => handleStatusUpdate('AVAILABLE')}
             >
               <span style={{ ...styles.dot, backgroundColor: '#34a853' }}></span> 空席あり
             </button>
@@ -438,7 +450,6 @@ const OwnerDashboardPage = () => {
                 ...styles.statusCard, 
                 ...(cafeStatus === 'ALMOST_FULL' ? styles.activeStatusCard : {}) 
               }}
-              onClick={() => handleStatusUpdate('ALMOST_FULL')}
             >
               <span style={{ ...styles.dot, backgroundColor: '#fbbc04' }}></span> 残りわずか
             </button>
@@ -449,7 +460,6 @@ const OwnerDashboardPage = () => {
                 ...styles.statusCard, 
                 ...(cafeStatus === 'FULL' ? styles.activeStatusCard : {}) 
               }}
-              onClick={() => handleStatusUpdate('FULL')}
             >
               <span style={{ ...styles.dot, backgroundColor: '#ea4335' }}></span> 満席
             </button>
