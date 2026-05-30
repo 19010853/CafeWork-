@@ -83,15 +83,15 @@ const ProfilePage = () => {
 
         // Validation logic
         if (!form.fullName.trim()) {
-            toast.error('Tên không được để trống');
+            toast.error('名前を入力してください。');
             return;
         }
         if (!form.phone.trim()) {
-            toast.error('Số điện thoại không được để trống');
+            toast.error('電話番号を入力してください。');
             return;
         }
         if (!/^\d+$/.test(form.phone)) {
-            toast.error('Số điện thoại chỉ được chứa ký tự số');
+            toast.error('電話番号は数字のみで入力してください。');
             return;
         }
 

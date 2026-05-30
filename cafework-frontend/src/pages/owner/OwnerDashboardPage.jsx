@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 const OwnerDashboardPage = () => {
   // ==========================================
   // 1. KHO CHỨA (STATE)
@@ -76,13 +77,13 @@ const OwnerDashboardPage = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert("Bệ hạ chưa đăng nhập hoặc đã mất thẻ bài!");
+        toast.error('ログインしていないか、セッションが切れています。');
         return;
       }
 
       const cafeId = localStorage.getItem('cafeId'); 
       if (!cafeId) {
-        alert("Bệ hạ chưa chọn quán cafe nào để quản lý!");
+        toast.error('管理するカフェが選択されていません。');
         return;
       }
 
@@ -100,15 +101,14 @@ const OwnerDashboardPage = () => {
       console.log('Báo cáo từ Backend:', response.data);
 
     } catch (error) {
-      console.error("Truyền lệnh thất bại!", error);
+      console.error('Truyền lệnh thất bại!', error);
       if (error.response) {
-        alert(`Bẩm, triều đình từ chối lệnh: ${error.response.data.message || 'Lỗi không xác định'}`);
+        toast.error(`申し訳ありません、サーバーが要求を拒否しました: ${error.response.data.message || '不明なエラー'}`);
       } else if (error.request) {
-        alert("Bẩm, không thể kết nối đến máy chủ. Xin kiểm tra lại Spring Boot!");
+        toast.error('サーバーに接続できません。バックエンドを確認してください。');
       } else {
-        alert("Bẩm, có lỗi nội bộ xảy ra!");
+        toast.error('内部エラーが発生しました。');
       }
-      // setCafeStatus('TRẠNG_THÁI_CŨ'); // Tạm khóa dòng này lại để khỏi lỗi
     }
   };
 
@@ -156,12 +156,12 @@ const OwnerDashboardPage = () => {
         }
       );
 
-      alert("Bẩm bệ hạ, ảnh đã được treo lên tường thành công!");
+      toast.success('画像は正常にアップロードされました！');
       fetchAllCafeData(); // Tải lại trang để ảnh hiện ra
 
     } catch (error) {
-      console.error("Lỗi tải ảnh:", error);
-      alert("Bẩm, phép thuật tải ảnh đã thất bại!");
+      console.error('Lỗi tải ảnh:', error);
+      toast.error('画像のアップロードに失敗しました。');
     } finally {
       event.target.value = null; // Dọn dẹp cơ quan ngầm
     }
@@ -210,15 +210,15 @@ const OwnerDashboardPage = () => {
       setHoveredImageId(null); 
 
     } catch (error) {
-      console.error("Lỗi khi xóa ảnh:", error);
-      alert("Bẩm, xóa ảnh thất bại do sự cố kỹ thuật!");
+      console.error('Lỗi khi xóa ảnh:', error);
+      toast.error('画像の削除に失敗しました。');
     }
   };
   
   // Chiêu thức 9: Gửi lệnh đúc Coupon xuống Database
   const handleCreateCoupon = async () => {
     if (!couponForm.code || !couponForm.discountValue || !couponForm.validFrom || !couponForm.validTo) {
-      alert("Bẩm bệ hạ, xin hãy điền đầy đủ các thông tin bắt buộc!");
+      toast.error('必須項目をすべて入力してください。');
       return;
     }
 
@@ -240,15 +240,15 @@ const OwnerDashboardPage = () => {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
-      alert("Bẩm, vé khuyến mãi mới đã được phát hành thành công!");
+      toast.success('クーポンの発行に成功しました！');
       
       setShowCouponModal(false);
       setCouponForm({ code: '', description: '', discountValue: '', validFrom: '', validTo: '' });
       fetchAllCafeData();
 
     } catch (error) {
-      console.error("Lỗi khi đúc vé:", error);
-      alert("Bẩm, có lỗi xảy ra khi tạo vé khuyến mãi!");
+      console.error('Lỗi khi đúc vé:', error);
+      toast.error('クーポン作成中にエラーが発生しました。');
     }
   };
 
@@ -278,7 +278,7 @@ const OwnerDashboardPage = () => {
 
     } catch (error) {
       console.error("Lỗi khi xé vé:", error);
-      alert("Bẩm, lệnh tiêu hủy vé gặp trục trặc kỹ thuật!");
+      toast.error('クーポン削除中に技術的な問題が発生しました。');
     }
   };
   // ==========================================
@@ -337,17 +337,17 @@ const OwnerDashboardPage = () => {
         }
       );
 
-      alert("Bẩm bệ hạ, toàn bộ thay đổi (Thêm/Xóa/Đổi màu) đã ghim chặt vào Database!");
+      toast.success('変更内容はデータベースに保存されました！');
       fetchAllCafeData(); // Tải lại dữ liệu chuẩn từ DB
     } catch (error) {
       console.error("Lưu thất bại:", error);
-      alert("Bẩm, có lỗi xảy ra khi lưu!");
+      toast.error('保存中にエラーが発生しました。');
     }
   };
   const handleAddNewSeats = () => {
     const amount = parseInt(addAmount, 10);
     if (isNaN(amount) || amount <= 0) {
-      alert("Bẩm, số lượng ghế phải lớn hơn 0!");
+      toast.error('座席数は0より大きくなければなりません。');
       return;
     }
 
@@ -381,11 +381,11 @@ const OwnerDashboardPage = () => {
     console.log("🚩 ĐÃ VÀO BÊN TRONG HÀM XÓA GHẾ!");
     const amount = parseInt(deleteAmount, 10);
     if (isNaN(amount) || amount <= 0) {
-      alert("Bẩm, số lượng ghế cần xóa phải lớn hơn 0!");
+      toast.error('削除する座席数は0より大きくなければなりません。');
       return;
     }
     if (amount > seats.length) {
-      alert(`Bẩm, quán chỉ còn ${seats.length} ghế, không thể xóa đến ${amount} ghế!`);
+      toast.error(`現在の座席数は${seats.length}席しかありません。${amount}席は削除できません。`);
       return;
     }
 
@@ -550,7 +550,6 @@ const OwnerDashboardPage = () => {
                     />
                     {/* Nút bấm thực hiện lệnh xóa tạm, dùng màu đỏ cảnh báo */}
                     <button onClick={() => {
-                      alert("Bẩm, chức năng xóa ghế đang trong giai đoạn thử nghiệm, chưa thể kích hoạt!");
                       handleDeleteLastSeats();
                       }} style={{ ...styles.popupBtn, backgroundColor: '#ea4335' }}>
                       削除
@@ -641,9 +640,9 @@ const OwnerDashboardPage = () => {
                 <div style={styles.couponInfo}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <p style={styles.couponTitle}>{coupon.code || 'SALE'}</p>
-                    {/* Giả sử ngài có trường description, nếu tên trường khác ngài tự đổi nhé */}
+                    {/* 説明フィールドがない場合のデフォルト表示 */}
                     <span style={{ fontSize: '14px', color: '#666' }}>
-                      {coupon.description || 'Giảm giá cho khách hàng'}
+                      {coupon.description || 'お客様向け割引'}
                     </span>
                   </div>
                   <p style={styles.couponDate}>
@@ -690,38 +689,38 @@ const OwnerDashboardPage = () => {
       {showCouponModal && (
         <div style={styles.fullscreenModal}>
           <div style={styles.formModalCard}>
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>クーポン作成 (Tạo Khuyến Mãi)</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>クーポン作成</h3>
             
-            <label style={styles.formLabel}>Mã Code (Code)*</label>
+            <label style={styles.formLabel}>クーポンコード*</label>
             <input 
               style={styles.formInput} 
               type="text" 
-              placeholder="VD: SUMMER2026"
+              placeholder="例: SUMMER2026"
               value={couponForm.code} 
               onChange={e => setCouponForm({...couponForm, code: e.target.value})} 
             />
 
-            <label style={styles.formLabel}>Mô tả (Description)</label>
+            <label style={styles.formLabel}>説明</label>
             <input 
               style={styles.formInput} 
               type="text" 
-              placeholder="VD: Giảm giá mùa hè cho thức uống"
+              placeholder="例: 夏のドリンク割引"
               value={couponForm.description} 
               onChange={e => setCouponForm({...couponForm, description: e.target.value})} 
             />
 
-            <label style={styles.formLabel}>Giá trị giảm (Discount Value)*</label>
+            <label style={styles.formLabel}>割引額*</label>
             <input 
               style={styles.formInput} 
               type="number" 
-              placeholder="VD: 20000"
+              placeholder="例: 20000"
               value={couponForm.discountValue} 
               onChange={e => setCouponForm({...couponForm, discountValue: e.target.value})} 
             />
 
             <div style={{ display: 'flex', gap: '16px' }}>
               <div style={{ flex: 1 }}>
-                <label style={styles.formLabel}>Từ ngày (Valid From)*</label>
+                <label style={styles.formLabel}>開始日*</label>
                 <input 
                   style={styles.formInput} 
                   type="date" 
@@ -730,7 +729,7 @@ const OwnerDashboardPage = () => {
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <label style={styles.formLabel}>Đến ngày (Valid To)*</label>
+                <label style={styles.formLabel}>終了日*</label>
                 <input 
                   style={styles.formInput} 
                   type="date" 
@@ -745,13 +744,13 @@ const OwnerDashboardPage = () => {
                 style={{ ...styles.popupBtn, backgroundColor: '#ccc', color: '#333' }} 
                 onClick={() => setShowCouponModal(false)}
               >
-                Hủy
+                キャンセル
               </button>
               <button 
                 style={styles.popupBtn} 
                 onClick={handleCreateCoupon}
               >
-                Tạo Vé
+                クーポン作成
               </button>
             </div>
           </div>

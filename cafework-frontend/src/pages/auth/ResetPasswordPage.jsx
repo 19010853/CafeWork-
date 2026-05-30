@@ -17,13 +17,13 @@ const ResetPasswordPage = () => {
         const passwordRegex = /^(?=.*[A-Z])(?=.*[\d!@#$%^&*])(?=.{8,})/;
         
         if (!form.newPassword) {
-            newErrors.newPassword = 'Mật khẩu mới không được để trống';
+            newErrors.newPassword = '新しいパスワードを入力してください。';
         } else if (!passwordRegex.test(form.newPassword)) {
-            newErrors.newPassword = 'Mật khẩu phải tối thiểu 8 ký tự, gồm chữ hoa và số/ký tự đặc biệt';
+            newErrors.newPassword = 'パスワードは8文字以上で、大文字・数字・記号を含む必要があります。';
         }
 
         if (form.confirmPassword !== form.newPassword) {
-            newErrors.confirmPassword = 'Xác nhận mật khẩu không khớp';
+            newErrors.confirmPassword = 'パスワードの確認が一致しません。';
         }
 
         setErrors(newErrors);
@@ -38,10 +38,10 @@ const ResetPasswordPage = () => {
         try {
             // Logic gọi API reset mật khẩu sẽ ở đây
             // await authService.resetPassword(form);
-            toast.success('Đặt lại mật khẩu thành công!');
+            toast.success('パスワードが正常にリセットされました！');
             navigate('/login');
         } catch (error) {
-            toast.error(error?.response?.data || 'Đặt lại mật khẩu thất bại');
+            toast.error(error?.response?.data || 'パスワードリセットに失敗しました。');
         } finally {
             setLoading(false);
         }

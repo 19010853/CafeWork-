@@ -16,19 +16,19 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
     const validate = () => {
         const newErrors = {};
         if (!form.currentPassword) {
-            newErrors.currentPassword = 'Mật khẩu hiện tại không được để trống';
+            newErrors.currentPassword = '現在のパスワードを入力してください。';
         }
         
         // Password regex: ít nhất 8 ký tự, có chữ hoa, số hoặc ký tự đặc biệt
         const passwordRegex = /^(?=.*[A-Z])(?=.*[\d!@#$%^&*])(?=.{8,})/;
         if (!form.newPassword) {
-            newErrors.newPassword = 'Mật khẩu mới không được để trống';
+            newErrors.newPassword = '新しいパスワードを入力してください。';
         } else if (!passwordRegex.test(form.newPassword)) {
-            newErrors.newPassword = 'Mật khẩu phải tối thiểu 8 ký tự, gồm chữ hoa và số/ký tự đặc biệt';
+            newErrors.newPassword = 'パスワードは8文字以上で、大文字・数字・記号を含む必要があります。';
         }
 
         if (form.confirmPassword !== form.newPassword) {
-            newErrors.confirmPassword = 'Xác nhận mật khẩu không khớp';
+            newErrors.confirmPassword = 'パスワードの確認が一致しません。';
         }
 
         setErrors(newErrors);
@@ -43,10 +43,10 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         try {
             // Logic gọi API đổi mật khẩu sẽ ở đây (giả lập thành công)
             // await profileService.changePassword(form);
-            toast.success('Đổi mật khẩu thành công!');
+            toast.success('パスワードが正常に変更されました！');
             onClose();
         } catch (error) {
-            toast.error(error?.response?.data || 'Đổi mật khẩu thất bại');
+            toast.error(error?.response?.data || 'パスワード変更に失敗しました。');
         } finally {
             setLoading(false);
         }
