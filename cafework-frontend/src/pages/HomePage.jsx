@@ -3,6 +3,7 @@ import MapArea from '../components/MapArea';
 import SearchBar from '../components/Search/SearchBar'; 
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
+import { t } from '../utils/i18n';
 const HomePage = () => {
   const navigation = useNavigate();
   useEffect(() => {
@@ -28,20 +29,20 @@ const HomePage = () => {
 
   // Phép thuật dịch thuật: Dịch lệnh của máy chủ (tiếng Anh) sang tiếng Nhật chuẩn
   const translateStep = (step) => {
-    if (step.maneuver.type === 'depart') return '出発';
-    if (step.maneuver.type === 'arrive') return '目的地に到着';
+      if (step.maneuver.type === 'depart') return t('depart');
+      if (step.maneuver.type === 'arrive') return t('arriveDestination');
 
-    switch(step.maneuver.modifier) {
-        case 'left': return '左折する';
-        case 'right': return '右折する';
-        case 'straight': return '直進する';
-        case 'slight left': return '左方向へ進む';
-        case 'slight right': return '右方向へ進む';
-        case 'sharp left': return '大きく左折する';
-        case 'sharp right': return '大きく右折する';
-        case 'uturn': return 'Uターンする';
-        default: return '進む';
-    }
+      switch(step.maneuver.modifier) {
+          case 'left': return t('turnLeft');
+          case 'right': return t('turnRight');
+          case 'straight': return t('goStraight');
+          case 'slight left': return t('keepLeft');
+          case 'slight right': return t('keepRight');
+          case 'sharp left': return t('sharpLeft');
+          case 'sharp right': return t('sharpRight');
+          case 'uturn': return t('uTurn');
+          default: return t('continue');
+      }
   };
 
   return (
@@ -60,16 +61,16 @@ const HomePage = () => {
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <div style={{ padding: '15px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <button onClick={() => setRouteData(null)} style={{ padding: '6px 12px', backgroundColor: '#f0f0f0', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                        ← 戻る
+                        ← {t('back')}
                     </button>
-                    <h3 style={{ margin: 0, fontSize: '16px' }}>ルート案内</h3>
+                    <h3 style={{ margin: 0, fontSize: '16px' }}>{t('routeGuide')}</h3>
                 </div>
 
                 <div style={{ padding: '20px', borderBottom: '5px solid #f5f5f5' }}>
                     <h2 style={{ margin: '0 0 10px 0', fontSize: '24px', color: '#0066ff' }}>
                         {routeData.distance} km <span style={{ fontSize: '16px', color: '#555' }}>/ {routeData.duration} 分</span>
                     </h2>
-                    <p style={{ margin: 0, fontSize: '13px', color: '#888' }}>※ 交通状況により変動します</p>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#888' }}>{t('trafficMayVary')}</p>
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import styles from './CafeManagementPage.module.css';
 import axiosClient from '../../api/axiosClient';
+import { t } from '../../utils/i18n';
 
 const CafeManagementPage = () => {
   const [formData, setFormData] = useState({
@@ -27,7 +28,7 @@ const CafeManagementPage = () => {
         }
       } catch (error) {
         console.error('Error fetching cafe data:', error);
-        toast.error('カフェ情報の取得に失敗しました。');
+        toast.error(t('fetchCafeFailed'));
       } finally {
         setLoading(false);
       }
@@ -37,22 +38,22 @@ const CafeManagementPage = () => {
   }, []);
 
   const validate = () => {
-    if (!formData.name?.trim()) return 'カフェ名を入力してください。';
-    if (!formData.ownerName?.trim()) return '店主名を入力してください。';
-    if (!formData.address?.trim()) return '住所を入力してください。';
+    if (!formData.name?.trim()) return t('requiredCafeName');
+    if (!formData.ownerName?.trim()) return t('requiredOwnerName');
+    if (!formData.address?.trim()) return t('requiredAddress');
     
     // Email regex
-    if (!formData.email?.trim()) return 'メールアドレスを入力してください。';
+    if (!formData.email?.trim()) return t('requiredEmail');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) return '有効なメールアドレスを入力してください。';
+    if (!emailRegex.test(formData.email)) return t('invalidEmail');
 
     // Phone regex (only numbers)
-    if (!formData.phone?.trim()) return '電話番号を入力してください。';
-    if (!/^\d+$/.test(formData.phone)) return '電話番号は数字のみで入力してください。';
+    if (!formData.phone?.trim()) return t('requiredPhone');
+    if (!/^\d+$/.test(formData.phone)) return t('invalidPhone');
 
     // Open hours regex (HH:MM)
     if (formData.openHours && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(formData.openHours)) {
-      return '営業時間は HH:MM の形式で入力してください。';
+      return t('invalidBusinessHours');
     }
 
     return null;
@@ -78,53 +79,53 @@ const CafeManagementPage = () => {
     setSubmitting(true);
     try {
       await axiosClient.put('/cafes/my-cafe', formData);
-      toast.success('更新に成功しました');
+      toast.success(t('updateSuccess'));
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     } catch (error) {
       console.error('Error updating cafe:', error);
-      const errorMsg = error.response?.data || '情報の更新に失敗しました。';
-      toast.error(typeof errorMsg === 'string' ? errorMsg : '更新エラー');
+      const errorMsg = error.response?.data || t('updateFailed');
+      toast.error(typeof errorMsg === 'string' ? errorMsg : t('updateError'));
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div style={{ padding: '20px', color: '#8d6e63' }}>読み込み中...</div>;
+  if (loading) return <div style={{ padding: '20px', color: '#8d6e63' }}>{t('loading')}</div>;
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>カフェ情報の管理</h1>
+      <h1 className={styles.title}>{t('cafeManagement')}</h1>
       
       <form onSubmit={handleSubmit}>
         <div className={styles.formGrid}>
           <div className={styles.formGroup}>
-            <label className={styles.label}>カフェ名</label>
+            <label className={styles.label}>{t('cafeName')}</label>
             <input
               type="text"
               name="name"
               className={styles.input}
               value={formData.name || ''}
               onChange={handleChange}
-              placeholder="例: Cafe Sakura"
+              placeholder={t('placeholderCafeName')}
             />
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>店主名</label>
+            <label className={styles.label}>{t('ownerName')}</label>
             <input
               type="text"
               name="ownerName"
               className={styles.input}
               value={formData.ownerName || ''}
               onChange={handleChange}
-              placeholder="例: 山田 太郎"
+              placeholder={t('placeholderOwnerName')}
             />
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>メールアドレス</label>
+            <label className={styles.label}>{t('emailAddress')}</label>
             <input
               type="email"
               name="email"
@@ -136,7 +137,7 @@ const CafeManagementPage = () => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>電話番号</label>
+            <label className={styles.label}>{t('phoneNumber')}</label>
             <input
               type="text"
               name="phone"
@@ -148,7 +149,7 @@ const CafeManagementPage = () => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>営業時間 (HH:MM)</label>
+            <label className={styles.label}>{t('businessHours')}</label>
             <input
               type="text"
               name="openHours"
@@ -160,19 +161,19 @@ const CafeManagementPage = () => {
           </div>
 
           <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-            <label className={styles.label}>住所</label>
+            <label className={styles.label}>{t('address')}</label>
             <input
               type="text"
               name="address"
               className={styles.input}
               value={formData.address || ''}
               onChange={handleChange}
-              placeholder="東京都渋谷区..."
+              placeholder={t('placeholderAddress')}
             />
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>緯度 (Latitude)</label>
+            <label className={styles.label}>{t('latitude')}</label>
             <input
               type="number"
               step="any"
@@ -185,7 +186,7 @@ const CafeManagementPage = () => {
           </div>
 
           <div className={styles.formGroup}>
-            <label className={styles.label}>経度 (Longitude)</label>
+            <label className={styles.label}>{t('longitude')}</label>
             <input
               type="number"
               step="any"
@@ -198,13 +199,13 @@ const CafeManagementPage = () => {
           </div>
 
           <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-            <label className={styles.label}>説明</label>
+            <label className={styles.label}>{t('description')}</label>
             <textarea
               name="description"
               className={styles.textarea}
               value={formData.description || ''}
               onChange={handleChange}
-              placeholder="お店の特徴について教えてください..."
+              placeholder={t('placeholderDescription')}
             />
           </div>
         </div>
@@ -214,7 +215,7 @@ const CafeManagementPage = () => {
           className={styles.saveButton}
           disabled={submitting}
         >
-          {submitting ? '保存中...' : '更新'}
+          {submitting ? t('saving') : t('update')}
         </button>
       </form>
     </div>

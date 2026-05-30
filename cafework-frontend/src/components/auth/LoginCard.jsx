@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './LoginCard.module.css';
 import api from '../../api/axiosClient';
+import { t } from '../../utils/i18n';
 
 const LoginCard = ({ onSwitchToSignup }) => {
   const navigate = useNavigate();
@@ -68,11 +69,13 @@ const LoginCard = ({ onSwitchToSignup }) => {
 
   return (
     <div className={styles.card}>
-      <h2 className={styles.title}>ログイン</h2>
+      <h2 className={styles.title}>{t('login')}</h2>
       
       <form onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
-          <label className={styles.label}>メールアドレス</label>
+          <label className={styles.label}>
+            {t('email')}
+          </label>
           <input
             type="email"
             className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
@@ -84,7 +87,9 @@ const LoginCard = ({ onSwitchToSignup }) => {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>パスワード</label>
+          <label className={styles.label}>
+            {t('password')}
+          </label>
           <input
             type="password"
             className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
@@ -97,14 +102,14 @@ const LoginCard = ({ onSwitchToSignup }) => {
 
         <div className={styles.links}>
           <a href="#" className={styles.link}>
-            パスワードを<span className={styles.linkStrong}>お忘れですか？</span>
+            {t('forgotPassword')}
           </a>
           <button 
             type="button" 
             onClick={onSwitchToSignup}
             className={styles.link}
           >
-            アカウント<span className={styles.linkStrong}>作成</span>
+            {t('createAccount')}
           </button>
         </div>
 
@@ -113,7 +118,7 @@ const LoginCard = ({ onSwitchToSignup }) => {
           disabled={loading}
           className={styles.submitButton}
         >
-          {loading ? '処理中...' : 'ログイン'}
+          {loading ? t('processing') : t('login')}
         </button>
       </form>
     </div>

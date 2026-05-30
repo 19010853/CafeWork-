@@ -2,31 +2,18 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styles from './Header.module.css';
 import { getLang, setLang as persistLang } from '../../utils/userLocalStore';
+import { t } from '../../utils/i18n';
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [langOpen, setLangOpen] = useState(false);
 
   const lang = useMemo(() => getLang(), []);
-  const labels = useMemo(() => {
-    if (lang === 'VI') {
-      return {
-        langLabel: 'VI Tiếng Việt',
-        login: 'Đăng nhập',
-        register: 'Đăng ký',
-        profile: 'Hồ sơ',
-        logout: 'Đăng xuất',
-      };
-    }
-
-    return {
-      langLabel: 'JP 日本語',
-      login: 'ログイン',
-      register: '登録',
-      profile: 'プロフィール',
-      logout: 'ログアウト',
-    };
-  }, [lang]);
+  const langLabel = {
+    JP: 'JP 日本語',
+    VI: 'VI Tiếng Việt',
+    EN: 'EN English'
+  }[lang] || 'JP 日本語';
   const isActive = (path) => location.pathname === path;
 
   // 1. Lấy token và thông tin user từ localStorage
@@ -44,7 +31,7 @@ const Header = () => {
 
   // 4. Hàm xử lý Đăng xuất
   const handleLogout = () => {
-    if (window.confirm("ログアウトしますか？")) {
+    if (window.confirm(t('confirmLogout'))) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('role');
@@ -75,8 +62,14 @@ const Header = () => {
             aria-haspopup="menu"
             aria-expanded={langOpen}
           >
-            <span className={styles.flag}>{lang === 'VI' ? '🇻🇳' : '🇯🇵'}</span>
-            <span>{labels.langLabel}</span>
+            <span className={styles.flag}>
+              {{
+                JP: '🇯🇵',
+                VI: '🇻🇳',
+                EN: '🇺🇸'
+            }[lang]}
+            </span>
+            <span>{langLabel}</span>
             <svg className={styles.arrowIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -88,6 +81,9 @@ const Header = () => {
               </button>
               <button type="button" className={styles.langMenuItem} role="menuitem" onClick={() => handleSelectLang('VI')}>
                 🇻🇳 VI Tiếng Việt
+              </button>
+              <button type="button" className={styles.langMenuItem} role="menuitem" onClick={() => handleSelectLang('EN')}>
+                🇺🇸 EN English
               </button>
             </div>
           )}
@@ -110,13 +106,13 @@ const Header = () => {
               onClick={() => navigate('/login')}
               className={styles.loginButton}
             >
-              {labels.login}
+              {t('login')}
             </button>
             <button
               onClick={() => navigate('/signup')}
               className={styles.registerButton}
             >
-              {labels.register}
+              {t('register')}
             </button>
           </>
         ) : (
@@ -125,21 +121,21 @@ const Header = () => {
             <Link
               to="/profile"
               className={styles.profileLink}
-              aria-label={labels.profile}
-              title={labels.profile}
+              aria-label={t('profile')}
+              title={t('profile')}
             >
               <div className={styles.avatar}>
                 {user?.fullName?.charAt(0) || 'U'}
               </div>
               <span className={styles.userName}>
-                {user?.fullName || 'ユーザー'}
+                {user?.fullName || t('user')}
               </span>
             </Link>
             <button
               onClick={handleLogout}
               className={styles.logoutButton}
             >
-              ⎋ {labels.logout}
+              ⎋ {t('logout')}
             </button>
           </div>
         )}
@@ -156,14 +152,14 @@ const Header = () => {
                   className={isActive('/owner/dashboard') ? styles.activeTab : styles.navTab}
                   onClick={() => navigate('/owner/dashboard')}
               >
-                ダッシュボード
+                {t('dashboard')}
               </button>
 
               <button
                   className={isActive('/owner/management') ? styles.activeTab : styles.navTab}
                   onClick={() => navigate('/owner/management')} // Ngài có thể đổi link này tùy ý
               >
-                店舗管理
+                {t('storeManagement')}
               </button>
             </>
           ) : (
@@ -173,21 +169,21 @@ const Header = () => {
                   className={isActive('/') ? styles.activeTab : styles.navTab}
                   onClick={() => navigate('/')}
               >
-                ホーム
+                {t('home')}
               </button>
 
               <button
                   className={isActive('/my-list') ? styles.activeTab : styles.navTab}
                   onClick={() => navigate('/my-list')}
               >
-                マイリスト
+                {t('myList')}
               </button>
 
               <button
                   className={isActive('/search-history') ? styles.activeTab : styles.navTab}
                   onClick={() => navigate('/search-history')}
               >
-                検索履歴
+                {t('searchHistory')}
               </button>
             </>
           )}

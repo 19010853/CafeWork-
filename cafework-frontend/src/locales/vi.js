@@ -1,0 +1,229 @@
+export default {
+    // Login and Header
+    login: 'Đăng nhập',
+    email: 'Email',
+    password: 'Mật khẩu',
+    register: 'Đăng ký',
+    logout: 'Đăng xuất',
+    profile: 'Hồ sơ',
+
+    forgotPassword: 'Quên mật khẩu?',
+    createAccount: 'Tạo tài khoản',
+
+    processing: 'Đang xử lý...',
+
+    signup: 'Đăng ký',
+
+    fullName: 'Họ tên',
+    confirmPassword: 'Xác nhận mật khẩu',
+
+    normalUser: 'Người dùng',
+    cafeOwner: 'Chủ quán',
+
+    alreadyHaveAccount: 'Đã có tài khoản?',
+    backToLogin: 'Đăng nhập',
+
+    otpTitle: 'Xác thực OTP',
+    otpCode: 'Mã xác thực',
+    verify: 'Xác nhận',
+    backToSignup: 'Quay lại đăng ký',
+    otpInstruction:
+        'Nhập mã xác thực 6 chữ số đã gửi tới',
+
+    home: 'Trang chủ',
+    myList: 'Danh sách của tôi',
+    searchHistory: 'Lịch sử tìm kiếm',
+
+    dashboard: 'Bảng điều khiển',
+    storeManagement: 'Quản lý quán',
+
+    confirmLogout: 'Bạn muốn đăng xuất?',
+    user: 'Người dùng',
+
+    // CafeDetailPage
+    loading: 'Đang tải...',
+    loadFailed:
+        'Không thể tải dữ liệu. Vui lòng thử lại sau.',
+    noInfo: 'Không có thông tin',
+
+    backToResults: 'Quay lại kết quả tìm kiếm',
+
+
+    noImage: 'Không có ảnh',
+    viewAllPhotos: 'Xem tất cả',
+
+    noReviewYet: 'Chưa có đánh giá',
+
+    availableSeats: 'Còn chỗ',
+    almostFull: 'Sắp hết chỗ',
+    fullSeats: 'Hết chỗ',
+    noSeatInfo: 'Không có thông tin',
+
+    refresh: 'Làm mới',
+    refreshing: 'Đang làm mới...',
+
+    savedFavorite: 'Đã lưu',
+    saveFavorite: 'Lưu yêu thích',
+
+    loginRequired: 'Vui lòng đăng nhập.',
+
+    directions: 'Chỉ đường',
+
+    storeInfo: 'Thông tin quán',
+
+    address: 'Địa chỉ',
+    businessHours: 'Giờ mở cửa',
+    phoneNumber: 'Số điện thoại',
+
+    aboutCafe: 'Giới thiệu',
+
+    openGoogleMaps: 'Mở Google Maps',
+
+    mapAccess: 'Bản đồ & Đường đi',
+
+    currentCrowdStatus: 'Tình trạng chỗ ngồi hiện tại',
+    currentStatus: 'Hiện tại',
+
+    reviews: 'Đánh giá',
+    reviewCount: 'đánh giá',
+
+    writeReview: 'Viết đánh giá',
+
+    loadingReviews: 'Đang tải đánh giá...',
+    noReviewsYet: 'Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!',
+
+    anonymousUser: 'Người dùng ẩn danh',
+    unknownDate: 'Không rõ ngày',
+
+    translateToJapanese: 'Dịch sang tiếng Nhật',
+    translating: 'Đang dịch...',
+    translatedByGoogle: 'Google Dịch',
+
+    reviewModalTitle: 'Viết đánh giá',
+    rating: 'Đánh giá',
+    points: 'điểm',
+    comment: 'Bình luận',
+
+    reviewPlaceholder: 'Hãy chia sẻ cảm nhận của bạn về quán cà phê này...',
+
+    cancel: 'Hủy',
+    submitReview: 'Đăng đánh giá',
+    submittingReview: 'Đang đăng...',
+
+    photos: 'Ảnh',
+    //Home Page
+    back: 'Quay lại',
+    routeGuide: 'Chỉ đường',
+    trafficMayVary: 'Thời gian di chuyển có thể thay đổi tùy tình trạng giao thông',
+
+    depart: 'Xuất phát',
+    arriveDestination: 'Đến điểm đến',
+
+    turnLeft: 'Rẽ trái',
+    turnRight: 'Rẽ phải',
+    goStraight: 'Đi thẳng',
+    keepLeft: 'Chếch trái',
+    keepRight: 'Chếch phải',
+    sharpLeft: 'Rẽ gấp trái',
+    sharpRight: 'Rẽ gấp phải',
+    uTurn: 'Quay đầu',
+    continue: 'Tiếp tục đi',
+
+    //Search Bar
+    searchPlaceholder: 'Tìm theo khu vực hoặc từ khóa...',
+
+    searchError: 'Đã xảy ra lỗi.',
+
+    sortDefault: 'Mặc định',
+    sortRatingHigh: 'Đánh giá cao nhất',
+    sortNearest: 'Gần nhất',
+
+    loadingResults: 'Đang tải...',
+    noCafeFound: 'Không tìm thấy quán cà phê',
+
+    unknownStatus: 'Không rõ',
+
+    //My List
+    noSavedCafes: 'Bạn chưa lưu quán cà phê nào.',
+
+    //Search History
+    noSearchHistory: 'Không có lịch sử tìm kiếm.',
+    clearHistoryConfirm: 'Bạn có muốn xóa toàn bộ lịch sử tìm kiếm không?',
+
+    //Owner Dashboard
+    ownerDashboard: 'Bảng điều khiển',
+
+    seatStatusUpdate: 'Cập nhật trạng thái chỗ ngồi',
+    statusAvailable: 'Còn chỗ',
+    statusAlmostFull: 'Sắp hết chỗ',
+    statusFull: 'Hết chỗ',
+
+    seatManagement: 'Quản lý ghế',
+    seatTotal: 'Tổng',
+    seatAvailable: 'Ghế trống',
+    seatOccupied: 'Đang sử dụng',
+
+    refreshLatest: '🔄 Làm mới',
+
+    addSeat: '+ Thêm ghế',
+    deleteSeat: '- Xóa ghế',
+
+    add: 'Thêm',
+    delete: 'Xóa',
+
+    photoManagement: 'Quản lý ảnh',
+    addImage: 'Thêm ảnh',
+
+    couponManagement: 'Quản lý khuyến mãi',
+    createCoupon: '+ Tạo coupon',
+
+    valid: 'Còn hiệu lực',
+    sale: 'SALE',
+    defaultCouponDescription: 'Khuyến mãi cho khách hàng',
+
+    createCouponTitle: 'Tạo khuyến mãi',
+    couponCode: 'Mã coupon',
+    couponDescription: 'Mô tả',
+    discountValue: 'Giá trị giảm',
+    validFrom: 'Từ ngày',
+    validTo: 'Đến ngày',
+
+    createTicket: 'Tạo',
+
+    couponCodePlaceholder: 'VD: SUMMER2026',
+    couponDescriptionPlaceholder: 'VD: Giảm giá mùa hè cho thức uống',
+    couponDiscountPlaceholder: 'VD: 20000',
+
+    //Cafe Management
+    cafeManagement: 'Quản lý quán cà phê',
+
+    fetchCafeFailed: 'Không thể tải thông tin quán.',
+
+    cafeName: 'Tên quán',
+    ownerName: 'Tên chủ quán',
+    emailAddress: 'Email',
+    latitude: 'Vĩ độ',
+    longitude: 'Kinh độ',
+    description: 'Mô tả',
+
+    placeholderCafeName: 'VD: Cafe Sakura',
+    placeholderOwnerName: 'VD: Nguyễn Văn A',
+    placeholderAddress: 'Quận Hoàn Kiếm, Hà Nội...',
+    placeholderDescription: 'Hãy giới thiệu đặc điểm nổi bật của quán...',
+
+    requiredCafeName: 'Vui lòng nhập tên quán.',
+    requiredOwnerName: 'Vui lòng nhập tên chủ quán.',
+    requiredAddress: 'Vui lòng nhập địa chỉ.',
+    requiredEmail: 'Vui lòng nhập email.',
+    invalidEmail: 'Email không hợp lệ.',
+    requiredPhone: 'Vui lòng nhập số điện thoại.',
+    invalidPhone: 'Số điện thoại chỉ được chứa chữ số.',
+    invalidBusinessHours: 'Giờ mở cửa phải theo định dạng HH:MM.',
+
+    updateSuccess: 'Cập nhật thành công.',
+    updateFailed: 'Không thể cập nhật thông tin.',
+    updateError: 'Lỗi cập nhật',
+
+    saving: 'Đang lưu...',
+    update: 'Cập nhật'
+}

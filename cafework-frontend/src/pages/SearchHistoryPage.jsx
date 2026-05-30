@@ -7,6 +7,7 @@ import {
     clearSearchHistory
 } from '../utils/userLocalStore';
 import styles from './profile/ProfilePage.module.css';
+import { t } from '../utils/i18n';
 
 const formatTime = (iso) => {
     try {
@@ -33,7 +34,7 @@ const SearchHistoryPage = () => {
         );
     };
     const handleClearAll = () => {
-        if (!window.confirm('履歴をすべて削除しますか？')) return;
+        if (!window.confirm(t('clearHistoryConfirm'))) return;
 
         clearSearchHistory();
         setItems([]);
@@ -44,10 +45,10 @@ const SearchHistoryPage = () => {
             <div className={styles.page}>
                 <div className={styles.container} style={{ display: 'block' }}>
                     <div className={`${styles.card} ${styles.mainCard}`}>
-                        <h1 className={styles.pageTitle}>検索履歴</h1>
+                        <h1 className={styles.pageTitle}>{t('searchHistory')}</h1>
 
                         {items.length === 0 ? (
-                            <p className={styles.subText}>検索履歴がありません。</p>
+                            <p className={styles.subText}>{t('noSearchHistory')}</p>
                         ) : (
                             <div style={{ display: 'grid', gap: 10 }}>
                                 {items.map((item) => (
