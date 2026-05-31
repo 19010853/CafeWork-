@@ -93,17 +93,17 @@ const ProfilePage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validation logic
+        // Validation logic (Sprint 3 Step 1)
         if (!form.fullName.trim()) {
-            toast.error('名前を入力してください。');
+            toast.error('Tên không được để trống');
             return;
         }
         if (!form.phone.trim()) {
-            toast.error('電話番号を入力してください。');
+            toast.error('Số điện thoại không được để trống');
             return;
         }
         if (!/^\d+$/.test(form.phone)) {
-            toast.error('電話番号は数字のみで入力してください。');
+            toast.error('Số điện thoại chỉ được chứa ký tự số');
             return;
         }
 
@@ -295,9 +295,9 @@ const ProfilePage = () => {
                     </main>
                 </div>
             </div>
-            <ChangePasswordModal
-                isOpen={isPasswordModalOpen}
-                onClose={() => setIsPasswordModalOpen(false)}
+            <ChangePasswordModal 
+                isOpen={isPasswordModalOpen} 
+                onClose={() => setIsPasswordModalOpen(false)} 
             />
         </div>
     );

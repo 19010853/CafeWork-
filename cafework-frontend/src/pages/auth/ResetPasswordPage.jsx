@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './ResetPasswordPage.module.css';
+import api from '../../api/axiosClient';
 
 const ResetPasswordPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const email = location.state?.email;
+    const otpCode = location.state?.otpCode;
+
     const [form, setForm] = useState({
         newPassword: '',
         confirmPassword: '',
@@ -12,18 +17,25 @@ const ResetPasswordPage = () => {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        if (!email || !otpCode) {
+            toast.error('Thông tin xác thực không hợp lệ. Vui lòng thử lại.');
+            navigate('/login');
+        }
+    }, [email, otpCode, navigate]);
+
     const validate = () => {
         const newErrors = {};
         const passwordRegex = /^(?=.*[A-Z])(?=.*[\d!@#$%^&*])(?=.{8,})/;
         
         if (!form.newPassword) {
-            newErrors.newPassword = '新しいパスワードを入力してください。';
+            newErrors.newPassword = 'Mật khẩu mới không được để trống';
         } else if (!passwordRegex.test(form.newPassword)) {
-            newErrors.newPassword = 'パスワードは8文字以上で、大文字・数字・記号を含む必要があります。';
+            newErrors.newPassword = 'Mật khẩu phải tối thiểu 8 ký tự, gồm chữ hoa và số/ký tự đặc biệt';
         }
 
         if (form.confirmPassword !== form.newPassword) {
-            newErrors.confirmPassword = 'パスワードの確認が一致しません。';
+            newErrors.confirmPassword = 'Xác nhận mật khẩu không khớp';
         }
 
         setErrors(newErrors);
@@ -36,22 +48,28 @@ const ResetPasswordPage = () => {
 
         setLoading(true);
         try {
-            // Logic gọi API reset mật khẩu sẽ ở đây
-            // await authService.resetPassword(form);
-            toast.success('パスワードが正常にリセットされました！');
+            await api.post('/auth/reset-password', {
+                email,
+                otpCode,
+                newPassword: form.newPassword
+            });
+            toast.success('Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.');
             navigate('/login');
         } catch (error) {
-            toast.error(error?.response?.data || 'パスワードリセットに失敗しました。');
+            const errorMsg = error.response?.data || 'Đặt lại mật khẩu thất bại';
+            toast.error(typeof errorMsg === 'string' ? errorMsg : 'Lỗi đặt lại mật khẩu');
         } finally {
             setLoading(false);
         }
     };
 
+    if (!email || !otpCode) return null;
+
     return (
         <div className={styles.page}>
             <div className={styles.card}>
                 <h1 className={styles.title}>Đặt lại mật khẩu</h1>
-                <p className={styles.subtitle}>Nhập mật khẩu mới cho tài khoản của bạn</p>
+                <p className={styles.subtitle}>Nhập mật khẩu mới cho tài khoản {email}</p>
                 
                 <form className={styles.form} onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
