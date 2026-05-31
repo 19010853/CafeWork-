@@ -337,7 +337,6 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
         <div className="route-loading-overlay">
           <div className="route-loading-spinner"></div>
           <h3 style={{ margin: 0, color: '#333', fontSize: '16px' }}>ルートを計算中...</h3>
-          <p style={{ margin: '8px 0 0 0', color: '#666', fontSize: '13px' }}>(Đang dò tìm lộ trình...)</p>
         </div>
       )}
 
