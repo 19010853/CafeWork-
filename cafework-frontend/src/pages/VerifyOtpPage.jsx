@@ -7,6 +7,7 @@ const VerifyOtpPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
+  const intent = location.state?.intent;
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +24,13 @@ const VerifyOtpPage = () => {
       return;
     }
 
+    if (intent === 'RESET_PASSWORD') {
+      // Luồng Reset Password: Chuyển tiếp sang trang nhập mật khẩu mới
+      navigate('/reset-password', { state: { email: email, otpCode: otp } });
+      return;
+    }
+
+    // Luồng Signup cũ: Giữ nguyên logic
     setLoading(true);
     try {
       const response = await api.post('/auth/signup/verify', {

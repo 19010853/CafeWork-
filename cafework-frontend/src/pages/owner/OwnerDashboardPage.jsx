@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
+import { t } from '../../utils/i18n';
 const OwnerDashboardPage = () => {
   // ==========================================
   // 1. KHO CHỨA (STATE)
@@ -50,7 +52,20 @@ const OwnerDashboardPage = () => {
       setSeats(seatsRes.data);
       setImages(imagesRes.data);
       setCoupons(couponsRes.data);
-
+      const fetchedSeats = seatsRes.data;
+      if (fetchedSeats && fetchedSeats.length > 0) {
+        const total = fetchedSeats.length;
+        const available = fetchedSeats.filter(s => s.status === 'AVAILABLE').length;
+        
+        let initialStatus = 'AVAILABLE';
+        if (available === 0) {
+          initialStatus = 'FULL';
+        } else if ((available / total) * 100 <= 30) {
+          initialStatus = 'ALMOST_FULL';
+        }
+        // Thắp sáng đúng màu nút trạng thái dựa theo số liệu thực
+        handleStatusUpdate(initialStatus);
+      }
     } catch (error) {
       console.error("Lỗi khi tải tài sản quán:", error);
     }
@@ -63,13 +78,13 @@ const OwnerDashboardPage = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert("Bệ hạ chưa đăng nhập hoặc đã mất thẻ bài!");
+        toast.error('ログインしていないか、セッションが切れています。');
         return;
       }
 
       const cafeId = localStorage.getItem('cafeId'); 
       if (!cafeId) {
-        alert("Bệ hạ chưa chọn quán cafe nào để quản lý!");
+        toast.error('管理するカフェが選択されていません。');
         return;
       }
 
@@ -87,15 +102,14 @@ const OwnerDashboardPage = () => {
       console.log('Báo cáo từ Backend:', response.data);
 
     } catch (error) {
-      console.error("Truyền lệnh thất bại!", error);
+      console.error('Truyền lệnh thất bại!', error);
       if (error.response) {
-        alert(`Bẩm, triều đình từ chối lệnh: ${error.response.data.message || 'Lỗi không xác định'}`);
+        toast.error(`申し訳ありません、サーバーが要求を拒否しました: ${error.response.data.message || '不明なエラー'}`);
       } else if (error.request) {
-        alert("Bẩm, không thể kết nối đến máy chủ. Xin kiểm tra lại Spring Boot!");
+        toast.error('サーバーに接続できません。バックエンドを確認してください。');
       } else {
-        alert("Bẩm, có lỗi nội bộ xảy ra!");
+        toast.error('内部エラーが発生しました。');
       }
-      // setCafeStatus('TRẠNG_THÁI_CŨ'); // Tạm khóa dòng này lại để khỏi lỗi
     }
   };
 
@@ -143,12 +157,12 @@ const OwnerDashboardPage = () => {
         }
       );
 
-      alert("Bẩm bệ hạ, ảnh đã được treo lên tường thành công!");
+      toast.success('画像は正常にアップロードされました！');
       fetchAllCafeData(); // Tải lại trang để ảnh hiện ra
 
     } catch (error) {
-      console.error("Lỗi tải ảnh:", error);
-      alert("Bẩm, phép thuật tải ảnh đã thất bại!");
+      console.error('Lỗi tải ảnh:', error);
+      toast.error('画像のアップロードに失敗しました。');
     } finally {
       event.target.value = null; // Dọn dẹp cơ quan ngầm
     }
@@ -197,15 +211,15 @@ const OwnerDashboardPage = () => {
       setHoveredImageId(null); 
 
     } catch (error) {
-      console.error("Lỗi khi xóa ảnh:", error);
-      alert("Bẩm, xóa ảnh thất bại do sự cố kỹ thuật!");
+      console.error('Lỗi khi xóa ảnh:', error);
+      toast.error('画像の削除に失敗しました。');
     }
   };
   
   // Chiêu thức 9: Gửi lệnh đúc Coupon xuống Database
   const handleCreateCoupon = async () => {
     if (!couponForm.code || !couponForm.discountValue || !couponForm.validFrom || !couponForm.validTo) {
-      alert("Bẩm bệ hạ, xin hãy điền đầy đủ các thông tin bắt buộc!");
+      toast.error('必須項目をすべて入力してください。');
       return;
     }
 
@@ -227,15 +241,15 @@ const OwnerDashboardPage = () => {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
-      alert("Bẩm, vé khuyến mãi mới đã được phát hành thành công!");
+      toast.success('クーポンの発行に成功しました！');
       
       setShowCouponModal(false);
       setCouponForm({ code: '', description: '', discountValue: '', validFrom: '', validTo: '' });
       fetchAllCafeData();
 
     } catch (error) {
-      console.error("Lỗi khi đúc vé:", error);
-      alert("Bẩm, có lỗi xảy ra khi tạo vé khuyến mãi!");
+      console.error('Lỗi khi đúc vé:', error);
+      toast.error('クーポン作成中にエラーが発生しました。');
     }
   };
 
@@ -265,7 +279,7 @@ const OwnerDashboardPage = () => {
 
     } catch (error) {
       console.error("Lỗi khi xé vé:", error);
-      alert("Bẩm, lệnh tiêu hủy vé gặp trục trặc kỹ thuật!");
+      toast.error('クーポン削除中に技術的な問題が発生しました。');
     }
   };
   // ==========================================
@@ -324,17 +338,17 @@ const OwnerDashboardPage = () => {
         }
       );
 
-      alert("Bẩm bệ hạ, toàn bộ thay đổi (Thêm/Xóa/Đổi màu) đã ghim chặt vào Database!");
+      toast.success('変更内容はデータベースに保存されました！');
       fetchAllCafeData(); // Tải lại dữ liệu chuẩn từ DB
     } catch (error) {
       console.error("Lưu thất bại:", error);
-      alert("Bẩm, có lỗi xảy ra khi lưu!");
+      toast.error('保存中にエラーが発生しました。');
     }
   };
   const handleAddNewSeats = () => {
     const amount = parseInt(addAmount, 10);
     if (isNaN(amount) || amount <= 0) {
-      alert("Bẩm, số lượng ghế phải lớn hơn 0!");
+      toast.error('座席数は0より大きくなければなりません。');
       return;
     }
 
@@ -368,11 +382,11 @@ const OwnerDashboardPage = () => {
     console.log("🚩 ĐÃ VÀO BÊN TRONG HÀM XÓA GHẾ!");
     const amount = parseInt(deleteAmount, 10);
     if (isNaN(amount) || amount <= 0) {
-      alert("Bẩm, số lượng ghế cần xóa phải lớn hơn 0!");
+      toast.error('削除する座席数は0より大きくなければなりません。');
       return;
     }
     if (amount > seats.length) {
-      alert(`Bẩm, quán chỉ còn ${seats.length} ghế, không thể xóa đến ${amount} ghế!`);
+      toast.error(`現在の座席数は${seats.length}席しかありません。${amount}席は削除できません。`);
       return;
     }
 
@@ -414,11 +428,11 @@ const OwnerDashboardPage = () => {
 
       {/* --- PHẦN 3: NỘI DUNG CHÍNH --- */}
       <main style={styles.main}>
-        <h1 style={styles.pageTitle}>ダッシュボード</h1>
+        <h1 style={styles.pageTitle}>{t('ownerDashboard')}</h1>
 
         {/* Khối 1: Cập nhật trạng thái tổng quan (Mục 8, 9, 10, 11) */}
         <div style={styles.card}>
-          <h2 style={styles.sectionTitle}>空席・混雑状況の更新</h2>
+          <h2 style={styles.sectionTitle}>{t('seatStatusUpdate')}</h2>
           <div style={styles.statusCardsContainer}>
             
             {/* Nút 1: Còn trống (AVAILABLE) */}
@@ -427,9 +441,8 @@ const OwnerDashboardPage = () => {
                 ...styles.statusCard, 
                 ...(cafeStatus === 'AVAILABLE' ? styles.activeStatusCard : {}) 
               }}
-              onClick={() => handleStatusUpdate('AVAILABLE')}
             >
-              <span style={{ ...styles.dot, backgroundColor: '#34a853' }}></span> 空席あり
+              <span style={{ ...styles.dot, backgroundColor: '#34a853' }}></span> {t('statusAvailable')}
             </button>
 
             {/* Nút 2: Sắp hết chỗ (ALMOST_FULL) */}
@@ -438,9 +451,8 @@ const OwnerDashboardPage = () => {
                 ...styles.statusCard, 
                 ...(cafeStatus === 'ALMOST_FULL' ? styles.activeStatusCard : {}) 
               }}
-              onClick={() => handleStatusUpdate('ALMOST_FULL')}
             >
-              <span style={{ ...styles.dot, backgroundColor: '#fbbc04' }}></span> 残りわずか
+              <span style={{ ...styles.dot, backgroundColor: '#fbbc04' }}></span> {t('statusAlmostFull')}
             </button>
 
             {/* Nút 3: Kín chỗ (FULL) */}
@@ -449,9 +461,8 @@ const OwnerDashboardPage = () => {
                 ...styles.statusCard, 
                 ...(cafeStatus === 'FULL' ? styles.activeStatusCard : {}) 
               }}
-              onClick={() => handleStatusUpdate('FULL')}
             >
-              <span style={{ ...styles.dot, backgroundColor: '#ea4335' }}></span> 満席
+              <span style={{ ...styles.dot, backgroundColor: '#ea4335' }}></span> {t('statusFull')}
             </button>
 
           </div>
@@ -462,16 +473,16 @@ const OwnerDashboardPage = () => {
           {/* Tiêu đề & Thống kê ghế THEO DỮ LIỆU THẬT */}
           <div style={styles.seatHeader}>
             <div>
-              <h2 style={styles.sectionTitle}>座席管理</h2>
+              <h2 style={styles.sectionTitle}>{t('seatManagement')}</h2>
               <p style={styles.seatStats}>
-                合計: <strong>{totalSeats}席</strong> &nbsp;|&nbsp; 
-                <span style={{ color: '#34a853' }}> 空席: {availableSeats}</span> &nbsp;|&nbsp; 
-                <span style={{ color: '#ea4335' }}> 使用中: {occupiedSeats}</span>
+                {t('seatTotal')}: <strong>{totalSeats}席</strong> &nbsp;|&nbsp;
+                <span style={{ color: '#34a853' }}> {t('seatAvailable')}: {availableSeats}</span> &nbsp;|&nbsp;
+                <span style={{ color: '#ea4335' }}> {t('seatOccupied')}: {occupiedSeats}</span>
               </p>
             </div>
             {/* Tích hợp nút refresh gọi lại API lấy ghế mới nhất */}
             <button style={styles.autoUpdateButton} onClick={saveSeats}>
-              🔄 最新に更新
+              {t('refreshLatest')}
             </button>
           </div>
           {/* Lưới hiển thị 30 ghế ngồi */}
@@ -494,10 +505,10 @@ const OwnerDashboardPage = () => {
           <div style={styles.seatFooter}>
             <div style={styles.legend}>
               <span style={styles.legendItem}>
-                <div style={styles.legendBoxVacant}></div> 空席
+                <div style={styles.legendBoxVacant}></div> {t('seatAvailable')}
               </span>
               <span style={styles.legendItem}>
-                <div style={styles.legendBoxOccupied}></div> 使用中
+                <div style={styles.legendBoxOccupied}></div> {t('seatOccupied')}
               </span>
             </div>
             <div style={styles.controls}>
@@ -514,7 +525,7 @@ const OwnerDashboardPage = () => {
                       style={styles.popupInput} 
                     />
                     <button onClick={handleAddNewSeats} style={styles.popupBtn}>
-                      追加
+                      {t('add')}
                     </button>
                   </div>
                 )}
@@ -524,7 +535,7 @@ const OwnerDashboardPage = () => {
                   style={styles.controlButton} 
                   onClick={() => setShowAddPopup(!showAddPopup)}
                 >
-                  + 座席追加
+                  {t('addSeat')}
                 </button>
               </div>
               {/* --- KHỐI XÓA GHẾ MỚI TOANH --- */}
@@ -540,22 +551,21 @@ const OwnerDashboardPage = () => {
                     />
                     {/* Nút bấm thực hiện lệnh xóa tạm, dùng màu đỏ cảnh báo */}
                     <button onClick={() => {
-                      alert("Bẩm, chức năng xóa ghế đang trong giai đoạn thử nghiệm, chưa thể kích hoạt!");
                       handleDeleteLastSeats();
                       }} style={{ ...styles.popupBtn, backgroundColor: '#ea4335' }}>
-                      削除
+                      {t('delete')}
                     </button>
                   </div>
                 )}
                 <button style={styles.controlButton} onClick={() => setShowDeletePopup(!showDeletePopup)}>
-                  - 座席削除
+                  {t('deleteSeat')}
                 </button>
               </div>
             </div>
           </div>
         </div>
         {/* ========================================= */}
-        {/* KHỐI 3: QUẢN LÝ ẢNH (写真管理) */}
+        {/* KHỐI 3: QUẢN LÝ ẢNH ({t('photoManagement')}) */}
         {/* ========================================= */}
         <div style={styles.card}>
           <h2 style={styles.sectionTitle}>写真管理</h2>
@@ -571,7 +581,7 @@ const OwnerDashboardPage = () => {
             {/* Nút thêm ảnh */}
             <div style={styles.addImageBox} onClick={() => imageInputRef.current.click()}>
               <span style={styles.addImageIcon}>+</span>
-              <span style={styles.addImageText}>画像を追加</span>
+              <span style={styles.addImageText}>{t('addImage')}</span>
             </div>
 
             {/* Danh sách ảnh đã tải lên */}
@@ -617,9 +627,9 @@ const OwnerDashboardPage = () => {
         {/* ========================================= */}
         <div style={styles.card}>
           <div style={styles.couponHeader}>
-            <h2 style={styles.sectionTitle}>割引・プロモーション管理</h2>
+            <h2 style={styles.sectionTitle}>{t('couponManagement')}</h2>
             <button style={styles.createCouponBtn} onClick={() => setShowCouponModal(true)}>
-              + クーポン作成
+              {t('createCoupon')}
             </button>
           </div>
 
@@ -630,10 +640,10 @@ const OwnerDashboardPage = () => {
                 {/* Cột trái: Tên, Mô tả & Ngày tháng */}
                 <div style={styles.couponInfo}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <p style={styles.couponTitle}>{coupon.code || 'SALE'}</p>
+                    <p style={styles.couponTitle}>{coupon.code || t('sale')}</p>
                     {/* Giả sử ngài có trường description, nếu tên trường khác ngài tự đổi nhé */}
                     <span style={{ fontSize: '14px', color: '#666' }}>
-                      {coupon.description || 'Giảm giá cho khách hàng'}
+                      {coupon.description || t('defaultCouponDescription')}
                     </span>
                   </div>
                   <p style={styles.couponDate}>
@@ -643,7 +653,7 @@ const OwnerDashboardPage = () => {
                 
                 {/* Cột phải: Trạng thái & Nút xóa */}
                 <div style={styles.couponActions}>
-                  <span style={styles.validBadge}>{coupon.status || '有効'}</span>
+                  <span style={styles.validBadge}>{coupon.status || t('valid')}</span>
                   <button style={styles.deleteCouponBtn}
                     onClick={() => handleDeleteCoupon(coupon.id)}
                   >
@@ -680,38 +690,38 @@ const OwnerDashboardPage = () => {
       {showCouponModal && (
         <div style={styles.fullscreenModal}>
           <div style={styles.formModalCard}>
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>クーポン作成 (Tạo Khuyến Mãi)</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>{t('createCouponTitle')}</h3>
             
-            <label style={styles.formLabel}>Mã Code (Code)*</label>
+            <label style={styles.formLabel}>{t('couponCode')}*</label>
             <input 
               style={styles.formInput} 
               type="text" 
-              placeholder="VD: SUMMER2026"
+              placeholder={t('couponCodePlaceholder')}
               value={couponForm.code} 
               onChange={e => setCouponForm({...couponForm, code: e.target.value})} 
             />
 
-            <label style={styles.formLabel}>Mô tả (Description)</label>
+            <label style={styles.formLabel}>{t('couponDescription')}</label>
             <input 
               style={styles.formInput} 
               type="text" 
-              placeholder="VD: Giảm giá mùa hè cho thức uống"
+              placeholder={t('couponDescriptionPlaceholder')}
               value={couponForm.description} 
               onChange={e => setCouponForm({...couponForm, description: e.target.value})} 
             />
 
-            <label style={styles.formLabel}>Giá trị giảm (Discount Value)*</label>
+            <label style={styles.formLabel}>{t('discountValue')}*</label>
             <input 
               style={styles.formInput} 
               type="number" 
-              placeholder="VD: 20000"
+              placeholder={t('couponDiscountPlaceholder')}
               value={couponForm.discountValue} 
               onChange={e => setCouponForm({...couponForm, discountValue: e.target.value})} 
             />
 
             <div style={{ display: 'flex', gap: '16px' }}>
               <div style={{ flex: 1 }}>
-                <label style={styles.formLabel}>Từ ngày (Valid From)*</label>
+                <label style={styles.formLabel}>{t('validFrom')}*</label>
                 <input 
                   style={styles.formInput} 
                   type="date" 
@@ -720,7 +730,7 @@ const OwnerDashboardPage = () => {
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <label style={styles.formLabel}>Đến ngày (Valid To)*</label>
+                <label style={styles.formLabel}>{t('validTo')}*</label>
                 <input 
                   style={styles.formInput} 
                   type="date" 
@@ -735,13 +745,13 @@ const OwnerDashboardPage = () => {
                 style={{ ...styles.popupBtn, backgroundColor: '#ccc', color: '#333' }} 
                 onClick={() => setShowCouponModal(false)}
               >
-                Hủy
+                {t('cancel')}
               </button>
               <button 
                 style={styles.popupBtn} 
                 onClick={handleCreateCoupon}
               >
-                Tạo Vé
+                {t('createTicket')}
               </button>
             </div>
           </div>

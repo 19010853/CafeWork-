@@ -1,57 +1,81 @@
-import React, { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import customPinImage from '../assets/my-custom-pin.png'; 
+import customPinImage from '../assets/my-custom-pin.png';
 import defaultShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Sửa lỗi icon marker (giữ nguyên)
+// Sửa lỗi icon marker
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// Chỉnh icon marker màu đỏ để phân biệt với vị trí cafe
+const myCustomIcon = L.icon({
+  iconUrl: customPinImage,
+  shadowUrl: defaultShadow,
+  iconSize: [24, 36],
+  iconAnchor: [12, 36],
+  popupAnchor: [0, -32],
+  shadowSize: [41, 41]
+});
 
-
-const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
+const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
+  const navigate = useNavigate();
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersLayerRef = useRef(null);
-  
-  // 1. KHO LƯU TRỮ VỊ TRÍ HIỆN TẠI VÀ ĐƯỜNG ĐI
+  const [mapReady, setMapReady] = useState(false);
+
+  // 👇 1. GỌI THÊM LÍNH CANH GIỮ TRẠNG THÁI LOADING 👇
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
+
+  const destMarkerRef = useRef(null);
+
+  // KHO LƯU TRỮ VỊ TRÍ HIỆN TẠI VÀ ĐƯỜNG ĐI
   const userCoordsRef = useRef(null);
-  const routingControlRef = useRef(null);
+  const pendingRouteTargetRef = useRef(null);
+  const lastRequestedRouteKeyRef = useRef(null);
+  const drawRouteRef = useRef(null);
+  const polylineRef = useRef(null);
+
+  useEffect(() => {
+    if (!isRouting && polylineRef.current && mapInstanceRef.current) {
+      mapInstanceRef.current.removeLayer(polylineRef.current);
+      polylineRef.current = null;
+    }
+  }, [isRouting]);
 
   // ----------------------------------------------------
   // HÀM VẼ ĐƯỜNG MÀU XANH TỪ VỊ TRÍ HIỆN TẠI ĐẾN QUÁN
   // ----------------------------------------------------
-  // Dùng để lưu đường kẻ xanh, dễ dàng xóa đi vẽ lại
-  const polylineRef = useRef(null);
-  useEffect(() => {
-    if (!isRouting && polylineRef.current && mapInstanceRef.current) {
-        mapInstanceRef.current.removeLayer(polylineRef.current);
-        polylineRef.current = null;
-    }
-  }, [isRouting]);
-  const drawRoute = async (destLat, destLng) => {
+  const drawRoute = useCallback(async (destLat, destLng, options = {}) => {
     if (!userCoordsRef.current) {
+      if (options.silentIfNoUserCoords) {
+        pendingRouteTargetRef.current = [destLat, destLng];
+        return;
+      }
       alert("Bệ hạ vui lòng cho phép định vị trước!");
       return;
     }
 
-    // 1. Xóa đường cũ nếu có
+    // Xóa đường cũ nếu có
     if (polylineRef.current) {
       mapInstanceRef.current.removeLayer(polylineRef.current);
     }
-    // Xóa cái bảng trắng cũ (nếu nó còn sót lại)
+
+    // 👇 2. BẬT BẢNG HIỆU LOADING TRƯỚC KHI PHÁI SỨ GIẢ ĐI 👇
+    setIsCalculatingRoute(true);
+
     try {
-      // ĐÃ THÊM MẬT LỆNH &steps=true VÀO CUỐI URL ĐỂ MÁY CHỦ KHAI RA TỪNG BƯỚC ĐI
       const url = `https://router.project-osrm.org/route/v1/car/${userCoordsRef.current[1]},${userCoordsRef.current[0]};${destLng},${destLat}?overview=full&geometries=geojson&steps=true`;
-      
+
       const response = await fetch(url);
       const data = await response.json();
       if (data.code !== 'Ok') return;
@@ -66,24 +90,25 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
       const duration = Math.round(data.routes[0].duration / 60);
       const steps = data.routes[0].legs[0].steps;
 
-      // PHÓNG MŨI TÊN CHUYỂN DỮ LIỆU VỀ CHO HOMEPAGE (ĐỂ NÓ HIỆN LÊN CỘT TRÁI)
+      // PHÓNG MŨI TÊN CHUYỂN DỮ LIỆU VỀ CHO HOMEPAGE 
       if (onRouteCalculated) {
-          onRouteCalculated({ distance, duration, steps });
+        onRouteCalculated({ distance, duration, steps });
       }
 
-    } catch (error) { console.error("Lỗi vẽ đường:", error); }
-  };
-  // Chỉnh icon marker màu đỏ để phân biệt với vị trí cafe (mặc định là xanh)
-  const myCustomIcon = L.icon({
-      iconUrl: customPinImage, // <--- Nhát kiếm quyết định: Truyền thẳng biến ảnh vào đây!
-      shadowUrl: defaultShadow,
-      iconSize: [24, 36], // Ví dụ ảnh của ngài vuông 32x32 pixel
-      iconAnchor: [12, 36], // Điểm cắm cờ (thường là điểm chính giữa ở viền dưới cùng của ảnh)
-      popupAnchor: [0, -32], // Vị trí hiện hộp thoại so với điểm cắm
-      shadowSize: [41, 41]
-  });
+    } catch (error) {
+      console.error("Lỗi vẽ đường:", error);
+    } finally {
+      // 👇 3. TẮT BẢNG HIỆU LOADING KHI LÀM XONG NHIỆM VỤ (KỂ CẢ THÀNH CÔNG HAY THẤT BẠI) 👇
+      setIsCalculatingRoute(false);
+    }
+  }, [onRouteCalculated]);
+
+  useEffect(() => {
+    drawRouteRef.current = drawRoute;
+  }, [drawRoute]);
+
   // ----------------------------------------------------
-  // PHÉP THUẬT 1: KHỞI TẠO BẢN ĐỒ VÀ ĐỊNH VỊ BỆ HẠ
+  // PHÉP THUẬT 1: KHỞI TẠO BẢN ĐỒ VÀ ĐỊNH VỊ 
   // ----------------------------------------------------
   useEffect(() => {
     if (mapContainerRef.current && !mapInstanceRef.current) {
@@ -93,8 +118,9 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
       }).addTo(map);
 
       mapInstanceRef.current = map;
+      setMapReady(true);
       markersLayerRef.current = L.layerGroup().addTo(map);
-      
+
       // Định vị bệ hạ
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
@@ -103,17 +129,23 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
               const lat = parseFloat(position.coords.latitude);
               const lng = parseFloat(position.coords.longitude);
               if (!isNaN(lat) && !isNaN(lng)) {
-                userCoordsRef.current = [lat, lng]; 
-                mapInstanceRef.current.setView(userCoordsRef.current, 16); 
-                
-                L.marker(userCoordsRef.current, { icon: myCustomIcon }) // Hoặc redIcon tùy bệ hạ đang dùng
+                userCoordsRef.current = [lat, lng];
+                mapInstanceRef.current.setView(userCoordsRef.current, 16);
+
+                L.marker(userCoordsRef.current, { icon: myCustomIcon })
                   .addTo(mapInstanceRef.current)
                   .bindPopup('<b>あなたはここにいる!</b>')
                   .openPopup();
-                
+
                 L.circle(userCoordsRef.current, { radius: 100, color: 'blue', fillOpacity: 0.1 })
                   .addTo(mapInstanceRef.current);
-             }
+
+                if (pendingRouteTargetRef.current) {
+                  const [destLat, destLng] = pendingRouteTargetRef.current;
+                  pendingRouteTargetRef.current = null;
+                  drawRouteRef.current?.(destLat, destLng, { silentIfNoUserCoords: false });
+                }
+              }
             }
           },
           (error) => console.error("位置情報の取得中にエラーが発生しました。", error),
@@ -121,15 +153,28 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
         );
       }
 
-      // LẮNG NGHE SỰ KIỆN: Khi ngài nhấp vào nút "Chỉ đường" bên trong Popup
-      map.on('popupopen', () => {
-        const routeBtn = document.querySelector('.route-btn');
+      // LẮNG NGHE SỰ KIỆN NÚT TRONG POPUP
+      map.on('popupopen', (e) => {
+        const popupEl = e?.popup?.getElement?.();
+        if (!popupEl) return;
+
+        const detailBtn = popupEl.querySelector('.detail-btn');
+        if (detailBtn) {
+          detailBtn.onclick = () => {
+            const cafeId = detailBtn.getAttribute('data-id');
+            if (!cafeId) return;
+            navigate(`/cafes/${cafeId}`);
+            map.closePopup();
+          };
+        }
+
+        const routeBtn = popupEl.querySelector('.route-btn');
         if (routeBtn) {
           routeBtn.onclick = () => {
             const lat = parseFloat(routeBtn.getAttribute('data-lat'));
             const lng = parseFloat(routeBtn.getAttribute('data-lng'));
-            drawRoute(lat, lng);
-            map.closePopup(); // Tự động đóng popup sau khi bấm để nhìn đường cho rõ
+            drawRouteRef.current?.(lat, lng);
+            map.closePopup();
           };
         }
       });
@@ -139,12 +184,54 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        setMapReady(false);
       }
     };
   }, []);
 
+  // Auto-route 
+  useEffect(() => {
+    if (!routeTarget || !mapReady) return;
+    const { lat, lng } = routeTarget;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    const key = `${lat},${lng}`;
+    if (lastRequestedRouteKeyRef.current === key) return;
+    lastRequestedRouteKeyRef.current = key;
+
+    drawRouteRef.current?.(lat, lng, { silentIfNoUserCoords: true });
+  }, [routeTarget, mapReady]);
+
+  // Show destination marker 
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current) return;
+
+    if (!routeTarget) {
+      if (destMarkerRef.current) {
+        mapInstanceRef.current.removeLayer(destMarkerRef.current);
+        destMarkerRef.current = null;
+      }
+      return;
+    }
+
+    const { lat, lng, name } = routeTarget;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    if (destMarkerRef.current) {
+      mapInstanceRef.current.removeLayer(destMarkerRef.current);
+      destMarkerRef.current = null;
+    }
+
+    const label = name ? `🏁 ${name}` : '🏁 目的地';
+    destMarkerRef.current = L.marker([lat, lng])
+      .addTo(mapInstanceRef.current)
+      .bindPopup(`<b>${label}</b>`);
+
+    destMarkerRef.current.openPopup();
+  }, [routeTarget, mapReady]);
+
   // ----------------------------------------------------
-  // PHÉP THUẬT 2: ĐỘI QUÂN CẮM CỜ VÀ SỬA POPUP THEO THIẾT KẾ
+  // PHÉP THUẬT 2: ĐỘI QUÂN CẮM CỜ VÀ SỬA POPUP
   // ----------------------------------------------------
   useEffect(() => {
     if (mapInstanceRef.current && markersLayerRef.current && cafes) {
@@ -152,9 +239,9 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
 
       cafes.forEach((cafe) => {
         if (cafe.latitude && cafe.longitude) {
-          const imageUrl = cafe.images && cafe.images.length > 0 
-              ? cafe.images[0].imageUrl 
-              : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=300&q=80';
+          const imageUrl = cafe.images && cafe.images.length > 0
+            ? cafe.images[0].imageUrl
+            : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=300&q=80';
 
           const marker = L.marker([cafe.latitude, cafe.longitude])
             .bindPopup(`
@@ -175,7 +262,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
                 </div>
                 
                 <div style="display: flex; gap: 8px;">
-                  <button style="flex: 1; padding: 8px; background-color: #5c4033; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                  <button class="detail-btn" data-id="${cafe.id}" style="flex: 1; padding: 8px; background-color: #5c4033; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
                     詳細を見る
                   </button>
                   
@@ -186,7 +273,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
                 </div>
               </div>
             `);
-          
+
           markersLayerRef.current.addLayer(marker);
         }
       });
@@ -196,10 +283,10 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
         mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
       }
     }
-  }, [cafes]); 
+  }, [cafes]);
 
   return (
-    <>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <style>{`
         /* Tẩy trắng nền, làm tròn góc và đổ bóng giống Ảnh 1 */
         .leaflet-routing-container {
@@ -229,13 +316,50 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting }) => {
         
         /* Chém bỏ mấy cái nút vô dụng mặc định */
         .leaflet-routing-collapse-btn { display: none !important; }
+
+        /* 👇 4. PHẾT SƠN CHO TẤM MÀN CHỜ LOADING 👇 */
+        .route-loading-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(255, 255, 255, 0.75);
+          backdrop-filter: blur(2px);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999; /* Đảm bảo đè lên trên bản đồ */
+        }
+        .route-loading-spinner {
+          width: 48px;
+          height: 48px;
+          border: 5px solid #f3f3f3;
+          border-top: 5px solid #0066ff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 16px;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
       `}</style>
-      
-      <div 
-        ref={mapContainerRef} 
-        style={{ height: '100%', width: '100%', zIndex: 0 }} 
+
+      {/* 👇 5. TẤM MÀN CHỜ SẼ HIỆN RA KHI isCalculatingRoute = true 👇 */}
+      {isCalculatingRoute && (
+        <div className="route-loading-overlay">
+          <div className="route-loading-spinner"></div>
+          <h3 style={{ margin: 0, color: '#333', fontSize: '16px' }}>ルートを計算中...</h3>
+        </div>
+      )}
+
+      <div
+        ref={mapContainerRef}
+        style={{ height: '100%', width: '100%', zIndex: 0 }}
       />
-    </>
+    </div>
   );
 };
 

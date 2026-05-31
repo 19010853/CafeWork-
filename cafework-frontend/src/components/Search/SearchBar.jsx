@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchCafes } from '../../services/cafeService';
 import L from 'leaflet'; // Bổ sung Leaflet để tính khoảng cách
-import { addSearchHistory } from '../../utils/userLocalStore';
+import { addSearchHistory, isBookmarked, toggleBookmark } from '../../utils/userLocalStore';
 import './SearchBar.css';
+import { t } from '../../utils/i18n';
 
 const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
     const navigate = useNavigate();
@@ -11,6 +12,9 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // Used to force a re-render when bookmarks in localStorage change
+    const [, setBookmarkTick] = useState(0);
 
     const [suggestions, setSuggestions] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -23,6 +27,25 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
     const searchBoxRef = useRef(null);
     const sortMenuRef = useRef(null);
     const typingTimeoutRef = useRef(null); // Debounce cho Autocomplete
+    const didInitRef = useRef(false);
+
+    const handleSearchEvent = async (searchKeyword) => {
+        setShowDropdown(false);
+        setLoading(true);
+        setError(null);
+        try {
+            addSearchHistory(searchKeyword);
+            const data = await searchCafes(searchKeyword);
+            setResults(data);
+            onSearchData(data);
+        } catch (err) {
+            console.error("Lỗi:", err);
+            setError(t('searchError'));
+            setResults([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         // Xin quyền lấy GPS thực tế của trình duyệt
@@ -40,30 +63,19 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
-    useEffect(() => {
-        if (initialKeyword && initialKeyword !== keyword) {
-            setKeyword(initialKeyword);
-            handleSearchEvent(initialKeyword);
-        }
-    }, [initialKeyword]);
 
-    const handleSearchEvent = async (searchKeyword) => {
-        setShowDropdown(false);
-        setLoading(true);
-        setError(null);
-        try {
-            addSearchHistory(searchKeyword);
-            const data = await searchCafes(searchKeyword);
-            setResults(data);
-            onSearchData(data);
-        } catch (err) {
-            console.error("Lỗi:", err);
-            setError('エラーが発生しました。');
-            setResults([]);
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        if (typeof initialKeyword === 'string' && initialKeyword !== keyword) {
+            setKeyword(initialKeyword);
         }
-    };
+
+        if (didInitRef.current) return;
+        didInitRef.current = true;
+
+        const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
+        handleSearchEvent(kw);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialKeyword]);
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -90,6 +102,9 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
         } else {
             setShowDropdown(false);
             setSuggestions([]);
+
+            // When cleared, show all cafes
+            handleSearchEvent('');
         }
     };
 
@@ -120,7 +135,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
                         <span className="search-icon">🔍</span>
                         <input
                             type="text"
-                            placeholder="エリアや条件で検索..."
+                            placeholder={t('searchPlaceholder')}
                             value={keyword}
                             onChange={handleInputChange}
                             onFocus={() => { if (keyword.trim().length > 0) setShowDropdown(true) }}
@@ -161,13 +176,13 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
                         {showSortMenu && (
                             <div style={sortDropdownStyle}>
                                 <div style={getSortItemStyle(sortBy === 'default')} onClick={() => { setSortBy('default'); setShowSortMenu(false); }}>
-                                    デフォルト (Mặc định) {sortBy === 'default' && '✓'}
+                                    {t('sortDefault')} {sortBy === 'default' && '✓'}
                                 </div>
                                 <div style={getSortItemStyle(sortBy === 'rating_desc')} onClick={() => { setSortBy('rating_desc'); setShowSortMenu(false); }}>
-                                    評価が高い順 (Đánh giá cao) {sortBy === 'rating_desc' && '✓'}
+                                    {t('sortRatingHigh')} {sortBy === 'rating_desc' && '✓'}
                                 </div>
                                 <div style={getSortItemStyle(sortBy === 'distance_asc')} onClick={() => { setSortBy('distance_asc'); setShowSortMenu(false); }}>
-                                    距離が近い順 (Gần nhất) {sortBy === 'distance_asc' && '✓'}
+                                    {t('sortNearest')} {sortBy === 'distance_asc' && '✓'}
                                 </div>
                             </div>
                         )}
@@ -176,68 +191,94 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
             </div>
 
             <div className="results-scroll-area" style={scrollAreaStyle}>
-                {loading && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>読み込み中...</p>}
-                {!loading && sortedResults.length === 0 && keyword && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>カフェが見つかりません</p>}
+                {loading && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>{t('loadingResults')}</p>}
+                {!loading && sortedResults.length === 0 && keyword && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>{t('noCafeFound')}</p>}
 
-                {sortedResults.map((cafe) => (
-                    <div
-                        key={cafe.id}
-                        className="cafe-card"
-                        style={{ ...cardStyle, cursor: 'pointer' }}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => navigate(`/cafes/${cafe.id}`)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                navigate(`/cafes/${cafe.id}`);
-                            }
-                        }}
-                    >
-                        {/* Khối Ảnh (Mục 9) và Nút thả tim (Mục 10) */}
-                        <div style={{ position: 'relative' }}>
-                            <img
-                                src={cafe.images && cafe.images.length > 0 ? cafe.images[0].imageUrl : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80'}
-                                alt={cafe.name}
-                                style={imageStyle}
-                                onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80';
-                                }}
-                            />
-                            <button style={heartBtnStyle}>
-                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="#666" strokeWidth="2" fill="none">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                </svg>
-                            </button>
-                        </div>
+                {sortedResults.map((cafe) => {
+                    const saved = isBookmarked(cafe.id);
 
-                        <div style={cardContentStyle}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                                <div style={{ flex: 1, paddingRight: '10px' }}>
-                                    <h3 style={titleStyle}>{cafe.name}</h3>
-                                    <div style={{ fontSize: '12px', color: '#888', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        {/* NẾU LỌC THEO KHOẢNG CÁCH THÌ HIỆN SỐ KM Ở ĐÂY */}
-                                        {sortBy === 'distance_asc' && (
-                                            <span style={{ color: '#0066cc', fontWeight: 'bold' }}>
-                                                📍 {(L.latLng(userLocation.lat, userLocation.lng).distanceTo(L.latLng(cafe.latitude, cafe.longitude)) / 1000).toFixed(1)} km
-                                            </span>
-                                        )}
-                                        <span>🕒 {cafe.openHours || '--:--'}</span>
+                    return (
+                        <div
+                            key={cafe.id}
+                            className="cafe-card"
+                            style={{ ...cardStyle, cursor: 'pointer' }}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => navigate(`/cafes/${cafe.id}`)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    navigate(`/cafes/${cafe.id}`);
+                                }
+                            }}
+                        >
+                            {/* Khối Ảnh (Mục 9) và Nút thả tim (Mục 10) */}
+                            <div style={{ position: 'relative' }}>
+                                <img
+                                    src={cafe.images && cafe.images.length > 0 ? cafe.images[0].imageUrl : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80'}
+                                    alt={cafe.name}
+                                    style={imageStyle}
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80';
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    style={heartBtnStyle}
+                                    aria-label={saved ? 'お気に入り解除' : 'お気に入り保存'}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleBookmark(cafe.id);
+                                        setBookmarkTick((t) => t + 1);
+                                    }}
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        width="16"
+                                        height="16"
+                                        stroke={saved ? '#EF4444' : '#666'}
+                                        strokeWidth="2"
+                                        fill={saved ? '#EF4444' : 'none'}
+                                    >
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div style={cardContentStyle}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                                    <div style={{ flex: 1, paddingRight: '10px' }}>
+                                        <h3 style={titleStyle}>{cafe.name}</h3>
+                                        <div style={{ fontSize: '12px', color: '#888', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            {/* NẾU LỌC THEO KHOẢNG CÁCH THÌ HIỆN SỐ KM Ở ĐÂY */}
+                                            {sortBy === 'distance_asc' && (
+                                                <span style={{ color: '#0066cc', fontWeight: 'bold' }}>
+                                                    📍 {(L.latLng(userLocation.lat, userLocation.lng).distanceTo(L.latLng(cafe.latitude, cafe.longitude)) / 1000).toFixed(1)} km
+                                                </span>
+                                            )}
+                                            <span>🕒 {cafe.openHours || '--:--'}</span>
+                                        </div>
+                                    </div>
+                                    <div style={ratingStyle}>
+                                        <span style={{ color: '#F59E0B', marginRight: '4px' }}>★</span>
+                                        {cafe.rating ? cafe.rating.toFixed(1) : '0.0'}
                                     </div>
                                 </div>
-                                <div style={ratingStyle}>
-                                    <span style={{ color: '#F59E0B', marginRight: '4px' }}>★</span>
-                                    {cafe.rating ? cafe.rating.toFixed(1) : '0.0'}
+
+                                <div style={statusWrapperStyle}>
+                                    <span style={getStatusDotStyle(cafe.seatStatus)}></span>
+                                    <span style={{ fontSize: '13px', color: '#555' }}>{cafe.seatStatus || '不明'}</span>
                                 </div>
                             </div>
 
                             <div style={statusWrapperStyle}>
                                 <span style={getStatusDotStyle(cafe.seatStatus)}></span>
-                                <span style={{ fontSize: '13px', color: '#555' }}>{cafe.seatStatus || '不明'}</span>
+                                <span style={{ fontSize: '13px', color: '#555' }}>{cafe.seatStatus || t('unknownStatus')}</span>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );
@@ -273,12 +314,6 @@ const getSortItemStyle = (isActive) => ({
     borderBottom: '1px solid #f5f5f5',
     display: 'flex', justifyContent: 'space-between'
 });
-
-const chipStyle = {
-    padding: '6px 12px', borderRadius: '20px', border: '1px solid #ddd',
-    backgroundColor: 'white', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap'
-};
-const chipActiveStyle = { ...chipStyle, backgroundColor: '#e6f2ff', borderColor: '#0066cc', color: '#0066cc', fontWeight: 'bold' };
 const scrollAreaStyle = { flex: 1, overflowY: 'auto', padding: '15px', backgroundColor: '#f5f5f5' };
 const cardStyle = {
     backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden',

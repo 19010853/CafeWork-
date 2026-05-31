@@ -1,0 +1,50 @@
+/* react-hot-toast */
+#_rht_toaster {
+    z-index: 99999 !important;
+}
+
+.cw-toast {
+    max-width: min(420px, calc(100vw - 24px));
+    box-sizing: border-box;
+    border-radius: 10px !important;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+    word-break: break-word;
+}
+
+.cw-toast--confirm {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.cw-toast__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.cw-toast__btn {
+    appearance: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.2;
+    cursor: pointer;
+    border: 1px solid #e0e0e0;
+    background: transparent;
+    color: inherit;
+}
+
+.cw-toast__btn--confirm {
+    background-color: #8d6e63;
+    border-color: #8d6e63;
+    color: #ffffff;
+}
+
+.cw-toast a {
+    color: inherit;
+    text-decoration: underline;
+}

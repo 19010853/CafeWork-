@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { profileService } from '../../api/profileService';
 import TopNavTabs from '../../components/layout/TopNavTabs';
-import { getPhoneLocal, setPhoneLocal } from '../../utils/userLocalStore';
+import ChangePasswordModal from '../../components/profile/ChangePasswordModal';
+import { getLang, getPhoneLocal, setPhoneLocal } from '../../utils/userLocalStore';
+import { confirmToast } from '../../utils/confirmToast';
 import styles from './ProfilePage.module.css';
 
 const getInitial = (text) => {
@@ -20,6 +22,7 @@ const getErrorMessage = (error) => {
 const ProfilePage = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
+    const lang = useMemo(() => getLang(), []);
 
     const [loading, setLoading] = useState(Boolean(token));
     const [saving, setSaving] = useState(false);
@@ -27,11 +30,9 @@ const ProfilePage = () => {
     const [profile, setProfile] = useState(null);
     const [form, setForm] = useState({
         fullName: '',
-        cafeName: '',
         phone: '',
-        openHours: '',
-        address: '',
     });
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
     const isOwner = useMemo(() => {
         const role = profile?.role || localStorage.getItem('role');
@@ -54,10 +55,7 @@ const ProfilePage = () => {
                 setProfile(data);
                 setForm({
                     fullName: data?.fullName || '',
-                    cafeName: data?.cafeName || '',
                     phone: data?.phone || getPhoneLocal() || '',
-                    openHours: data?.openHours || '',
-                    address: data?.address || '',
                 });
             } catch (err) {
                 if (cancelled) return;
@@ -73,17 +71,42 @@ const ProfilePage = () => {
     }, [token]);
 
     const handleLogout = () => {
-        if (!window.confirm('ログアウトしますか？')) return;
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('role');
-        localStorage.removeItem('fullName');
-        navigate('/');
-        window.location.reload();
+        const message = lang === 'VI' ? 'Bạn có chắc muốn đăng xuất không?' : 'ログアウトしますか？';
+        const cancelText = lang === 'VI' ? 'Hủy' : 'キャンセル';
+        const confirmText = lang === 'VI' ? 'Đăng xuất' : 'ログアウト';
+
+        confirmToast({
+            message,
+            cancelText,
+            confirmText,
+            onConfirm: () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('role');
+                localStorage.removeItem('fullName');
+                navigate('/');
+                window.location.reload();
+            },
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validation logic (Sprint 3 Step 1)
+        if (!form.fullName.trim()) {
+            toast.error('Tên không được để trống');
+            return;
+        }
+        if (!form.phone.trim()) {
+            toast.error('Số điện thoại không được để trống');
+            return;
+        }
+        if (!/^\d+$/.test(form.phone)) {
+            toast.error('Số điện thoại chỉ được chứa ký tự số');
+            return;
+        }
+
         if (!token) {
             toast.error('ログインが必要です。');
             navigate('/login');
@@ -95,15 +118,10 @@ const ProfilePage = () => {
         try {
             await profileService.updateMyProfile({
                 fullName: form.fullName,
-                cafeName: isOwner ? form.cafeName : null,
-                phone: isOwner ? form.phone : null,
-                openHours: isOwner ? form.openHours : null,
-                address: isOwner ? form.address : null,
+                phone: form.phone,
             });
 
-            if (!isOwner) {
-                setPhoneLocal(form.phone);
-            }
+            setPhoneLocal(form.phone);
 
             // Cập nhật localStorage để Header hiển thị tên mới ngay lập tức
             const userStr = localStorage.getItem('user');
@@ -186,11 +204,10 @@ const ProfilePage = () => {
                             </button>
                             <button
                                 type="button"
-                                className={`${styles.menuButton} ${styles.menuButtonDisabled}`}
-                                disabled
-                                title="準備中"
+                                className={styles.menuButton}
+                                onClick={() => setIsPasswordModalOpen(true)}
                             >
-                                パスワード変更（準備中）
+                                パスワード変更
                             </button>
                             <button
                                 type="button"
@@ -223,8 +240,7 @@ const ProfilePage = () => {
                                         className={styles.input}
                                         value={form.fullName}
                                         onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
-                                        placeholder="山田 太郎"
-                                        required
+                                        placeholder="Tên của bạn"
                                     />
                                 </div>
 
@@ -242,62 +258,20 @@ const ProfilePage = () => {
                                 </div>
 
                                 <div className={styles.formRow}>
-                                    <label className={styles.label} htmlFor="phone">
-                                        電話番号
-                                    </label>
+                                    <div className={styles.labelRow}>
+                                        <label className={styles.label} htmlFor="phone">
+                                            電話番号
+                                        </label>
+                                        <span className={styles.required}>*</span>
+                                    </div>
                                     <input
                                         id="phone"
                                         className={styles.input}
                                         value={form.phone}
                                         onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-                                        placeholder="090..."
+                                        placeholder="Số điện thoại"
                                     />
                                 </div>
-
-                                {isOwner && (
-                                    <>
-                                        <h2 className={styles.sectionTitle}>カフェ情報（オーナー）</h2>
-
-                                        <div className={styles.formRow}>
-                                            <label className={styles.label} htmlFor="cafeName">
-                                                店名
-                                            </label>
-                                            <input
-                                                id="cafeName"
-                                                className={styles.input}
-                                                value={form.cafeName}
-                                                onChange={(e) => setForm((p) => ({ ...p, cafeName: e.target.value }))}
-                                                placeholder="Cafe Work"
-                                            />
-                                        </div>
-
-                                        <div className={styles.formRow}>
-                                            <label className={styles.label} htmlFor="openHours">
-                                                営業時間
-                                            </label>
-                                            <input
-                                                id="openHours"
-                                                className={styles.input}
-                                                value={form.openHours}
-                                                onChange={(e) => setForm((p) => ({ ...p, openHours: e.target.value }))}
-                                                placeholder="08:00 - 22:00"
-                                            />
-                                        </div>
-
-                                        <div className={styles.formRow}>
-                                            <label className={styles.label} htmlFor="address">
-                                                住所
-                                            </label>
-                                            <textarea
-                                                id="address"
-                                                className={`${styles.input} ${styles.textarea}`}
-                                                value={form.address}
-                                                onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-                                                placeholder="..."
-                                            />
-                                        </div>
-                                    </>
-                                )}
 
                                 <div className={styles.actions}>
                                     <button
@@ -321,6 +295,10 @@ const ProfilePage = () => {
                     </main>
                 </div>
             </div>
+            <ChangePasswordModal 
+                isOpen={isPasswordModalOpen} 
+                onClose={() => setIsPasswordModalOpen(false)} 
+            />
         </div>
     );
 };
