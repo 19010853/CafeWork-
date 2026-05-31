@@ -3,11 +3,15 @@ package cafework.controller;
 import cafework.dto.request.LoginRequest;
 import cafework.dto.request.RegisterRequest;
 import cafework.dto.request.VerifyOtpRequest;
+import cafework.dto.request.ForgotPasswordRequest;
+import cafework.dto.request.ResetPasswordRequest;
+import cafework.dto.request.ChangePasswordRequest;
 import cafework.dto.response.AuthResponse;
 import cafework.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -57,6 +61,43 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(401).body(e.getMessage());
+        }
+    }
+
+    // --- Cập nhật Sprint 4: Reset Password ---
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            authService.processForgotPassword(request.getEmail());
+            return ResponseEntity.ok("Mã OTP đã được gửi đến email của bạn.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            authService.resetPassword(request);
+            return ResponseEntity.ok("Đặt lại mật khẩu thành công!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // --- Cập nhật Sprint 4: Change Password ---
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            authService.changePassword(email, request);
+            return ResponseEntity.ok("Đổi mật khẩu thành công");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Có lỗi xảy ra: " + e.getMessage());
         }
     }
 }
