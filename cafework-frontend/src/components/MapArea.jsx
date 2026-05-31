@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import customPinImage from '../assets/my-custom-pin.png';
@@ -26,11 +27,12 @@ const myCustomIcon = L.icon({
 });
 
 const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
+  const navigate = useNavigate();
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersLayerRef = useRef(null);
   const [mapReady, setMapReady] = useState(false);
-  
+
   // 👇 1. GỌI THÊM LÍNH CANH GIỮ TRẠNG THÁI LOADING 👇
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
 
@@ -93,8 +95,8 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
         onRouteCalculated({ distance, duration, steps });
       }
 
-    } catch (error) { 
-      console.error("Lỗi vẽ đường:", error); 
+    } catch (error) {
+      console.error("Lỗi vẽ đường:", error);
     } finally {
       // 👇 3. TẮT BẢNG HIỆU LOADING KHI LÀM XONG NHIỆM VỤ (KỂ CẢ THÀNH CÔNG HAY THẤT BẠI) 👇
       setIsCalculatingRoute(false);
@@ -130,7 +132,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
                 userCoordsRef.current = [lat, lng];
                 mapInstanceRef.current.setView(userCoordsRef.current, 16);
 
-                L.marker(userCoordsRef.current, { icon: myCustomIcon }) 
+                L.marker(userCoordsRef.current, { icon: myCustomIcon })
                   .addTo(mapInstanceRef.current)
                   .bindPopup('<b>あなたはここにいる!</b>')
                   .openPopup();
@@ -152,14 +154,27 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
       }
 
       // LẮNG NGHE SỰ KIỆN NÚT TRONG POPUP
-      map.on('popupopen', () => {
-        const routeBtn = document.querySelector('.route-btn');
+      map.on('popupopen', (e) => {
+        const popupEl = e?.popup?.getElement?.();
+        if (!popupEl) return;
+
+        const detailBtn = popupEl.querySelector('.detail-btn');
+        if (detailBtn) {
+          detailBtn.onclick = () => {
+            const cafeId = detailBtn.getAttribute('data-id');
+            if (!cafeId) return;
+            navigate(`/cafes/${cafeId}`);
+            map.closePopup();
+          };
+        }
+
+        const routeBtn = popupEl.querySelector('.route-btn');
         if (routeBtn) {
           routeBtn.onclick = () => {
             const lat = parseFloat(routeBtn.getAttribute('data-lat'));
             const lng = parseFloat(routeBtn.getAttribute('data-lng'));
             drawRouteRef.current?.(lat, lng);
-            map.closePopup(); 
+            map.closePopup();
           };
         }
       });
@@ -247,7 +262,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
                 </div>
                 
                 <div style="display: flex; gap: 8px;">
-                  <button style="flex: 1; padding: 8px; background-color: #5c4033; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                  <button class="detail-btn" data-id="${cafe.id}" style="flex: 1; padding: 8px; background-color: #5c4033; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
                     詳細を見る
                   </button>
                   
