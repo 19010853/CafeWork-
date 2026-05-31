@@ -4,7 +4,8 @@ import toast from 'react-hot-toast';
 import { profileService } from '../../api/profileService';
 import TopNavTabs from '../../components/layout/TopNavTabs';
 import ChangePasswordModal from '../../components/profile/ChangePasswordModal';
-import { getPhoneLocal, setPhoneLocal } from '../../utils/userLocalStore';
+import { getLang, getPhoneLocal, setPhoneLocal } from '../../utils/userLocalStore';
+import { confirmToast } from '../../utils/confirmToast';
 import styles from './ProfilePage.module.css';
 
 const getInitial = (text) => {
@@ -21,6 +22,7 @@ const getErrorMessage = (error) => {
 const ProfilePage = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
+    const lang = useMemo(() => getLang(), []);
 
     const [loading, setLoading] = useState(Boolean(token));
     const [saving, setSaving] = useState(false);
@@ -69,13 +71,23 @@ const ProfilePage = () => {
     }, [token]);
 
     const handleLogout = () => {
-        if (!window.confirm('ログアウトしますか？')) return;
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('role');
-        localStorage.removeItem('fullName');
-        navigate('/');
-        window.location.reload();
+        const message = lang === 'VI' ? 'Bạn có chắc muốn đăng xuất không?' : 'ログアウトしますか？';
+        const cancelText = lang === 'VI' ? 'Hủy' : 'キャンセル';
+        const confirmText = lang === 'VI' ? 'Đăng xuất' : 'ログアウト';
+
+        confirmToast({
+            message,
+            cancelText,
+            confirmText,
+            onConfirm: () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('role');
+                localStorage.removeItem('fullName');
+                navigate('/');
+                window.location.reload();
+            },
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -283,9 +295,9 @@ const ProfilePage = () => {
                     </main>
                 </div>
             </div>
-            <ChangePasswordModal 
-                isOpen={isPasswordModalOpen} 
-                onClose={() => setIsPasswordModalOpen(false)} 
+            <ChangePasswordModal
+                isOpen={isPasswordModalOpen}
+                onClose={() => setIsPasswordModalOpen(false)}
             />
         </div>
     );

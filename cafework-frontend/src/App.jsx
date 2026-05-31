@@ -20,7 +20,19 @@ const AppShell = () => {
 
   return (
     <>
-      <Toaster position="top-right" toastOptions={{ duration: 2500 }} />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 2500,
+          className: 'cw-toast',
+          style: {
+            maxWidth: 'min(420px, calc(100vw - 24px))',
+          },
+          error: {
+            duration: 4000,
+          },
+        }}
+      />
       {!shouldHideHeader && <Header />}
       <Routes>
         {/* Các route công khai */}
