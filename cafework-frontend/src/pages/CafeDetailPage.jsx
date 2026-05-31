@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -210,19 +210,6 @@ const styles = {
   // ── DESCRIPTION ──
   description: { fontSize: '14px', color: '#555', lineHeight: 1.8, margin: 0 },
 
-  // ── COUPON BANNER ──
-  couponBanner: {
-    backgroundColor: '#FFF8E1',
-    border: '1.5px dashed #F6C90E',
-    borderRadius: '10px',
-    padding: '14px 18px',
-    display: 'flex', alignItems: 'center', gap: '12px',
-  },
-  couponIcon: { fontSize: '24px' },
-  couponText: { flex: 1 },
-  couponTitle: { fontSize: '14px', fontWeight: '700', color: '#7C5E00', margin: '0 0 2px 0' },
-  couponSub: { fontSize: '12px', color: '#a08030', margin: 0 },
-
   // ── REVIEW SECTION ──
   reviewHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
   reviewTitle: { fontSize: '16px', fontWeight: '700', color: '#333', margin: 0 },
@@ -261,63 +248,41 @@ const styles = {
   spinner: {
     width: '36px', height: '36px',
     border: '3px solid #e5e0db', borderTop: '3px solid #8b5a2b',
-    borderRadius: '50',
+    borderRadius: '50%',
     animation: 'spin 0.9s linear infinite',
   },
   loadingText: { color: '#8b5a2b', fontSize: '14px' },
 
+  // ── COUPONS CAROUSEL ──
   couponCarouselWrap: {
     position: 'relative',
     overflow: 'hidden',
   },
-
   couponSlider: {
     display: 'flex',
     transition: 'transform 0.45s ease-in-out',
   },
-
   couponSlide: {
     minWidth: '100%',
     padding: '4px',
   },
-
-  couponNavBtn: {
-    position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    width: '42px',
-    height: '42px',
-    borderRadius: '50%',
-    border: 'none',
-    background: 'rgba(255,255,255,0.92)',
-    backdropFilter: 'blur(8px)',
-    boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
-    cursor: 'pointer',
-    zIndex: 5,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '18px',
-    fontWeight: 'bold',
-    color: '#6b4b2a',
-    transition: 'all 0.2s ease',
+  couponBanner: {
+    backgroundColor: '#FFF8E1',
+    border: '1.5px dashed #F6C90E',
+    borderRadius: '10px',
+    padding: '14px 18px',
+    display: 'flex', alignItems: 'center', gap: '12px',
   },
-
-  couponNavBtnLeft: {
-    left: '-10px',
-  },
-
-  couponNavBtnRight: {
-    right: '-10px',
-  },
-
+  couponIcon: { fontSize: '24px' },
+  couponText: { flex: 1 },
+  couponTitle: { fontSize: '14px', fontWeight: '700', color: '#7C5E00', margin: '0 0 2px 0' },
+  couponSub: { fontSize: '12px', color: '#a08030', margin: 0 },
   couponIndicatorWrap: {
     display: 'flex',
     justifyContent: 'center',
     gap: '6px',
     marginTop: '10px',
   },
-
   couponIndicator: (active) => ({
     width: active ? '18px' : '7px',
     height: '7px',
@@ -332,26 +297,19 @@ const styles = {
     gap: '14px',
     marginTop: '12px',
   },
-
   couponBottomBtn: {
     width: '32px',
     height: '32px',
-
     borderRadius: '50%',
     border: '1px solid #e2d7c7',
-
     backgroundColor: '#fff',
     color: '#8b5a2b',
-
     cursor: 'pointer',
-
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-
     fontSize: '18px',
     fontWeight: 'bold',
-
     transition: 'all 0.2s ease',
   },
 };
@@ -372,19 +330,20 @@ const getSeatStatusLabel = (status) => {
   if (status === 'FULL') return t('fullSeats');
   return t('noSeatInfo');
 };
-// (reviews are fetched from /api/reviews and filtered by cafeId)
+
 const isJapanese = (text) => {
-  if (!text) return true; // Nếu trống thì cứ coi như tiếng Nhật cho khỏi hiện nút
-  // Regex quét bảng mã Unicode của tiếng Nhật
+  if (!text) return true;
   const jpRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/;
   return jpRegex.test(text);
 };
+
 // ============================================================
 // COMPONENT
 // ============================================================
 const CafeDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [cafe, setCafe] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -394,9 +353,9 @@ const CafeDetailPage = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
-  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [coupons, setCoupons] = useState([]);
+  
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(Boolean(token));
@@ -405,6 +364,7 @@ const CafeDetailPage = () => {
   useEffect(() => {
     setIsFavorite(isBookmarked(id));
   }, [id]);
+
   // Review states
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -413,8 +373,8 @@ const CafeDetailPage = () => {
   const [hoveredStar, setHoveredStar] = useState(0);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [translations, setTranslations] = useState({});
-  // Trạng thái cờ lê báo hiệu "Đang dịch..."
   const [translatingIds, setTranslatingIds] = useState({});
+
   const fetchCafeDetails = () => {
     setIsRefreshing(true);
     axios
@@ -437,7 +397,6 @@ const CafeDetailPage = () => {
     axios
       .get(`http://localhost:8080/api/reviews`)
       .then((res) => {
-        // Filter reviews for this cafe
         const cafeReviews = res.data.filter((r) => r.cafeId === id);
         setReviews(cafeReviews);
         setReviewsLoading(false);
@@ -449,56 +408,9 @@ const CafeDetailPage = () => {
       });
   };
 
-  const handleSubmitReview = async () => {
-    // 1. Kiểm tra an toàn: Không cho gửi giấy trắng
-    if (!newReviewContent.trim()) return;
-
-    try {
-      setReviewSubmitting(true); // Bật trạng thái "Đang gửi..."
-
-      const token = localStorage.getItem('token');
-      // 3. Đóng gói tấu chương (Dữ liệu gửi lên Backend)
-      // Lưu ý: Biến 'id' ở đây là ID của quán cà phê đang xem
-      const payload = {
-        cafeId: id,
-        rating: newReviewRating,
-        content: newReviewContent,
-      };
-
-      // 4. Truyền tin lên kinh thành (Gọi API)
-      await axios.post('http://localhost:8080/api/reviews', payload, {
-        headers: {
-          // NHÁT KIẾM QUYẾT ĐỊNH: Giơ thẻ bài ra cho Cấm Vệ Quân kiểm tra
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      // 5. Nếu thành công, dọn dẹp chiến trường
-      setNewReviewContent(''); // Xóa ô nhập chữ
-      setNewReviewRating(5);   // Trả sao về lại 5
-      setShowReviewModal(false); // Đóng cửa sổ lại
-
-      // 6. Cập nhật lại danh sách để bá tánh thấy ngay tấu chương vừa viết
-      // Bệ hạ hãy gọi lại hàm lấy danh sách review ở đây (ví dụ: fetchReviews())
-      fetchReviews();
-
-      // Báo hỉ
-      toast.success('レビューを投稿しました。');
-
-    } catch (error) {
-      console.error("Lỗi khi gửi tấu chương:", error);
-      toast.error('レビュー投稿に失敗しました。');
-    } finally {
-      // Dù thành công hay thất bại cũng phải tắt trạng thái "Đang gửi..."
-      setReviewSubmitting(false);
-    }
-  };
   const fetchCoupons = async () => {
     try {
-      const res = await axios.get(
-          `http://localhost:8080/api/coupons/cafe/${id}`
-      );
-
+      const res = await axios.get(`http://localhost:8080/api/coupons/cafe/${id}`);
       setCoupons(res.data);
     } catch (err) {
       console.error('Coupon fetch error:', err);
@@ -506,17 +418,44 @@ const CafeDetailPage = () => {
     }
   };
 
-  const [currentCouponIndex, setCurrentCouponIndex] = useState(0);
-  const nextCoupon = () => {
-    setCurrentCouponIndex((prev) =>
-        prev === coupons.length - 1 ? 0 : prev + 1
-    );
+  const handleSubmitReview = async () => {
+    if (!newReviewContent.trim()) return;
+
+    try {
+      setReviewSubmitting(true);
+      const token = localStorage.getItem('token');
+      const payload = {
+        cafeId: id,
+        rating: newReviewRating,
+        content: newReviewContent,
+      };
+
+      await axios.post('http://localhost:8080/api/reviews', payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setNewReviewContent('');
+      setNewReviewRating(5);
+      setShowReviewModal(false);
+      fetchReviews();
+      
+      toast.success(t('reviewSubmitted') || 'レビューを投稿しました。');
+
+    } catch (error) {
+      console.error("Lỗi khi gửi tấu chương:", error);
+      toast.error('レビュー投稿に失敗しました。');
+    } finally {
+      setReviewSubmitting(false);
+    }
   };
 
+  // Carousel controls
+  const [currentCouponIndex, setCurrentCouponIndex] = useState(0);
+  const nextCoupon = () => {
+    setCurrentCouponIndex((prev) => prev === coupons.length - 1 ? 0 : prev + 1);
+  };
   const prevCoupon = () => {
-    setCurrentCouponIndex((prev) =>
-        prev === 0 ? coupons.length - 1 : prev - 1
-    );
+    setCurrentCouponIndex((prev) => prev === 0 ? coupons.length - 1 : prev - 1);
   };
 
   useEffect(() => {
@@ -530,13 +469,7 @@ const CafeDetailPage = () => {
   if (loading && !cafe) {
     return (
       <div style={styles.loadingWrap}>
-        <div
-          style={{
-            width: 36, height: 36,
-            border: '3px solid #e5e0db', borderTop: '3px solid #8b5a2b',
-            borderRadius: '50%', animation: 'spin 0.9s linear infinite',
-          }}
-        />
+        <div style={styles.spinner} />
         <p style={styles.loadingText}>{t('loading')}</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -561,44 +494,31 @@ const CafeDetailPage = () => {
   const lat = cafe.latitude || 21.028511;
   const lng = cafe.longitude || 105.804817;
 
+  // Gọi trực tiếp đến HomePage với các tham số chỉ đường
   const goToDirectionsPage = () => {
     if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return;
     const destName = cafe?.name ? `&destName=${encodeURIComponent(cafe.name)}` : '';
     navigate(`/?destLat=${encodeURIComponent(lat)}&destLng=${encodeURIComponent(lng)}${destName}`);
   };
+
   const handleTranslate = async (reviewId, text) => {
-    // 1. Kính chiếu yêu: Báo cáo xem có nhận được lệnh bấm nút chưa
-    console.log("🚨 Lệnh dịch thuật đã phát ra! ID:", reviewId, "Nội dung:", text);
-
-    // 2. Treo biển "Đang dịch..."
     setTranslatingIds(prev => ({ ...prev, [reviewId]: true }));
-
     try {
-      // Dùng trạm dịch thuật miễn phí MyMemory (Từ Anh sang Nhật: en|ja)
       const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ja`;
-      console.log("🌐 Đang chạy sang trạm dịch:", url);
-
       const response = await axios.get(url);
-      console.log("📦 Trạm dịch trả hàng về:", response.data);
-
       const translatedText = response.data.responseData.translatedText;
-
-      // 3. Cất bản dịch vào kho
       setTranslations(prev => ({ ...prev, [reviewId]: translatedText }));
-      console.log("✅ Đã lưu bản dịch thành công!");
-
     } catch (error) {
-      console.error("❌ Lỗi khi dịch thuật:", error);
-      alert("Bẩm bệ hạ, sứ giả đi dịch thuật đã gặp nạn: " + error.message);
+      console.error("Lỗi khi dịch thuật:", error);
+      toast.error(error.message);
     } finally {
-      // 4. Gỡ biển "Đang dịch..."
       setTranslatingIds(prev => ({ ...prev, [reviewId]: false }));
     }
   };
+
   return (
     <div style={styles.page}>
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #F7F5F2; }
         a { text-decoration: none; }
@@ -619,75 +539,52 @@ const CafeDetailPage = () => {
       </div>
 
       {/* ── HERO GALLERY ── */}
-      <div className="gallery-grid" style={styles.gallery}>
-        {images.length === 0 ? (
-          // No images — placeholder
-          <div style={{
-            gridColumn: '1 / -1', height: '300px',
-            backgroundColor: '#e9e0d5',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            gap: '8px', color: '#a08070',
-          }}>
-            <span style={{ fontSize: '40px' }}>📷</span>
-            <span style={{ fontSize: '14px' }}>{t('noImage')}</span>
-          </div>
-        ) : images.length === 1 ? (
-          // 1 image — full width
-          <div style={{ gridColumn: '1 / -1', position: 'relative', cursor: 'pointer' }}
-            onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
-            <img
-              src={images[0].imageUrl}
-              alt={cafe.name}
-              style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block' }}
-              onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.style.display = 'none'; }}
-            />
-          </div>
-        ) : (
-          // 2+ images — grid layout
-          <>
-            {/* Main image */}
-            <div className="gallery-main" style={styles.galleryMain}
-        
+      <div style={styles.galleryWrap}>
+        <div className="gallery-grid" style={styles.gallery}>
+          {images.length === 0 ? (
+            <div style={{
+              gridColumn: '1 / -1', height: '300px', backgroundColor: '#e9e0d5', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#a08070',
+            }}>
+              <span style={{ fontSize: '40px' }}>📷</span>
+              <span style={{ fontSize: '14px' }}>{t('noImage')}</span>
+            </div>
+          ) : images.length === 1 ? (
+            <div style={{ gridColumn: '1 / -1', position: 'relative', cursor: 'pointer' }}
+              onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
+              <img src={images[0].imageUrl} alt={cafe.name} style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block' }} onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.style.display = 'none'; }} />
+            </div>
+          ) : (
+            <>
+              <div className="gallery-main" style={styles.galleryMain}
                 onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
-                <img
-                  src={images[0].imageUrl}
-                  alt={cafe.name}
-                  style={{ ...styles.galleryMainImg, cursor: 'pointer' }}
-                  onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                />
+                <img src={images[0].imageUrl} alt={cafe.name} style={{ ...styles.galleryMainImg, cursor: 'pointer' }} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
               </div>
-
-            {/* Sub images — slot 2, with "see more" overlay if there are more */}
-            {images[2] && (
-              <div style={{ ...styles.gallerySub, position: 'relative', cursor: 'pointer' }}
-                onClick={() => { setSelectedPhotoIndex(2); setShowPhotoModal(true); }}>
-                <img
-                  src={images[2].imageUrl}
-                  alt={`${cafe.name} 3`}
-                  style={{ ...styles.gallerySubImg, cursor: 'pointer' }}
-                  onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                />
-                {/* "See more" overlay — only shown when there are 4+ images */}
-                {images.length > 3 && (
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    backgroundColor: 'rgba(0,0,0,0.52)',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center',
-                    gap: '4px', color: '#fff',
-                  }}>
-                    <span style={{ fontSize: '24px' }}>📷</span>
-                    <span style={{ fontSize: '15px', fontWeight: '700' }}>
-                      +{images.length - 3} {t('photos')}
-                    </span>
-                    <span style={{ fontSize: '11px', opacity: 0.85 }}>{t('viewAllPhotos')}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
+              {images[1] && (
+                <div style={{ ...styles.gallerySub, position: 'relative' }}
+                  onClick={() => { setSelectedPhotoIndex(1); setShowPhotoModal(true); }}>
+                  <img src={images[1].imageUrl} alt={`${cafe.name} 2`} style={{ ...styles.gallerySubImg, cursor: 'pointer' }} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+                </div>
+              )}
+              {images[2] && (
+                <div style={{ ...styles.gallerySub, position: 'relative', cursor: 'pointer' }}
+                  onClick={() => { setSelectedPhotoIndex(2); setShowPhotoModal(true); }}>
+                  <img src={images[2].imageUrl} alt={`${cafe.name} 3`} style={{ ...styles.gallerySubImg, cursor: 'pointer' }} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+                  {images.length > 3 && (
+                    <div style={{
+                      position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.52)', display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center', gap: '4px', color: '#fff',
+                    }}>
+                      <span style={{ fontSize: '24px' }}>📷</span>
+                      <span style={{ fontSize: '15px', fontWeight: '700' }}>+{images.length - 3} {t('photos')}</span>
+                      <span style={{ fontSize: '11px', opacity: 0.85 }}>{t('viewAllPhotos')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* ── MAIN CONTENT ── */}
@@ -711,11 +608,7 @@ const CafeDetailPage = () => {
                 <span style={styles.statusDot(statusCls)} />
                 {getSeatStatusLabel(cafe.seatStatus)}
               </div>
-              <button
-                style={styles.refreshBtn}
-                onClick={fetchCafeDetails}
-                disabled={isRefreshing}
-              >
+              <button style={styles.refreshBtn} onClick={fetchCafeDetails} disabled={isRefreshing}>
                 🔄 {isRefreshing ? t('refreshing') : t('refresh')}
               </button>
             </div>
@@ -727,21 +620,17 @@ const CafeDetailPage = () => {
                 onClick={() => {
                   const token = localStorage.getItem('token');
                   if (!token) {
-                    alert(t('loginRequired'));
+                    toast.error(t('loginRequired'));
                     navigate('/login');
                     return;
                   }
-
                   const result = toggleBookmark(id);
                   setIsFavorite(result.saved);
                 }}
               >
                 {isFavorite ? `♥ ${t('savedFavorite')}` : `♡ ${t('saveFavorite')}`}
               </button>
-              <button
-                style={styles.btnDirections}
-                onClick={goToDirectionsPage}
-              >
+              <button style={styles.btnDirections} onClick={goToDirectionsPage}>
                 🧭 {t('directions')}
               </button>
             </div>
@@ -749,143 +638,78 @@ const CafeDetailPage = () => {
 
           {/* Coupon Banner Carousel */}
           {isLoggedIn && coupons.length > 0 && (
-              <div style={styles.couponCarouselWrap}>
-
-                {/* SLIDER */}
-                <div
-                    style={{
-                      ...styles.couponSlider,
-                      transform: `translateX(-${currentCouponIndex * 100}%)`,
-                    }}
-                >
-                  {coupons.map((coupon) => {
-                    const expired =
-                        new Date(coupon.validTo) < new Date();
-
-                    return (
-                        <div
-                            key={coupon.id}
-                            style={styles.couponSlide}
-                        >
-                          <div
-                              style={{
-                                ...styles.couponBanner,
-                                opacity: expired ? 0.6 : 1,
-                                border: expired
-                                    ? '1.5px dashed #ccc'
-                                    : '1.5px dashed #F6C90E',
-                                backgroundColor: expired
-                                    ? '#f5f5f5'
-                                    : '#FFF8E1',
-                                transition: 'all 0.25s ease',
-                                cursor: 'pointer',
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.transform =
-                                    'translateY(-2px)';
-                                e.currentTarget.style.boxShadow =
-                                    '0 8px 22px rgba(0,0,0,0.12)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform =
-                                    'translateY(0)';
-                                e.currentTarget.style.boxShadow = 'none';
-                              }}
-                          >
-              <span style={styles.couponIcon}>
-                {expired ? '⏰' : '🎫'}
-              </span>
-
-                            <div style={styles.couponText}>
-                              <p style={styles.couponTitle}>
-                                {coupon.code}
-                                {' · '}
-                                {coupon.discountValue}% OFF
-                              </p>
-
-                              <p style={styles.couponSub}>
-                                {coupon.description}
-                              </p>
-
-                              <p
-                                  style={{
-                                    marginTop: '4px',
-                                    fontSize: '11px',
-                                    color: '#777',
-                                  }}
-                              >
-                                {new Date(
-                                    coupon.validFrom
-                                ).toLocaleDateString('ja-JP')}
-                                {' ~ '}
-                                {new Date(
-                                    coupon.validTo
-                                ).toLocaleDateString('ja-JP')}
-                              </p>
-                            </div>
-                          </div>
+            <div style={styles.couponCarouselWrap}>
+              <div style={{ ...styles.couponSlider, transform: `translateX(-${currentCouponIndex * 100}%)` }}>
+                {coupons.map((coupon) => {
+                  const expired = new Date(coupon.validTo) < new Date();
+                  return (
+                    <div key={coupon.id} style={styles.couponSlide}>
+                      <div
+                        style={{
+                          ...styles.couponBanner,
+                          opacity: expired ? 0.6 : 1,
+                          border: expired ? '1.5px dashed #ccc' : '1.5px dashed #F6C90E',
+                          backgroundColor: expired ? '#f5f5f5' : '#FFF8E1',
+                          transition: 'all 0.25s ease', cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 8px 22px rgba(0,0,0,0.12)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                      >
+                        <span style={styles.couponIcon}>{expired ? '⏰' : '🎫'}</span>
+                        <div style={styles.couponText}>
+                          <p style={styles.couponTitle}>{coupon.code} {' · '} {coupon.discountValue}% OFF</p>
+                          <p style={styles.couponSub}>{coupon.description}</p>
+                          <p style={{ marginTop: '4px', fontSize: '11px', color: '#777' }}>
+                            {new Date(coupon.validFrom).toLocaleDateString('ja-JP')}
+                            {' ~ '}
+                            {new Date(coupon.validTo).toLocaleDateString('ja-JP')}
+                          </p>
                         </div>
-                    );
-                  })}
-                </div>
-
-                {/* CONTROLS */}
-                {coupons.length > 1 && (
-                    <div style={styles.couponControls}>
-
-                      <button
-                          onClick={prevCoupon}
-                          style={styles.couponBottomBtn}
-                      >
-                        ‹
-                      </button>
-
-                      <div style={styles.couponIndicatorWrap}>
-                        {coupons.map((_, index) => (
-                            <div
-                                key={index}
-                                style={styles.couponIndicator(
-                                    index === currentCouponIndex
-                                )}
-                            />
-                        ))}
                       </div>
-
-                      <button
-                          onClick={nextCoupon}
-                          style={styles.couponBottomBtn}
-                      >
-                        ›
-                      </button>
-
                     </div>
-                )}
+                  );
+                })}
               </div>
+
+              {/* CONTROLS */}
+              {coupons.length > 1 && (
+                <div style={styles.couponControls}>
+                  <button onClick={prevCoupon} style={styles.couponBottomBtn}>‹</button>
+                  <div style={styles.couponIndicatorWrap}>
+                    {coupons.map((_, index) => (
+                      <div key={index} style={styles.couponIndicator(index === currentCouponIndex)} />
+                    ))}
+                  </div>
+                  <button onClick={nextCoupon} style={styles.couponBottomBtn}>›</button>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Details */}
           <div style={styles.sectionCard}>
             <h2 style={styles.sectionTitle}>📋 {t('storeInfo')}</h2>
-
             <div style={styles.detailRow}>
               <span style={styles.detailIcon}>📍</span>
               <span style={styles.detailLabel}>{t('address')}</span>
               <span style={styles.detailValue}>{cafe.address || t('noInfo')}</span>
             </div>
-
             <div style={styles.detailRow}>
               <span style={styles.detailIcon}>🕒</span>
               <span style={styles.detailLabel}>{t('businessHours')}</span>
               <span style={styles.detailValue}>{cafe.openHours || t('noInfo')}</span>
             </div>
-
             <div style={styles.detailRow}>
               <span style={styles.detailIcon}>📞</span>
               <span style={styles.detailLabel}>{t('phoneNumber')}</span>
               <span style={styles.detailValue}>
-                {cafe.phone
-                  ? <a href={`tel:${cafe.phone}`} style={styles.phoneLink}>{cafe.phone}</a>
-                  : t('noInfo')}
+                {cafe.phone ? <a href={`tel:${cafe.phone}`} style={styles.phoneLink}>{cafe.phone}</a> : t('noInfo')}
               </span>
             </div>
           </div>
@@ -926,27 +750,22 @@ const CafeDetailPage = () => {
                 return (
                   <div key={r.id} style={styles.reviewCard}>
                     <div style={styles.reviewTopRow}>
-                      {/* Cột chứa Tên và Ngày tháng */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={styles.reviewerName}>
-                          {/* Ưu tiên hiển thị r.userName, nếu không có mới dùng ID cắt ngắn */}
                           👤 {r.userName || (r.userId ? `${t('user')} #${r.userId.slice(0, 6)}` : t('anonymousUser'))}
                         </span>
                         <span style={{ fontSize: '12px', color: '#888' }}>
-                          {/* Format ngày tháng sang kiểu Nhật (VD: 2026/05/17) */}
                           📅 {r.createdAt ? new Date(r.createdAt).toLocaleDateString('ja-JP') : t('unknownDate')}
                         </span>
                       </div>
-
                       <span style={styles.reviewStars}>
                         {'★'.repeat(Math.min(ratingNum, 5))}{'☆'.repeat(Math.max(0, 5 - ratingNum))}
                       </span>
                     </div>
                     <p style={styles.reviewContent}>{r.content}</p>
-                    {/* 👇 CHỈ HIỂN THỊ KHỐI DỊCH THUẬT NẾU KHÔNG PHẢI TIẾNG NHẬT 👇 */}
+                    
                     {!isJapanese(r.content) && (
                       <>
-                        {/* Nếu chưa có bản dịch thì hiện nút bấm */}
                         {!translations[r.id] ? (
                           <button
                             onClick={() => handleTranslate(r.id, r.content)}
@@ -960,7 +779,6 @@ const CafeDetailPage = () => {
                             {translatingIds[r.id] ? `⏳ ${t('translating')}` : `🌐 ${t('translateToJapanese')}`}
                           </button>
                         ) : (
-                          /* Nếu đã dịch xong thì hiện khung kết quả */
                           <div style={{
                             marginTop: '12px', padding: '10px', backgroundColor: '#f4f6f8',
                             borderRadius: '6px', borderLeft: '3px solid #1a73e8'
@@ -978,7 +796,6 @@ const CafeDetailPage = () => {
               })
             )}
           </div>
-
         </div>
 
         {/* ── RIGHT COLUMN ── */}
@@ -999,7 +816,7 @@ const CafeDetailPage = () => {
                 style={{ ...styles.btnDirections, width: '100%', justifyContent: 'center' }}
                 onClick={goToDirectionsPage}
               >
-                🧭 {t('openGoogleMaps')}
+                🧭 {t('directions')}
               </button>
             </div>
           </div>
@@ -1031,7 +848,6 @@ const CafeDetailPage = () => {
           </div>
 
         </div>
-
       </div>
 
       {/* ── REVIEW MODAL ── */}
@@ -1046,8 +862,7 @@ const CafeDetailPage = () => {
           <div
             style={{
               backgroundColor: '#fff', borderRadius: '14px', padding: '28px 28px',
-              width: '440px', maxWidth: '90vw',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
+              width: '440px', maxWidth: '90vw', boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1134,7 +949,6 @@ const CafeDetailPage = () => {
           }}
           onClick={() => setShowPhotoModal(false)}
         >
-          {/* Header */}
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             padding: '14px 20px', color: '#fff', flexShrink: 0,
@@ -1153,43 +967,33 @@ const CafeDetailPage = () => {
             </button>
           </div>
 
-          {/* Main Image */}
           <div style={{
             flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
             position: 'relative', padding: '0 60px',
           }} onClick={(e) => e.stopPropagation()}>
-            {/* Prev button */}
             <button
               onClick={() => setSelectedPhotoIndex((i) => (i - 1 + images.length) % images.length)}
               style={{
-                position: 'absolute', left: '12px',
-                background: 'rgba(255,255,255,0.15)', border: 'none',
-                color: '#fff', fontSize: '22px', cursor: 'pointer',
-                width: '44px', height: '44px', borderRadius: '50%',
+                position: 'absolute', left: '12px', background: 'rgba(255,255,255,0.15)', border: 'none',
+                color: '#fff', fontSize: '22px', cursor: 'pointer', width: '44px', height: '44px', borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
               ‹
             </button>
-
             <img
               src={images[selectedPhotoIndex]?.imageUrl}
               alt={`${cafe.name} ${selectedPhotoIndex + 1}`}
               style={{
-                maxWidth: '100%', maxHeight: '70vh',
-                objectFit: 'contain', borderRadius: '8px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain',
+                borderRadius: '8px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
               }}
             />
-
-            {/* Next button */}
             <button
               onClick={() => setSelectedPhotoIndex((i) => (i + 1) % images.length)}
               style={{
-                position: 'absolute', right: '12px',
-                background: 'rgba(255,255,255,0.15)', border: 'none',
-                color: '#fff', fontSize: '22px', cursor: 'pointer',
-                width: '44px', height: '44px', borderRadius: '50%',
+                position: 'absolute', right: '12px', background: 'rgba(255,255,255,0.15)', border: 'none',
+                color: '#fff', fontSize: '22px', cursor: 'pointer', width: '44px', height: '44px', borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
@@ -1197,7 +1001,6 @@ const CafeDetailPage = () => {
             </button>
           </div>
 
-          {/* Thumbnail Strip */}
           <div style={{
             display: 'flex', gap: '8px', padding: '16px 20px',
             overflowX: 'auto', flexShrink: 0, justifyContent: 'center',
@@ -1211,9 +1014,7 @@ const CafeDetailPage = () => {
                 style={{
                   width: '64px', height: '48px', objectFit: 'cover',
                   borderRadius: '6px', cursor: 'pointer', flexShrink: 0,
-                  border: i === selectedPhotoIndex
-                    ? '2px solid #fff'
-                    : '2px solid transparent',
+                  border: i === selectedPhotoIndex ? '2px solid #fff' : '2px solid transparent',
                   opacity: i === selectedPhotoIndex ? 1 : 0.55,
                   transition: 'all 0.15s',
                 }}
