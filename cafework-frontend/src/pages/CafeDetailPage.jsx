@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { isBookmarked, toggleBookmark } from '../utils/userLocalStore';
 
 // ============================================================
@@ -268,7 +269,6 @@ const styles = {
 // ============================================================
 // HELPERS
 // ============================================================
-const isLoggedIn = Boolean(localStorage.getItem('token'));
 const getSeatStatusClass = (status) => {
   if (status === 'AVAILABLE') return 'available';
   if (status === 'ALMOST_FULL') return 'warning';
@@ -281,13 +281,6 @@ const getSeatStatusLabel = (status) => {
   if (status === 'ALMOST_FULL') return '残りわずか';
   if (status === 'FULL') return '満席';
   return '情報なし';
-};
-
-const renderStars = (rating) => {
-  if (!rating) return '—';
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
-  return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0));
 };
 // (reviews are fetched from /api/reviews and filtered by cafeId)
 const isJapanese = (text) => {
@@ -399,11 +392,11 @@ const CafeDetailPage = () => {
       fetchReviews();
 
       // Báo hỉ
-      alert("Tấu chương của bệ hạ đã được lưu danh sử sách thành công!");
+      toast.success('レビューを投稿しました。');
 
     } catch (error) {
       console.error("Lỗi khi gửi tấu chương:", error);
-      alert("Khởi bẩm, có lỗi xảy ra trên đường vận chuyển ạ!");
+      toast.error('レビュー投稿に失敗しました。');
     } finally {
       // Dù thành công hay thất bại cũng phải tắt trạng thái "Đang gửi..."
       setReviewSubmitting(false);
