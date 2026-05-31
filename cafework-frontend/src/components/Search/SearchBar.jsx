@@ -4,6 +4,7 @@ import { searchCafes } from '../../services/cafeService';
 import L from 'leaflet'; // Bổ sung Leaflet để tính khoảng cách
 import { addSearchHistory, isBookmarked, toggleBookmark } from '../../utils/userLocalStore';
 import './SearchBar.css';
+import { t } from '../../utils/i18n';
 
 const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
     const navigate = useNavigate();
@@ -39,7 +40,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
             onSearchData(data);
         } catch (err) {
             console.error("Lỗi:", err);
-            setError('エラーが発生しました。');
+            setError(t('searchError'));
             setResults([]);
         } finally {
             setLoading(false);
@@ -134,7 +135,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
                         <span className="search-icon">🔍</span>
                         <input
                             type="text"
-                            placeholder="エリアや条件で検索..."
+                            placeholder={t('searchPlaceholder')}
                             value={keyword}
                             onChange={handleInputChange}
                             onFocus={() => { if (keyword.trim().length > 0) setShowDropdown(true) }}
@@ -175,13 +176,13 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
                         {showSortMenu && (
                             <div style={sortDropdownStyle}>
                                 <div style={getSortItemStyle(sortBy === 'default')} onClick={() => { setSortBy('default'); setShowSortMenu(false); }}>
-                                    デフォルト (Mặc định) {sortBy === 'default' && '✓'}
+                                    {t('sortDefault')} {sortBy === 'default' && '✓'}
                                 </div>
                                 <div style={getSortItemStyle(sortBy === 'rating_desc')} onClick={() => { setSortBy('rating_desc'); setShowSortMenu(false); }}>
-                                    評価が高い順 (Đánh giá cao) {sortBy === 'rating_desc' && '✓'}
+                                    {t('sortRatingHigh')} {sortBy === 'rating_desc' && '✓'}
                                 </div>
                                 <div style={getSortItemStyle(sortBy === 'distance_asc')} onClick={() => { setSortBy('distance_asc'); setShowSortMenu(false); }}>
-                                    距離が近い順 (Gần nhất) {sortBy === 'distance_asc' && '✓'}
+                                    {t('sortNearest')} {sortBy === 'distance_asc' && '✓'}
                                 </div>
                             </div>
                         )}
@@ -190,9 +191,8 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
             </div>
 
             <div className="results-scroll-area" style={scrollAreaStyle}>
-                {loading && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>読み込み中...</p>}
-                {error && <p style={{ textAlign: 'center', color: '#D14343', fontSize: '13px' }}>{error}</p>}
-                {!loading && sortedResults.length === 0 && keyword && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>カフェが見つかりません</p>}
+                {loading && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>{t('loadingResults')}</p>}
+                {!loading && sortedResults.length === 0 && keyword && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>{t('noCafeFound')}</p>}
 
                 {sortedResults.map((cafe) => {
                     const saved = isBookmarked(cafe.id);
@@ -270,6 +270,11 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
                                     <span style={getStatusDotStyle(cafe.seatStatus)}></span>
                                     <span style={{ fontSize: '13px', color: '#555' }}>{cafe.seatStatus || '不明'}</span>
                                 </div>
+                            </div>
+
+                            <div style={statusWrapperStyle}>
+                                <span style={getStatusDotStyle(cafe.seatStatus)}></span>
+                                <span style={{ fontSize: '13px', color: '#555' }}>{cafe.seatStatus || t('unknownStatus')}</span>
                             </div>
                         </div>
                     );

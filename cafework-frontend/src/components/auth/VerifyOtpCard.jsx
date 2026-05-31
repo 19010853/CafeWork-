@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './VerifyOtpCard.module.css';
 import api from '../../api/axiosClient';
+import { t } from '../../utils/i18n';
 
 const VerifyOtpCard = () => {
   const navigate = useNavigate();
@@ -48,14 +49,17 @@ const VerifyOtpCard = () => {
 
   return (
     <div className={styles.card}>
-      <h2 className={styles.title}>認証コード入力</h2>
+      <h2 className={styles.title}>{t('otpTitle')}</h2>
       <p className={styles.subtitle}>
-        <span className={styles.emailHighlight}>{email}</span> 宛に送信された6桁 của 認証コードを入力してください。
+        {t('otpInstruction')}{' '}
+        <span className={styles.emailHighlight}>
+          {email}
+        </span>
       </p>
 
       <form onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
-          <label className={styles.label}>認証コード</label>
+          <label className={styles.label}>{t('otpCode')}</label>
           <input
             type="text"
             maxLength="6"
@@ -72,13 +76,13 @@ const VerifyOtpCard = () => {
           disabled={loading}
           className={styles.submitButton}
         >
-          {loading ? '処理中...' : '認証する'}
+          {loading ? t('processing') : t('verify')}
         </button>
       </form>
 
       <div className={styles.footer}>
         <button type="button" className={styles.resendLink} onClick={() => navigate('/signup')}>
-          ← 登録画面に戻る
+          ← {t('backToSignup')}
         </button>
       </div>
     </div>

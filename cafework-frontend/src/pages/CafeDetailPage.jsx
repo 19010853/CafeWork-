@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { isBookmarked, toggleBookmark } from '../utils/userLocalStore';
+import { t } from '../utils/i18n';
 
 // ============================================================
 // STYLES
@@ -264,6 +265,95 @@ const styles = {
     animation: 'spin 0.9s linear infinite',
   },
   loadingText: { color: '#8b5a2b', fontSize: '14px' },
+
+  couponCarouselWrap: {
+    position: 'relative',
+    overflow: 'hidden',
+  },
+
+  couponSlider: {
+    display: 'flex',
+    transition: 'transform 0.45s ease-in-out',
+  },
+
+  couponSlide: {
+    minWidth: '100%',
+    padding: '4px',
+  },
+
+  couponNavBtn: {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    width: '42px',
+    height: '42px',
+    borderRadius: '50%',
+    border: 'none',
+    background: 'rgba(255,255,255,0.92)',
+    backdropFilter: 'blur(8px)',
+    boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
+    cursor: 'pointer',
+    zIndex: 5,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    color: '#6b4b2a',
+    transition: 'all 0.2s ease',
+  },
+
+  couponNavBtnLeft: {
+    left: '-10px',
+  },
+
+  couponNavBtnRight: {
+    right: '-10px',
+  },
+
+  couponIndicatorWrap: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '6px',
+    marginTop: '10px',
+  },
+
+  couponIndicator: (active) => ({
+    width: active ? '18px' : '7px',
+    height: '7px',
+    borderRadius: '999px',
+    backgroundColor: active ? '#8b5a2b' : '#d6c6b8',
+    transition: 'all 0.25s ease',
+  }),
+  couponControls: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '14px',
+    marginTop: '12px',
+  },
+
+  couponBottomBtn: {
+    width: '32px',
+    height: '32px',
+
+    borderRadius: '50%',
+    border: '1px solid #e2d7c7',
+
+    backgroundColor: '#fff',
+    color: '#8b5a2b',
+
+    cursor: 'pointer',
+
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+
+    fontSize: '18px',
+    fontWeight: 'bold',
+
+    transition: 'all 0.2s ease',
+  },
 };
 
 // ============================================================
@@ -277,10 +367,10 @@ const getSeatStatusClass = (status) => {
 };
 
 const getSeatStatusLabel = (status) => {
-  if (status === 'AVAILABLE') return '空席あり';
-  if (status === 'ALMOST_FULL') return '残りわずか';
-  if (status === 'FULL') return '満席';
-  return '情報なし';
+  if (status === 'AVAILABLE') return t('availableSeats');
+  if (status === 'ALMOST_FULL') return t('almostFull');
+  if (status === 'FULL') return t('fullSeats');
+  return t('noSeatInfo');
 };
 // (reviews are fetched from /api/reviews and filtered by cafeId)
 const isJapanese = (text) => {
@@ -306,6 +396,7 @@ const CafeDetailPage = () => {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [coupons, setCoupons] = useState([]);
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(Boolean(token));
@@ -402,10 +493,36 @@ const CafeDetailPage = () => {
       setReviewSubmitting(false);
     }
   };
+  const fetchCoupons = async () => {
+    try {
+      const res = await axios.get(
+          `http://localhost:8080/api/coupons/cafe/${id}`
+      );
+
+      setCoupons(res.data);
+    } catch (err) {
+      console.error('Coupon fetch error:', err);
+      setCoupons([]);
+    }
+  };
+
+  const [currentCouponIndex, setCurrentCouponIndex] = useState(0);
+  const nextCoupon = () => {
+    setCurrentCouponIndex((prev) =>
+        prev === coupons.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const prevCoupon = () => {
+    setCurrentCouponIndex((prev) =>
+        prev === 0 ? coupons.length - 1 : prev - 1
+    );
+  };
 
   useEffect(() => {
     fetchCafeDetails();
     fetchReviews();
+    fetchCoupons();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -420,7 +537,7 @@ const CafeDetailPage = () => {
             borderRadius: '50%', animation: 'spin 0.9s linear infinite',
           }}
         />
-        <p style={styles.loadingText}>読み込み中...</p>
+        <p style={styles.loadingText}>{t('loading')}</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -432,7 +549,7 @@ const CafeDetailPage = () => {
       <div style={styles.loadingWrap}>
         <span style={{ fontSize: 32 }}>⚠️</span>
         <p style={{ color: '#888', fontSize: 14 }}>{error}</p>
-        <button onClick={() => navigate(-1)} style={styles.btnRegister}>← 戻る</button>
+        <button onClick={() => navigate(-1)} style={styles.btnRegister}>← {t('backToResults')}</button>
       </div>
     );
   }
@@ -497,41 +614,41 @@ const CafeDetailPage = () => {
       {/* ── BACK BUTTON ── */}
       <div style={styles.backBar}>
         <button style={styles.backBtn} onClick={() => navigate(-1)}>
-          ← 検索結果に戻る
+          ← {t('backToResults')}
         </button>
       </div>
 
       {/* ── HERO GALLERY ── */}
-      <div style={styles.galleryWrap}>
-        <div className="gallery-grid" style={styles.gallery}>
-          {images.length === 0 ? (
-            // No images — placeholder
-            <div style={{
-              gridColumn: '1 / -1', height: '300px',
-              backgroundColor: '#e9e0d5',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              gap: '8px', color: '#a08070',
-            }}>
-              <span style={{ fontSize: '40px' }}>📷</span>
-              <span style={{ fontSize: '14px' }}>画像なし</span>
-            </div>
-          ) : images.length === 1 ? (
-            // 1 image — full width
-            <div style={{ gridColumn: '1 / -1', position: 'relative', cursor: 'pointer' }}
-              onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
-              <img
-                src={images[0].imageUrl}
-                alt={cafe.name}
-                style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block' }}
-                onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.style.display = 'none'; }}
-              />
-            </div>
-          ) : (
-            // 2+ images — grid layout
-            <>
-              {/* Main image */}
-              <div className="gallery-main" style={styles.galleryMain}
+      <div className="gallery-grid" style={styles.gallery}>
+        {images.length === 0 ? (
+          // No images — placeholder
+          <div style={{
+            gridColumn: '1 / -1', height: '300px',
+            backgroundColor: '#e9e0d5',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: '8px', color: '#a08070',
+          }}>
+            <span style={{ fontSize: '40px' }}>📷</span>
+            <span style={{ fontSize: '14px' }}>{t('noImage')}</span>
+          </div>
+        ) : images.length === 1 ? (
+          // 1 image — full width
+          <div style={{ gridColumn: '1 / -1', position: 'relative', cursor: 'pointer' }}
+            onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
+            <img
+              src={images[0].imageUrl}
+              alt={cafe.name}
+              style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block' }}
+              onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.style.display = 'none'; }}
+            />
+          </div>
+        ) : (
+          // 2+ images — grid layout
+          <>
+            {/* Main image */}
+            <div className="gallery-main" style={styles.galleryMain}
+        
                 onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
                 <img
                   src={images[0].imageUrl}
@@ -541,50 +658,36 @@ const CafeDetailPage = () => {
                 />
               </div>
 
-              {/* Sub images — slot 1 */}
-              {images[1] && (
-                <div style={{ ...styles.gallerySub, position: 'relative' }}
-                  onClick={() => { setSelectedPhotoIndex(1); setShowPhotoModal(true); }}>
-                  <img
-                    src={images[1].imageUrl}
-                    alt={`${cafe.name} 2`}
-                    style={{ ...styles.gallerySubImg, cursor: 'pointer' }}
-                    onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                  />
-                </div>
-              )}
-
-              {/* Sub images — slot 2, with "see more" overlay if there are more */}
-              {images[2] && (
-                <div style={{ ...styles.gallerySub, position: 'relative', cursor: 'pointer' }}
-                  onClick={() => { setSelectedPhotoIndex(2); setShowPhotoModal(true); }}>
-                  <img
-                    src={images[2].imageUrl}
-                    alt={`${cafe.name} 3`}
-                    style={{ ...styles.gallerySubImg, cursor: 'pointer' }}
-                    onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                  />
-                  {/* "See more" overlay — only shown when there are 4+ images */}
-                  {images.length > 3 && (
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      backgroundColor: 'rgba(0,0,0,0.52)',
-                      display: 'flex', flexDirection: 'column',
-                      alignItems: 'center', justifyContent: 'center',
-                      gap: '4px', color: '#fff',
-                    }}>
-                      <span style={{ fontSize: '24px' }}>📷</span>
-                      <span style={{ fontSize: '15px', fontWeight: '700' }}>
-                        +{images.length - 3} 枚
-                      </span>
-                      <span style={{ fontSize: '11px', opacity: 0.85 }}>すべて見る</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+            {/* Sub images — slot 2, with "see more" overlay if there are more */}
+            {images[2] && (
+              <div style={{ ...styles.gallerySub, position: 'relative', cursor: 'pointer' }}
+                onClick={() => { setSelectedPhotoIndex(2); setShowPhotoModal(true); }}>
+                <img
+                  src={images[2].imageUrl}
+                  alt={`${cafe.name} 3`}
+                  style={{ ...styles.gallerySubImg, cursor: 'pointer' }}
+                  onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                />
+                {/* "See more" overlay — only shown when there are 4+ images */}
+                {images.length > 3 && (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    backgroundColor: 'rgba(0,0,0,0.52)',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    gap: '4px', color: '#fff',
+                  }}>
+                    <span style={{ fontSize: '24px' }}>📷</span>
+                    <span style={{ fontSize: '15px', fontWeight: '700' }}>
+                      +{images.length - 3} {t('photos')}
+                    </span>
+                    <span style={{ fontSize: '11px', opacity: 0.85 }}>{t('viewAllPhotos')}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* ── MAIN CONTENT ── */}
@@ -598,7 +701,7 @@ const CafeDetailPage = () => {
             <div style={styles.nameRow}>
               <h1 style={styles.cafeName}>{cafe.name}</h1>
               <div style={styles.ratingBadge}>
-                ★ {cafe.rating ? Number(cafe.rating).toFixed(1) : 'レビューなし'}
+                ★ {cafe.rating ? Number(cafe.rating).toFixed(1) : t('noReviewYet')}
               </div>
             </div>
 
@@ -613,7 +716,7 @@ const CafeDetailPage = () => {
                 onClick={fetchCafeDetails}
                 disabled={isRefreshing}
               >
-                🔄 {isRefreshing ? '更新中...' : '更新'}
+                🔄 {isRefreshing ? t('refreshing') : t('refresh')}
               </button>
             </div>
 
@@ -624,7 +727,7 @@ const CafeDetailPage = () => {
                 onClick={() => {
                   const token = localStorage.getItem('token');
                   if (!token) {
-                    alert('ログインが必要です。');
+                    alert(t('loginRequired'));
                     navigate('/login');
                     return;
                   }
@@ -633,49 +736,156 @@ const CafeDetailPage = () => {
                   setIsFavorite(result.saved);
                 }}
               >
-                {isFavorite ? '♥ 保存済み' : '♡ お気に入り保存'}
+                {isFavorite ? `♥ ${t('savedFavorite')}` : `♡ ${t('saveFavorite')}`}
               </button>
               <button
                 style={styles.btnDirections}
                 onClick={goToDirectionsPage}
               >
-                🧭 現在地からの道案内
+                🧭 {t('directions')}
               </button>
             </div>
           </div>
 
-          {/* Coupon Banner */}
-          <div style={styles.couponBanner}>
-            <span style={styles.couponIcon}>🎫</span>
-            <div style={styles.couponText}>
-              <p style={styles.couponTitle}>ウェルカムクーポン：初回ドリンク 10% OFF</p>
-              <p style={styles.couponSub}>アプリ提示で割引適用 · 期間限定</p>
-            </div>
-          </div>
+          {/* Coupon Banner Carousel */}
+          {isLoggedIn && coupons.length > 0 && (
+              <div style={styles.couponCarouselWrap}>
+
+                {/* SLIDER */}
+                <div
+                    style={{
+                      ...styles.couponSlider,
+                      transform: `translateX(-${currentCouponIndex * 100}%)`,
+                    }}
+                >
+                  {coupons.map((coupon) => {
+                    const expired =
+                        new Date(coupon.validTo) < new Date();
+
+                    return (
+                        <div
+                            key={coupon.id}
+                            style={styles.couponSlide}
+                        >
+                          <div
+                              style={{
+                                ...styles.couponBanner,
+                                opacity: expired ? 0.6 : 1,
+                                border: expired
+                                    ? '1.5px dashed #ccc'
+                                    : '1.5px dashed #F6C90E',
+                                backgroundColor: expired
+                                    ? '#f5f5f5'
+                                    : '#FFF8E1',
+                                transition: 'all 0.25s ease',
+                                cursor: 'pointer',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform =
+                                    'translateY(-2px)';
+                                e.currentTarget.style.boxShadow =
+                                    '0 8px 22px rgba(0,0,0,0.12)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform =
+                                    'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
+                              }}
+                          >
+              <span style={styles.couponIcon}>
+                {expired ? '⏰' : '🎫'}
+              </span>
+
+                            <div style={styles.couponText}>
+                              <p style={styles.couponTitle}>
+                                {coupon.code}
+                                {' · '}
+                                {coupon.discountValue}% OFF
+                              </p>
+
+                              <p style={styles.couponSub}>
+                                {coupon.description}
+                              </p>
+
+                              <p
+                                  style={{
+                                    marginTop: '4px',
+                                    fontSize: '11px',
+                                    color: '#777',
+                                  }}
+                              >
+                                {new Date(
+                                    coupon.validFrom
+                                ).toLocaleDateString('ja-JP')}
+                                {' ~ '}
+                                {new Date(
+                                    coupon.validTo
+                                ).toLocaleDateString('ja-JP')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                    );
+                  })}
+                </div>
+
+                {/* CONTROLS */}
+                {coupons.length > 1 && (
+                    <div style={styles.couponControls}>
+
+                      <button
+                          onClick={prevCoupon}
+                          style={styles.couponBottomBtn}
+                      >
+                        ‹
+                      </button>
+
+                      <div style={styles.couponIndicatorWrap}>
+                        {coupons.map((_, index) => (
+                            <div
+                                key={index}
+                                style={styles.couponIndicator(
+                                    index === currentCouponIndex
+                                )}
+                            />
+                        ))}
+                      </div>
+
+                      <button
+                          onClick={nextCoupon}
+                          style={styles.couponBottomBtn}
+                      >
+                        ›
+                      </button>
+
+                    </div>
+                )}
+              </div>
+          )}
 
           {/* Details */}
           <div style={styles.sectionCard}>
-            <h2 style={styles.sectionTitle}>📋 店舗情報</h2>
+            <h2 style={styles.sectionTitle}>📋 {t('storeInfo')}</h2>
 
             <div style={styles.detailRow}>
               <span style={styles.detailIcon}>📍</span>
-              <span style={styles.detailLabel}>住所</span>
-              <span style={styles.detailValue}>{cafe.address || '情報なし'}</span>
+              <span style={styles.detailLabel}>{t('address')}</span>
+              <span style={styles.detailValue}>{cafe.address || t('noInfo')}</span>
             </div>
 
             <div style={styles.detailRow}>
               <span style={styles.detailIcon}>🕒</span>
-              <span style={styles.detailLabel}>営業時間</span>
-              <span style={styles.detailValue}>{cafe.openHours || '情報なし'}</span>
+              <span style={styles.detailLabel}>{t('businessHours')}</span>
+              <span style={styles.detailValue}>{cafe.openHours || t('noInfo')}</span>
             </div>
 
             <div style={styles.detailRow}>
               <span style={styles.detailIcon}>📞</span>
-              <span style={styles.detailLabel}>電話番号</span>
+              <span style={styles.detailLabel}>{t('phoneNumber')}</span>
               <span style={styles.detailValue}>
                 {cafe.phone
                   ? <a href={`tel:${cafe.phone}`} style={styles.phoneLink}>{cafe.phone}</a>
-                  : '情報なし'}
+                  : t('noInfo')}
               </span>
             </div>
           </div>
@@ -683,7 +893,7 @@ const CafeDetailPage = () => {
           {/* Description */}
           {cafe.description && (
             <div style={styles.sectionCard}>
-              <h2 style={styles.sectionTitle}>📖 お店について</h2>
+              <h2 style={styles.sectionTitle}>📖 {t('aboutCafe')}</h2>
               <p style={styles.description}>{cafe.description}</p>
             </div>
           )}
@@ -692,24 +902,24 @@ const CafeDetailPage = () => {
           <div style={styles.sectionCard}>
             <div style={styles.reviewHeader}>
               <h2 style={styles.reviewTitle}>
-                💬 レビュー
+                💬 {t('reviews')}
                 {!reviewsLoading && (
                   <span style={{ fontSize: '13px', fontWeight: 'normal', color: '#999', marginLeft: '8px' }}>
-                    ({reviews.length}件)
+                    ({reviews.length} {t('reviewsCount')})
                   </span>
                 )}
               </h2>
               {isLoggedIn && (
                 <button style={styles.btnWriteReview} onClick={() => setShowReviewModal(true)}>
-                  レビューを書く
+                  {t('writeReview')}
                 </button>
               )}
             </div>
 
             {reviewsLoading ? (
-              <p style={styles.reviewEmpty}>レビューを読み込み中...</p>
+              <p style={styles.reviewEmpty}>{t('loadingReviews')}</p>
             ) : reviews.length === 0 ? (
-              <p style={styles.reviewEmpty}>まだレビューがありません。最初のレビューを書いてみましょう！</p>
+              <p style={styles.reviewEmpty}>{t('noReviewsYet')}</p>
             ) : (
               reviews.map((r) => {
                 const ratingNum = parseInt(r.rating, 10) || 0;
@@ -720,11 +930,11 @@ const CafeDetailPage = () => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={styles.reviewerName}>
                           {/* Ưu tiên hiển thị r.userName, nếu không có mới dùng ID cắt ngắn */}
-                          👤 {r.userName || (r.userId ? `ユーザー #${r.userId.slice(0, 6)}` : '匿名ユーザー')}
+                          👤 {r.userName || (r.userId ? `${t('user')} #${r.userId.slice(0, 6)}` : t('anonymousUser'))}
                         </span>
                         <span style={{ fontSize: '12px', color: '#888' }}>
                           {/* Format ngày tháng sang kiểu Nhật (VD: 2026/05/17) */}
-                          📅 {r.createdAt ? new Date(r.createdAt).toLocaleDateString('ja-JP') : '日付不明'}
+                          📅 {r.createdAt ? new Date(r.createdAt).toLocaleDateString('ja-JP') : t('unknownDate')}
                         </span>
                       </div>
 
@@ -747,7 +957,7 @@ const CafeDetailPage = () => {
                               display: 'flex', alignItems: 'center', gap: '4px'
                             }}
                           >
-                            {translatingIds[r.id] ? '⏳ 翻訳中...' : '🌐 日本語に翻訳 (Translate)'}
+                            {translatingIds[r.id] ? `⏳ ${t('translating')}` : `🌐 ${t('translateToJapanese')}`}
                           </button>
                         ) : (
                           /* Nếu đã dịch xong thì hiện khung kết quả */
@@ -756,7 +966,7 @@ const CafeDetailPage = () => {
                             borderRadius: '6px', borderLeft: '3px solid #1a73e8'
                           }}>
                             <span style={{ fontSize: '11px', color: '#5f6368', marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>
-                              🌐 Google翻訳:
+                              🌐 {t('translatedText')}
                             </span>
                             <p style={{ margin: 0, fontSize: '14px', color: '#333' }} dangerouslySetInnerHTML={{ __html: translations[r.id] }} />
                           </div>
@@ -776,7 +986,7 @@ const CafeDetailPage = () => {
 
           {/* Mini Map */}
           <div style={styles.mapCard}>
-            <p style={styles.mapHeader}>🗺️ 地図・アクセス</p>
+            <p style={styles.mapHeader}>🗺️ {t('mapAccess')}</p>
             <iframe
               title="map"
               style={styles.mapFrame}
@@ -789,19 +999,19 @@ const CafeDetailPage = () => {
                 style={{ ...styles.btnDirections, width: '100%', justifyContent: 'center' }}
                 onClick={goToDirectionsPage}
               >
-                🧭 アプリで道案内を見る
+                🧭 {t('openGoogleMaps')}
               </button>
             </div>
           </div>
 
           {/* Seat Status Summary Card */}
           <div style={{ ...styles.sectionCard, padding: '18px 20px' }}>
-            <h3 style={{ ...styles.sectionTitle, fontSize: '14px', marginBottom: '14px' }}>🪑 現在の混雑状況</h3>
+            <h3 style={{ ...styles.sectionTitle, fontSize: '14px', marginBottom: '14px' }}>🪑 {t('currentCrowdStatus')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { label: '空席あり', cls: 'available', val: cafe.seatStatus === 'AVAILABLE' },
-                { label: '残りわずか', cls: 'warning', val: cafe.seatStatus === 'ALMOST_FULL' },
-                { label: '満席', cls: 'full', val: cafe.seatStatus === 'FULL' },
+                { label: t('availableSeats'), cls: 'available', val: cafe.seatStatus === 'AVAILABLE' },
+                { label: t('almostFull'), cls: 'warning', val: cafe.seatStatus === 'ALMOST_FULL' },
+                { label: t('fullSeats'), cls: 'full', val: cafe.seatStatus === 'FULL' },
               ].map((s) => (
                 <div
                   key={s.cls}
@@ -814,7 +1024,7 @@ const CafeDetailPage = () => {
                 >
                   <span style={{ ...styles.statusDot(s.cls), width: 10, height: 10 }} />
                   <span style={{ fontSize: '13px', color: '#333', flex: 1 }}>{s.label}</span>
-                  {s.val && <span style={{ fontSize: '11px', color: '#8b5a2b', fontWeight: '700' }}>● 現在</span>}
+                  {s.val && <span style={{ fontSize: '11px', color: '#8b5a2b', fontWeight: '700' }}>● {t('currentStatus')}</span>}
                 </div>
               ))}
             </div>
@@ -842,13 +1052,13 @@ const CafeDetailPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '18px', color: '#333' }}>
-              ✍️ レビューを書く
+              ✍️ {t('writeReview')}
             </h3>
 
             {/* Star Rating Picker */}
             <div style={{ marginBottom: '14px' }}>
               <label style={{ fontSize: '13px', color: '#555', display: 'block', marginBottom: '8px' }}>
-                評価 <span style={{ color: '#c00' }}>*</span>
+                {t('rating')} <span style={{ color: '#c00' }}>*</span>
               </label>
               <div style={{ display: 'flex', gap: '4px' }}>
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -867,7 +1077,7 @@ const CafeDetailPage = () => {
                   </span>
                 ))}
                 <span style={{ fontSize: '13px', color: '#888', alignSelf: 'center', marginLeft: '8px' }}>
-                  {newReviewRating}点
+                  {newReviewRating} {t('points')}
                 </span>
               </div>
             </div>
@@ -875,13 +1085,13 @@ const CafeDetailPage = () => {
             {/* Content Input */}
             <div style={{ marginBottom: '18px' }}>
               <label style={{ fontSize: '13px', color: '#555', display: 'block', marginBottom: '6px' }}>
-                コメント <span style={{ color: '#c00' }}>*</span>
+                {t('comment')} <span style={{ color: '#c00' }}>*</span>
               </label>
               <textarea
                 rows={4}
                 value={newReviewContent}
                 onChange={(e) => setNewReviewContent(e.target.value)}
-                placeholder="このカフェの感想を教えてください..."
+                placeholder={t('reviewPlaceholder')}
                 style={{
                   width: '100%', padding: '10px 12px', borderRadius: '8px',
                   border: '1.5px solid #ddd', fontSize: '13px', resize: 'vertical',
@@ -897,7 +1107,7 @@ const CafeDetailPage = () => {
                 onClick={() => { setShowReviewModal(false); setNewReviewContent(''); setNewReviewRating(5); }}
                 disabled={reviewSubmitting}
               >
-                キャンセル
+                {t('cancel')}
               </button>
               <button
                 style={{
@@ -908,7 +1118,7 @@ const CafeDetailPage = () => {
                 onClick={handleSubmitReview}
                 disabled={!newReviewContent.trim() || reviewSubmitting}
               >
-                {reviewSubmitting ? '投稿中...' : '投稿する'}
+                {reviewSubmitting ? t('submittingReview') : t('submitReview')}
               </button>
             </div>
           </div>
@@ -930,7 +1140,7 @@ const CafeDetailPage = () => {
             padding: '14px 20px', color: '#fff', flexShrink: 0,
           }} onClick={(e) => e.stopPropagation()}>
             <span style={{ fontSize: '14px', color: '#ccc' }}>
-              {cafe.name} — {selectedPhotoIndex + 1} / {images.length} 枚
+              {cafe.name} — {selectedPhotoIndex + 1} / {images.length} {t('photos')}
             </span>
             <button
               onClick={() => setShowPhotoModal(false)}

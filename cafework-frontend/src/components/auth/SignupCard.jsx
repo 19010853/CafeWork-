@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './SignupCard.module.css';
 import api from '../../api/axiosClient';
+import { t } from '../../utils/i18n';
 
 const SignupCard = ({ onSwitchToLogin }) => {
   const navigate = useNavigate();
@@ -67,7 +68,9 @@ const SignupCard = ({ onSwitchToLogin }) => {
 
   return (
     <div className={styles.card}>
-      <h2 className={styles.title}>アカウント登録</h2>
+      <h2 className={styles.title}>
+        {t('signup')}
+      </h2>
 
       {/* Role Selection Tabs */}
       <div className={styles.roleToggle}>
@@ -76,20 +79,20 @@ const SignupCard = ({ onSwitchToLogin }) => {
           className={`${styles.roleButton} ${formData.role === 'USER' ? styles.roleButtonActive : ''}`}
           onClick={() => setFormData({ ...formData, role: 'USER' })}
         >
-          一般ユーザー
+          {t('normalUser')}
         </button>
         <button
           type="button"
           className={`${styles.roleButton} ${formData.role === 'OWNER' ? styles.roleButtonActive : ''}`}
           onClick={() => setFormData({ ...formData, role: 'OWNER' })}
         >
-          カフェオーナー
+          {t('cafeOwner')}
         </button>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
-          <label className={styles.label}>お名前</label>
+          <label className={styles.label}>{t('fullName')}</label>
           <input
             type="text"
             className={`${styles.input} ${errors.fullName ? styles.inputError : ''}`}
@@ -101,7 +104,7 @@ const SignupCard = ({ onSwitchToLogin }) => {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>メールアドレス</label>
+          <label className={styles.label}>{t('email')}</label>
           <input
             type="email"
             className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
@@ -113,7 +116,7 @@ const SignupCard = ({ onSwitchToLogin }) => {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>パスワード</label>
+          <label className={styles.label}>{t('password')}</label>
           <input
             type="password"
             className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
@@ -125,7 +128,7 @@ const SignupCard = ({ onSwitchToLogin }) => {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>パスワード（確認）</label>
+          <label className={styles.label}>{t('confirmPassword')}</label>
           <input
             type="password"
             className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
@@ -141,7 +144,7 @@ const SignupCard = ({ onSwitchToLogin }) => {
           disabled={loading}
           className={styles.submitButton}
         >
-          {loading ? '処理中...' : '登録'}
+          {loading ? t('processing') : t('signup')}
         </button>
       </form>
 
@@ -151,7 +154,7 @@ const SignupCard = ({ onSwitchToLogin }) => {
           onClick={onSwitchToLogin}
           className={styles.link}
         >
-          既にアカウントをお持ちですか？ ログインへ
+          {t('alreadyHaveAccount')} {t('backToLogin')}
         </button>
       </div>
     </div>

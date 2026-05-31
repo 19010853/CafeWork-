@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { getBookmarks, isBookmarked, toggleBookmark } from '../utils/userLocalStore';
 import { getCafeById } from '../services/cafeService';
 import styles from './profile/ProfilePage.module.css';
+import { t } from '../utils/i18n';
 
 const MyListPage = () => {
     const navigate = useNavigate();
@@ -169,13 +170,13 @@ const MyListPage = () => {
             <div className={styles.page}>
                 <div className={styles.container} style={{ display: 'block' }}>
                     <div className={`${styles.card} ${styles.mainCard}`}>
-                        <h1 className={styles.pageTitle}>マイリスト</h1>
+                        <h1 className={styles.pageTitle}>{t('myList')}</h1>
 
-                        {loading && <p className={styles.subText}>読み込み中...</p>}
+                        {loading && <p className={styles.subText}>{t('loading')}</p>}
                         {error && <p className={styles.errorText}>{error}</p>}
 
                         {!loading && !error && cafes.length === 0 && (
-                            <p className={styles.subText}>まだ保存したカフェがありません。</p>
+                            <p className={styles.subText}>{t('noSavedCafes')}</p>
                         )}
 
                         {!loading && !error && cafes.length > 0 && (
