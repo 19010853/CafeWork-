@@ -195,7 +195,7 @@ export default{
 
     //Cafe Management
     cafeManagement: 'カフェ情報の管理',
-
+    setupCafeInfo: 'ダッシュボードに入る前に、カフェ情報を設定してください！',
     fetchCafeFailed: 'カフェ情報の取得に失敗しました。',
 
     cafeName: 'カフェ名',

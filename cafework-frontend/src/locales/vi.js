@@ -196,7 +196,7 @@ export default {
 
     //Cafe Management
     cafeManagement: 'Quản lý quán cà phê',
-
+    setupCafeInfo: 'Vui lòng thiết lập thông tin quán trước khi vào Bảng điều khiển!',
     fetchCafeFailed: 'Không thể tải thông tin quán.',
 
     cafeName: 'Tên quán',

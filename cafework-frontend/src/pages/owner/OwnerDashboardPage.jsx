@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom';;
 import toast from 'react-hot-toast';
 import { t } from '../../utils/i18n';
 const OwnerDashboardPage = () => {
@@ -14,7 +15,7 @@ const OwnerDashboardPage = () => {
   const [showDeletePopup, setShowDeletePopup] = useState(false); // Ẩn/hiện pop-up xóa
   const [deleteAmount, setDeleteAmount] = useState(1);           // Số lượng ghế muốn xóa
   const [blacklistIds, setBlacklistIds] = useState([]); // Kho lưu ID ghế đã chọn để xóa (nếu có)
-
+  const navigate = useNavigate();
   const [images, setImages] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const imageInputRef = useRef(null);
@@ -286,6 +287,21 @@ const OwnerDashboardPage = () => {
   // 3. LÍNH CANH (USE EFFECT) - GỌI CHIÊU KHI VỪA VÀO PHÒNG
   // ==========================================
   useEffect(() => {
+    const userRole = localStorage.getItem('role');
+    const cafeId = localStorage.getItem('cafeId');
+
+    // Phòng trường hợp bách tính vãnh lai gõ bừa URL đi lạc vào cung cấm
+    if (userRole !== 'OWNER') {
+      navigate('/');
+      return;
+    }
+
+    // Nếu đúng là OWNER nhưng chưa đúc thẻ bài quán cafe -> Trục xuất ngay sang trang Tạo quán
+    if (!cafeId || cafeId === 'null' || cafeId === 'undefined') {
+      toast.error(t('setupCafeInfo'), { id: 'setup-cafe-required' });
+      navigate('/owner/management');
+      return;
+    }
     fetchAllCafeData();
   }, []);
   // Chiêu 3: Lật trạng thái của 1 chiếc ghế trên giao diện
