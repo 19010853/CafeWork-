@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { profileService } from '../../api/profileService';
-import TopNavTabs from '../../components/layout/TopNavTabs';
 import ChangePasswordModal from '../../components/profile/ChangePasswordModal';
 import { getLang, getPhoneLocal, setPhoneLocal } from '../../utils/userLocalStore';
 import { confirmToast } from '../../utils/confirmToast';
+import { t } from '../../utils/i18n';
 import styles from './ProfilePage.module.css';
 
 const getInitial = (text) => {
@@ -16,7 +16,7 @@ const getInitial = (text) => {
 const getErrorMessage = (error) => {
     const data = error?.response?.data;
     if (typeof data === 'string' && data.trim()) return data;
-    return error?.message || 'エラーが発生しました。';
+    return error?.message || t('errorOccurred');
 };
 
 const ProfilePage = () => {
@@ -71,21 +71,17 @@ const ProfilePage = () => {
     }, [token]);
 
     const handleLogout = () => {
-        const message = lang === 'VI' ? 'Bạn có chắc muốn đăng xuất không?' : 'ログアウトしますか？';
-        const cancelText = lang === 'VI' ? 'Hủy' : 'キャンセル';
-        const confirmText = lang === 'VI' ? 'Đăng xuất' : 'ログアウト';
-
         confirmToast({
-            message,
-            cancelText,
-            confirmText,
+            message: t('confirmLogout'),
+            cancelText: t('cancel'),
+            confirmText: t('logout'),
             onConfirm: () => {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 localStorage.removeItem('role');
                 localStorage.removeItem('fullName');
-                navigate('/');
-                window.location.reload();
+                localStorage.removeItem('cafeId'); // Kế thừa chiêu thức dọn dẹp cũ
+                window.location.href = '/'; 
             },
         });
     };
@@ -93,22 +89,22 @@ const ProfilePage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validation logic (Sprint 3 Step 1)
+        // Validation logic
         if (!form.fullName.trim()) {
-            toast.error('Tên không được để trống');
+            toast.error(t('nameRequired'));
             return;
         }
         if (!form.phone.trim()) {
-            toast.error('Số điện thoại không được để trống');
+            toast.error(t('phoneRequired'));
             return;
         }
         if (!/^\d+$/.test(form.phone)) {
-            toast.error('Số điện thoại chỉ được chứa ký tự số');
+            toast.error(t('phoneInvalid'));
             return;
         }
 
         if (!token) {
-            toast.error('ログインが必要です。');
+            toast.error(t('loginRequired'));
             navigate('/login');
             return;
         }
@@ -123,7 +119,6 @@ const ProfilePage = () => {
 
             setPhoneLocal(form.phone);
 
-            // Cập nhật localStorage để Header hiển thị tên mới ngay lập tức
             const userStr = localStorage.getItem('user');
             if (userStr) {
                 try {
@@ -136,7 +131,7 @@ const ProfilePage = () => {
             localStorage.setItem('fullName', form.fullName);
 
             setProfile((prev) => (prev ? { ...prev, fullName: form.fullName } : prev));
-            toast.success('プロフィールを更新しました。');
+            toast.success(t('profileUpdated'));
         } catch (err) {
             const msg = getErrorMessage(err);
             setError(msg);
@@ -150,9 +145,9 @@ const ProfilePage = () => {
         return (
             <div className={styles.centerWrap}>
                 <div className={`${styles.card} ${styles.messageCard}`}>
-                    <h1 className={styles.pageTitle}>プロフィール</h1>
+                    <h1 className={styles.pageTitle}>{t('profile')}</h1>
                     <p className={styles.subText}>
-                        Hồ sơ chỉ hiển thị sau khi bạn đăng nhập.
+                        {t('profileLoginRequired')}
                     </p>
                     <div className={styles.actions}>
                         <button
@@ -160,7 +155,7 @@ const ProfilePage = () => {
                             className={styles.primaryButton}
                             onClick={() => navigate('/login')}
                         >
-                            ログインへ
+                            {t('goToLogin')}
                         </button>
                     </div>
                 </div>
@@ -172,128 +167,125 @@ const ProfilePage = () => {
         return (
             <div className={styles.centerWrap}>
                 <div className={`${styles.card} ${styles.messageCard}`}>
-                    <h1 className={styles.pageTitle}>読み込み中...</h1>
+                    <h1 className={styles.pageTitle}>{t('loading')}</h1>
                 </div>
             </div>
         );
     }
 
     return (
-        <div>
-            <TopNavTabs />
-            <div className={styles.page}>
-                <div className={styles.container}>
-                    <aside className={styles.sidebar}>
-                        <div className={`${styles.card} ${styles.profileCard}`}>
-                            <div className={styles.avatar}>
-                                {getInitial(profile?.fullName || profile?.email)}
-                            </div>
-                            <h2 className={styles.name}>{profile?.fullName || 'ユーザー'}</h2>
-                            <p className={styles.subText}>{profile?.email}</p>
-                            <span className={styles.roleBadge}>
-                                {profile?.role === 'OWNER' ? 'OWNER / オーナー' : 'USER / ユーザー'}
-                            </span>
+        <div className={styles.page}>
+            <div className={styles.container}>
+                <aside className={styles.sidebar}>
+                    <div className={`${styles.card} ${styles.profileCard}`}>
+                        <div className={styles.avatar}>
+                            {getInitial(profile?.fullName || profile?.email)}
                         </div>
+                        <h2 className={styles.name}>{profile?.fullName || t('user')}</h2>
+                        <p className={styles.subText}>{profile?.email}</p>
+                        <span className={styles.roleBadge}>
+                            {profile?.role === 'OWNER' ? t('roleOwner') : t('roleUser')}
+                        </span>
+                    </div>
 
-                        <div className={`${styles.card} ${styles.menuCard}`}>
-                            <button
-                                type="button"
-                                className={`${styles.menuButton} ${styles.menuButtonActive}`}
-                            >
-                                プロフィール編集
-                            </button>
-                            <button
-                                type="button"
-                                className={styles.menuButton}
-                                onClick={() => setIsPasswordModalOpen(true)}
-                            >
-                                パスワード変更
-                            </button>
-                            <button
-                                type="button"
-                                className={`${styles.menuButton} ${styles.menuButtonDanger}`}
-                                onClick={handleLogout}
-                            >
-                                ログアウト
-                            </button>
-                        </div>
-                    </aside>
+                    <div className={`${styles.card} ${styles.menuCard}`}>
+                        <button
+                            type="button"
+                            className={`${styles.menuButton} ${styles.menuButtonActive}`}
+                        >
+                            {t('editProfile')}
+                        </button>
+                        <button
+                            type="button"
+                            className={styles.menuButton}
+                            onClick={() => setIsPasswordModalOpen(true)}
+                        >
+                            {t('changePassword')}
+                        </button>
+                        <button
+                            type="button"
+                            className={`${styles.menuButton} ${styles.menuButtonDanger}`}
+                            onClick={handleLogout}
+                        >
+                            {t('logout')}
+                        </button>
+                    </div>
+                </aside>
 
-                    <main className={styles.main}>
-                        <div className={`${styles.card} ${styles.mainCard}`}>
-                            <h1 className={styles.pageTitle}>基本情報</h1>
+                <main className={styles.main}>
+                    <div className={`${styles.card} ${styles.mainCard}`}>
+                        <h1 className={styles.pageTitle}>{t('basicInfo')}</h1>
 
-                            {error && (
-                                <p className={styles.errorText}>{error}</p>
-                            )}
+                        {error && (
+                            <p className={styles.errorText}>{error}</p>
+                        )}
 
-                            <form className={styles.form} onSubmit={handleSubmit}>
-                                <div className={styles.formRow}>
-                                    <div className={styles.labelRow}>
-                                        <label className={styles.label} htmlFor="fullName">
-                                            お名前
-                                        </label>
-                                        <span className={styles.required}>*</span>
-                                    </div>
-                                    <input
-                                        id="fullName"
-                                        className={styles.input}
-                                        value={form.fullName}
-                                        onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
-                                        placeholder="Tên của bạn"
-                                    />
-                                </div>
-
-                                <div className={styles.formRow}>
-                                    <label className={styles.label} htmlFor="email">
-                                        メールアドレス
+                        <form className={styles.form} onSubmit={handleSubmit}>
+                            <div className={styles.formRow}>
+                                <div className={styles.labelRow}>
+                                    <label className={styles.label} htmlFor="fullName">
+                                        {t('fullName')}
                                     </label>
-                                    <input
-                                        id="email"
-                                        className={`${styles.input} ${styles.inputDisabled}`}
-                                        value={profile?.email || ''}
-                                        disabled
-                                        readOnly
-                                    />
+                                    <span className={styles.required}>*</span>
                                 </div>
+                                <input
+                                    id="fullName"
+                                    className={styles.input}
+                                    value={form.fullName}
+                                    onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
+                                    placeholder={t('placeholderName')}
+                                />
+                            </div>
 
-                                <div className={styles.formRow}>
-                                    <div className={styles.labelRow}>
-                                        <label className={styles.label} htmlFor="phone">
-                                            電話番号
-                                        </label>
-                                        <span className={styles.required}>*</span>
-                                    </div>
-                                    <input
-                                        id="phone"
-                                        className={styles.input}
-                                        value={form.phone}
-                                        onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-                                        placeholder="Số điện thoại"
-                                    />
-                                </div>
+                            <div className={styles.formRow}>
+                                <label className={styles.label} htmlFor="email">
+                                    {t('emailAddress')}
+                                </label>
+                                <input
+                                    id="email"
+                                    className={`${styles.input} ${styles.inputDisabled}`}
+                                    value={profile?.email || ''}
+                                    disabled
+                                    readOnly
+                                />
+                            </div>
 
-                                <div className={styles.actions}>
-                                    <button
-                                        type="button"
-                                        className={styles.secondaryButton}
-                                        onClick={() => navigate('/')}
-                                        disabled={saving}
-                                    >
-                                        戻る
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className={styles.primaryButton}
-                                        disabled={saving}
-                                    >
-                                        {saving ? '更新中...' : '更新する'}
-                                    </button>
+                            <div className={styles.formRow}>
+                                <div className={styles.labelRow}>
+                                    <label className={styles.label} htmlFor="phone">
+                                        {t('phoneNumber')}
+                                    </label>
+                                    <span className={styles.required}>*</span>
                                 </div>
-                            </form>
-                        </div>
-                    </main>
-                </div>
+                                <input
+                                    id="phone"
+                                    className={styles.input}
+                                    value={form.phone}
+                                    onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                                    placeholder={t('placeholderPhone')}
+                                />
+                            </div>
+
+                            <div className={styles.actions}>
+                                <button
+                                    type="button"
+                                    className={styles.secondaryButton}
+                                    onClick={() => navigate('/')}
+                                    disabled={saving}
+                                >
+                                    {t('back')}
+                                </button>
+                                <button
+                                    type="submit"
+                                    className={styles.primaryButton}
+                                    disabled={saving}
+                                >
+                                    {saving ? t('updating') : t('update')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </main>
             </div>
             <ChangePasswordModal 
                 isOpen={isPasswordModalOpen} 

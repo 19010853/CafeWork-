@@ -111,7 +111,7 @@ const LoginCard = ({ onSwitchToSignup }) => {
             onClick={() => navigate('/forgot-password')}
             className={styles.link}
           >
-            パスワードを<span className={styles.linkStrong}>お忘れですか？</span>
+          <span className={styles.linkStrong}>{t('forgotPassword')}</span>
           </button>
           <button 
             type="button" 

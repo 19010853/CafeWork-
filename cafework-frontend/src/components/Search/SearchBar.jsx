@@ -5,7 +5,6 @@ import L from 'leaflet'; // Bổ sung Leaflet để tính khoảng cách
 import { addSearchHistory, isBookmarked, toggleBookmark } from '../../utils/userLocalStore';
 import './SearchBar.css';
 import { t } from '../../utils/i18n';
-
 const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
     const navigate = useNavigate();
     const [keyword, setKeyword] = useState(initialKeyword);
@@ -267,8 +266,23 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
                                 </div>
 
                                 <div style={statusWrapperStyle}>
-                                    <span style={getStatusDotStyle(cafe.seatStatus)}></span>
-                                    <span style={{ fontSize: '13px', color: '#555' }}>{cafe.seatStatus || '不明'}</span>
+                                    {/* 🔴 🟡 🟢 CHIẾC CHẤM BIẾN MÀU THEO STATUS */}
+                                    <span style={{ 
+                                        ...getStatusDotStyle(cafe.seatStatus), // Kế thừa các thuộc tính bo tròn, kích thước cũ
+                                        display: 'inline-block',
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        backgroundColor: cafe.seatStatus === 'AVAILABLE' ? '#10B981' :    // Xanh lá tươi tắn
+                                                        cafe.seatStatus === 'ALMOST_FULL' ? '#F59E0B' :  // Vàng hổ phách
+                                                        cafe.seatStatus === 'FULL' ? '#EF4444' : '#9CA3AF' // Đỏ hoàng gia / Xám mặc định
+                                    }}></span>
+                                    
+                                    <span style={{ fontSize: '13px', color: '#555', marginLeft: '6px' }}>
+                                        {cafe.seatStatus === 'AVAILABLE' ? t('statusAvailable') : 
+                                        cafe.seatStatus === 'ALMOST_FULL' ? t('statusAlmostFull') : 
+                                        cafe.seatStatus === 'FULL' ? t('statusFull') : t('statusUnknown')}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -331,7 +345,7 @@ const statusWrapperStyle = {
 };
 const getStatusDotStyle = (status) => ({
     width: '8px', height: '8px', borderRadius: '50%', marginRight: '6px',
-    backgroundColor: status === '空席あり' ? '#10B981' : (status === '満席' ? '#EF4444' : '#F59E0B')
+    backgroundColor: status === t('statusAvailable') ? '#10B981' : (status === t('statusFull') ? '#EF4444' : '#F59E0B')
 });
 
 export default SearchBar;
