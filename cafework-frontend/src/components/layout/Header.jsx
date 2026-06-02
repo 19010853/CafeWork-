@@ -35,20 +35,22 @@ const Header = () => {
   }
 
   // 4. Hàm xử lý Đăng xuất (Đã dung hợp confirmToast và t('...'))
+  // Lộ trình xử lý Đăng xuất vị vương giả
   const handleLogout = () => {
     confirmToast({
       message: t('confirmLogout'),
-      // Fallback an toàn cho nút Hủy đề phòng file i18n chưa định nghĩa
       cancelText: lang === 'VI' ? 'Hủy' : (lang === 'EN' ? 'Cancel' : 'キャンセル'), 
       confirmText: t('logout'),
       onConfirm: () => {
+        // 1. Thu hồi toàn bộ thẻ bài tận gốc (Nhớ tiêu hủy cả cafeId kẻo kẹt rác)
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('role');
         localStorage.removeItem('fullName');
+        localStorage.removeItem('cafeId'); // 👈 BỆ HẠ CHÉM THÊM DÒNG NÀY VÀO ĐÂY 👇
 
-        navigate('/');
-        window.location.reload(); // Reload để cập nhật lại trạng thái giao diện toàn trang
+        // 2. Nhát kiếm cưỡng bách: Di chuyển về gốc tọa độ và ép làm mới sạch sẽ
+        window.location.href = '/'; 
       },
     });
   };
