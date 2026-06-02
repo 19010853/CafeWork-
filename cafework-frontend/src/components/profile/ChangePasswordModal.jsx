@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import styles from './ChangePasswordModal.module.css';
 import axiosClient from '../../api/axiosClient';
-
+import { t } from '../../utils/i18n';
 const ChangePasswordModal = ({ isOpen, onClose }) => {
     const [form, setForm] = useState({
         currentPassword: '',
@@ -27,19 +27,19 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
 
         // Validate
         if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
-            toast.error("Vui lòng nhập đầy đủ thông tin.");
+            toast.error(t('requiredFields'));
             return;
         }
 
         if (form.newPassword !== form.confirmPassword) {
-            toast.error("Mật khẩu xác nhận không khớp.");
+            toast.error(t('passwordMismatch'));
             return;
         }
 
         // Độ mạnh mật khẩu (giống backend yêu cầu)
         const passwordRegex = /^(?=.*[A-Z])(?=.*[\d!@#$%^&*])(?=.{8,}).*$/;
         if (!passwordRegex.test(form.newPassword)) {
-            toast.error("Mật khẩu mới phải tối thiểu 8 ký tự, gồm chữ hoa và số/ký tự đặc biệt.");
+            toast.error(t('newPasswordError'));
             return;
         }
 
@@ -49,12 +49,12 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 currentPassword: form.currentPassword,
                 newPassword: form.newPassword
             });
-            toast.success("Đổi mật khẩu thành công!");
+            toast.success(t('changePasswordSuccess'));
             handleClose();
         } catch (error) {
             console.error("Lỗi đổi mật khẩu:", error);
-            const errorMsg = error.response?.data || "Đổi mật khẩu thất bại.";
-            toast.error(typeof errorMsg === 'string' ? errorMsg : "Có lỗi xảy ra.");
+            const errorMsg = error.response?.data || t('changePasswordFailed');
+            toast.error(typeof errorMsg === 'string' ? errorMsg : t('unexpectedError'));
         } finally {
             setIsLoading(false);
         }
@@ -64,13 +64,13 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         <div className={styles.overlay} onClick={handleClose}>
             <div className={styles.card} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.header}>
-                    <h2 className={styles.title}>Đổi mật khẩu</h2>
+                    <h2 className={styles.title}>{t('changePassword')}</h2>
                     <button className={styles.closeX} onClick={handleClose}>&times;</button>
                 </div>
 
                 <form className={styles.form} onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Mật khẩu hiện tại</label>
+                        <label className={styles.label}>{t('currentPassword')}</label>
                         <input
                             type="password"
                             className={styles.input}
@@ -81,7 +81,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Mật khẩu mới</label>
+                        <label className={styles.label}>{t('newPassword')}</label>
                         <input
                             type="password"
                             className={styles.input}
@@ -92,7 +92,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Xác nhận mật khẩu mới</label>
+                        <label className={styles.label}>{t('confirmPassword')}</label>
                         <input
                             type="password"
                             className={styles.input}
@@ -107,7 +107,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                         className={styles.submitBtn}
                         disabled={isLoading}
                     >
-                        {isLoading ? "Đang xử lý..." : "Đổi mật khẩu"}
+                        {isLoading ? t('processing') : t('changePassword')}
                     </button>
                 </form>
             </div>

@@ -5,10 +5,16 @@ import L from 'leaflet'; // Bổ sung Leaflet để tính khoảng cách
 import { addSearchHistory, isBookmarked, toggleBookmark } from '../../utils/userLocalStore';
 import './SearchBar.css';
 import { t } from '../../utils/i18n';
-const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
+const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
     const navigate = useNavigate();
-    const [keyword, setKeyword] = useState(initialKeyword);
-    const [results, setResults] = useState([]);
+    const userRole = localStorage.getItem('role');
+    const [keyword, setKeyword] = useState(() => {
+        return initialKeyword || sessionStorage.getItem('savedKeyword') || '';
+    });
+    const [results, setResults] = useState(() => {
+        const savedCafes = sessionStorage.getItem('savedCafes');
+        return savedCafes ? JSON.parse(savedCafes) : [];
+    });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -27,7 +33,13 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
     const sortMenuRef = useRef(null);
     const typingTimeoutRef = useRef(null); // Debounce cho Autocomplete
     const didInitRef = useRef(false);
-
+    useEffect(() => {
+        // Nếu vừa mở trang mà đã có kết quả trong bụng (do phục hồi trí nhớ)
+        if (results.length > 0) {
+            onSearchData(results); 
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     const handleSearchEvent = async (searchKeyword) => {
         setShowDropdown(false);
         setLoading(true);
@@ -45,7 +57,11 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
             setLoading(false);
         }
     };
-
+    useEffect(() => {
+        if (onKeywordChange) {
+            onKeywordChange(keyword);
+        }
+    }, [keyword]);
     useEffect(() => {
         // Xin quyền lấy GPS thực tế của trình duyệt
         if ("geolocation" in navigator) {
@@ -70,9 +86,12 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
 
         if (didInitRef.current) return;
         didInitRef.current = true;
-
-        const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
-        handleSearchEvent(kw);
+        const savedCafes = sessionStorage.getItem('savedCafes');
+        const hasRestoredData = savedCafes && JSON.parse(savedCafes).length > 0;
+        if (!hasRestoredData) {
+            const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
+            handleSearchEvent(kw);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialKeyword]);
 
@@ -221,28 +240,32 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
                                         e.target.src = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80';
                                     }}
                                 />
-                                <button
-                                    type="button"
-                                    style={heartBtnStyle}
-                                    aria-label={saved ? 'お気に入り解除' : 'お気に入り保存'}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleBookmark(cafe.id);
-                                        setBookmarkTick((t) => t + 1);
-                                    }}
-                                >
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        width="16"
-                                        height="16"
-                                        stroke={saved ? '#EF4444' : '#666'}
-                                        strokeWidth="2"
-                                        fill={saved ? '#EF4444' : 'none'}
+                                
+                                {/* 👑 CHỈ CHO PHÉP KHÁCH HÀNG / USER NHÌN THẤY NÚT TIM */}
+                                {userRole === 'USER' && (
+                                    <button
+                                        type="button"
+                                        style={heartBtnStyle}
+                                        aria-label={saved ? 'お気に入り解除' : 'お気に入り保存'}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleBookmark(cafe.id);
+                                            setBookmarkTick((t) => t + 1);
+                                        }}
                                     >
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                    </svg>
-                                </button>
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            width="16"
+                                            height="16"
+                                            stroke={saved ? '#EF4444' : '#666'}
+                                            strokeWidth="2"
+                                            fill={saved ? '#EF4444' : 'none'}
+                                        >
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
 
                             <div style={cardContentStyle}>

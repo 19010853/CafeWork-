@@ -1,5 +1,5 @@
 export default {
-    cafeWork: 'CafeWork',
+    cafeWork: 'Cafe Work',
     // Login and Header
     login: 'Đăng nhập',
     email: 'Email',
@@ -243,5 +243,9 @@ export default {
     update: 'Cập nhật',
     mapLocation: 'Vị trí trên bản đồ',
     mapInstruction: 'Vui lòng click vào bản đồ để đặt vị trí quán.',
-    reviewsCount: 'đánh giá'
+    reviewsCount: 'đánh giá',
+    prelocation: 'Vui lòng cho phép truy cập vị trí trước!',
+    newPasswordError: 'Mật khẩu mới phải tối thiểu 8 ký tự, gồm chữ hoa và số/ký tự đặc biệt.',
+    currentPassword: 'Mật khẩu hiện tại',
+    newPassword: 'Mật khẩu mới',
 }

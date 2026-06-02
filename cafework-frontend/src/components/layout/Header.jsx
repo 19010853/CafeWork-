@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styles from './Header.module.css';
 import { getLang, setLang as persistLang } from '../../utils/userLocalStore';
@@ -33,7 +33,18 @@ const Header = () => {
   } catch (error) {
     console.error('Error parsing user data:', error);
   }
-
+  useEffect(() => {
+    // Nếu bệ hạ đi sang các trang khác (Không phải trang chủ '/' và không phải trang chi tiết '/cafes/')
+    // Hệ thống sẽ lập tức thanh trừng ký ức tìm kiếm cũ ngay!
+    if (location.pathname !== '/' && !location.pathname.startsWith('/cafes/')) {
+      sessionStorage.removeItem('savedCafes');
+      sessionStorage.removeItem('savedKeyword');
+    }
+  }, [location.pathname]);
+  const handleClearSearchCache = () => {
+    sessionStorage.removeItem('savedCafes');
+    sessionStorage.removeItem('savedKeyword');
+  };
   // 4. Hàm xử lý Đăng xuất (Đã dung hợp confirmToast và t('...'))
   // Lộ trình xử lý Đăng xuất vị vương giả
   const handleLogout = () => {
@@ -48,7 +59,7 @@ const Header = () => {
         localStorage.removeItem('role');
         localStorage.removeItem('fullName');
         localStorage.removeItem('cafeId'); // 👈 BỆ HẠ CHÉM THÊM DÒNG NÀY VÀO ĐÂY 👇
-
+        handleClearSearchCache(); // 2. Thanh trừng ký ức tìm kiếm cũ (nếu có)
         // 2. Nhát kiếm cưỡng bách: Di chuyển về gốc tọa độ và ép làm mới sạch sẽ
         window.location.href = '/'; 
       },

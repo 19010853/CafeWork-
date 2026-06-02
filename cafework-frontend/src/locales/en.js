@@ -1,5 +1,5 @@
 export default {
-    cafeWork: 'CafeWork',
+    cafeWork: 'Cafe Work',
     // Login and Header
     login: 'Login',
     email: 'Email',
@@ -242,5 +242,9 @@ export default {
     update: 'Update',
     mapLocation: 'Map Location',
     mapInstruction: 'Please click the map to set the cafe location.',
-    reviewsCount: 'reviews'
+    reviewsCount: 'reviews',
+    prelocation: 'Please allow pre-location!',
+    newPasswordError: 'New password must be at least 8 characters, include uppercase letters and numbers/special characters.',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
 }
