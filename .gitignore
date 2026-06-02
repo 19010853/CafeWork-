@@ -84,7 +84,6 @@ src/main/resources/application-secret.yml
 src/main/resources/application-local.properties
 src/main/resources/application-local.yml
 
-
 # Certificate / Key
 *.p12
 *.jks
@@ -128,5 +127,4 @@ desktop.ini
 .cache/
 tmp/
 temp/
-src/main/resources/application.properties
 src/main/resources/application.properties
