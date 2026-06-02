@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import styles from './ChangePasswordModal.module.css';
+import { getLang } from '../../utils/userLocalStore';
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
     const [form, setForm] = useState({
@@ -8,6 +9,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         newPassword: '',
         confirmPassword: '',
     });
+    const lang = useMemo(() => getLang(), []);
+    const isVi = lang === 'VI';
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -46,10 +49,10 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         try {
             // Logic gọi API đổi mật khẩu sẽ ở đây (giả lập thành công)
             // await profileService.changePassword(form);
-            toast.success('パスワードが正常に変更されました！');
+            toast.success(isVi ? 'Đổi mật khẩu thành công.' : 'パスワードが正常に変更されました！');
             onClose();
         } catch (error) {
-            toast.error(error?.response?.data || 'パスワード変更に失敗しました。');
+            toast.error(isVi ? 'Đổi mật khẩu thất bại.' : (error?.response?.data || 'パスワード変更に失敗しました。'));
         } finally {
             setLoading(false);
         }

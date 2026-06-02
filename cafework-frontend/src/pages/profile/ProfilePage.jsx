@@ -22,6 +22,7 @@ const ProfilePage = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
     const lang = useMemo(() => getLang(), []);
+    const isVi = lang === 'VI';
 
     const [loading, setLoading] = useState(Boolean(token));
     const [saving, setSaving] = useState(false);
@@ -93,21 +94,35 @@ const ProfilePage = () => {
         e.preventDefault();
 
         // Validation logic
-        if (!form.fullName.trim()) {
-            toast.error('名前を入力してください。');
+        const trimmedName = form.fullName.trim();
+        if (!trimmedName) {
+            toast.error(isVi ? 'Vui lòng nhập họ tên.' : '名前を入力してください。');
+            return;
+        }
+        if (trimmedName.length < 2 || trimmedName.length > 50) {
+            toast.error(isVi ? 'Họ tên phải từ 2 đến 50 ký tự.' : '名前は2〜50文字で入力してください。');
+            return;
+        }
+        const namePattern = /^[\p{L}]+([\p{L} .'-]*[\p{L}]+)?$/u;
+        if (!namePattern.test(trimmedName) || /\d/.test(trimmedName)) {
+            toast.error(isVi ? 'Họ tên chỉ được chứa chữ cái, không có số hoặc ký tự đặc biệt.' : '名前は文字のみで入力してください（数字や記号は不可）。');
+            return;
+        }
+        if (trimmedName.includes('@')) {
+            toast.error(isVi ? 'Họ tên không được chứa email.' : '名前にメールアドレスは使用できません。');
             return;
         }
         if (!form.phone.trim()) {
-            toast.error('電話番号を入力してください。');
+            toast.error(isVi ? 'Vui lòng nhập số điện thoại.' : '電話番号を入力してください。');
             return;
         }
         if (!/^\d+$/.test(form.phone)) {
-            toast.error('電話番号は数字のみで入力してください。');
+            toast.error(isVi ? 'Số điện thoại chỉ gồm chữ số.' : '電話番号は数字のみで入力してください。');
             return;
         }
 
         if (!token) {
-            toast.error('ログインが必要です。');
+            toast.error(isVi ? 'Bạn cần đăng nhập.' : 'ログインが必要です。');
             navigate('/login');
             return;
         }
@@ -116,7 +131,7 @@ const ProfilePage = () => {
         setError('');
         try {
             await profileService.updateMyProfile({
-                fullName: form.fullName,
+                fullName: trimmedName,
                 phone: form.phone,
             });
 
@@ -127,19 +142,20 @@ const ProfilePage = () => {
             if (userStr) {
                 try {
                     const user = JSON.parse(userStr);
-                    localStorage.setItem('user', JSON.stringify({ ...user, fullName: form.fullName }));
+                    localStorage.setItem('user', JSON.stringify({ ...user, fullName: trimmedName }));
                 } catch {
                     // ignore
                 }
             }
-            localStorage.setItem('fullName', form.fullName);
+            localStorage.setItem('fullName', trimmedName);
 
-            setProfile((prev) => (prev ? { ...prev, fullName: form.fullName } : prev));
-            toast.success('プロフィールを更新しました。');
+            setProfile((prev) => (prev ? { ...prev, fullName: trimmedName } : prev));
+            toast.success(isVi ? 'Đã cập nhật hồ sơ.' : 'プロフィールを更新しました。');
         } catch (err) {
             const msg = getErrorMessage(err);
-            setError(msg);
-            toast.error(msg);
+            const fallback = isVi ? 'Cập nhật hồ sơ thất bại.' : 'プロフィール更新に失敗しました。';
+            setError(isVi ? fallback : msg);
+            toast.error(isVi ? fallback : msg);
         } finally {
             setSaving(false);
         }
