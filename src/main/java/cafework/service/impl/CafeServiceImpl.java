@@ -141,8 +141,8 @@ public class CafeServiceImpl implements CafeService {
         }
 
         // OpenHours: HH:MM format
-        if (request.getOpenHours() != null && !Pattern.matches("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", request.getOpenHours())) {
-            throw new IllegalArgumentException("Giờ hoạt động không đúng định dạng HH:MM.");
+        if (request.getOpenHours() == null || !Pattern.matches("^([0-1]?[0-9]|2[0-3]):[0-5][0-9] - ([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", request.getOpenHours().trim())) {
+            throw new IllegalArgumentException("Vui lòng nhập đầy đủ giờ mở cửa và đóng cửa (HH:MM - HH:MM).");
         }
     }
 
