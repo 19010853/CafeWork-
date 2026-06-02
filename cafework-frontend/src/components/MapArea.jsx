@@ -4,6 +4,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import customPinImage from '../assets/my-custom-pin.png';
 import defaultShadow from 'leaflet/dist/images/marker-shadow.png';
+import { toast } from 'react-hot-toast';
+import { t } from '../utils/i18n';
 
 // Sửa lỗi icon marker
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -61,7 +63,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
         pendingRouteTargetRef.current = [destLat, destLng];
         return;
       }
-      alert("Bệ hạ vui lòng cho phép định vị trước!");
+      toast.error(t('prelocation'));
       return;
     }
 

@@ -7,6 +7,7 @@ import './SearchBar.css';
 import { t } from '../../utils/i18n';
 const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
     const navigate = useNavigate();
+    const userRole = localStorage.getItem('role');
     const [keyword, setKeyword] = useState(() => {
         return initialKeyword || sessionStorage.getItem('savedKeyword') || '';
     });
@@ -239,28 +240,32 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
                                         e.target.src = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80';
                                     }}
                                 />
-                                <button
-                                    type="button"
-                                    style={heartBtnStyle}
-                                    aria-label={saved ? 'お気に入り解除' : 'お気に入り保存'}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleBookmark(cafe.id);
-                                        setBookmarkTick((t) => t + 1);
-                                    }}
-                                >
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        width="16"
-                                        height="16"
-                                        stroke={saved ? '#EF4444' : '#666'}
-                                        strokeWidth="2"
-                                        fill={saved ? '#EF4444' : 'none'}
+                                
+                                {/* 👑 CHỈ CHO PHÉP KHÁCH HÀNG / USER NHÌN THẤY NÚT TIM */}
+                                {userRole === 'USER' && (
+                                    <button
+                                        type="button"
+                                        style={heartBtnStyle}
+                                        aria-label={saved ? 'お気に入り解除' : 'お気に入り保存'}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleBookmark(cafe.id);
+                                            setBookmarkTick((t) => t + 1);
+                                        }}
                                     >
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                    </svg>
-                                </button>
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            width="16"
+                                            height="16"
+                                            stroke={saved ? '#EF4444' : '#666'}
+                                            strokeWidth="2"
+                                            fill={saved ? '#EF4444' : 'none'}
+                                        >
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
 
                             <div style={cardContentStyle}>

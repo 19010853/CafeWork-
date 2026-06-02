@@ -243,5 +243,9 @@ export default{
     update: '更新',
     mapLocation: '地図の位置',
     mapInstruction: '地図をクリックしてカフェの位置を設定してください。',
-    reviewsCount: '件のレビュー'
+    reviewsCount: '件のレビュー',
+    prelocation: '事前位置情報を許可してください！',
+    newPasswordError: '新しいパスワードは8文字以上で、大文字と数字/特殊文字を含める必要があります。',
+    currentPassword: '現在のパスワード',
+    newPassword: '新しいパスワード',
 }
