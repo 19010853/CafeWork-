@@ -5,10 +5,15 @@ import L from 'leaflet'; // Bổ sung Leaflet để tính khoảng cách
 import { addSearchHistory, isBookmarked, toggleBookmark } from '../../utils/userLocalStore';
 import './SearchBar.css';
 import { t } from '../../utils/i18n';
-const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
+const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
     const navigate = useNavigate();
-    const [keyword, setKeyword] = useState(initialKeyword);
-    const [results, setResults] = useState([]);
+    const [keyword, setKeyword] = useState(() => {
+        return initialKeyword || sessionStorage.getItem('savedKeyword') || '';
+    });
+    const [results, setResults] = useState(() => {
+        const savedCafes = sessionStorage.getItem('savedCafes');
+        return savedCafes ? JSON.parse(savedCafes) : [];
+    });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -27,7 +32,13 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
     const sortMenuRef = useRef(null);
     const typingTimeoutRef = useRef(null); // Debounce cho Autocomplete
     const didInitRef = useRef(false);
-
+    useEffect(() => {
+        // Nếu vừa mở trang mà đã có kết quả trong bụng (do phục hồi trí nhớ)
+        if (results.length > 0) {
+            onSearchData(results); 
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     const handleSearchEvent = async (searchKeyword) => {
         setShowDropdown(false);
         setLoading(true);
@@ -45,7 +56,11 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
             setLoading(false);
         }
     };
-
+    useEffect(() => {
+        if (onKeywordChange) {
+            onKeywordChange(keyword);
+        }
+    }, [keyword]);
     useEffect(() => {
         // Xin quyền lấy GPS thực tế của trình duyệt
         if ("geolocation" in navigator) {
@@ -70,9 +85,12 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
 
         if (didInitRef.current) return;
         didInitRef.current = true;
-
-        const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
-        handleSearchEvent(kw);
+        const savedCafes = sessionStorage.getItem('savedCafes');
+        const hasRestoredData = savedCafes && JSON.parse(savedCafes).length > 0;
+        if (!hasRestoredData) {
+            const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
+            handleSearchEvent(kw);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialKeyword]);
 

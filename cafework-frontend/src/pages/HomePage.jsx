@@ -24,10 +24,14 @@ const HomePage = () => {
     }, [navigation]);
 
     // 2. KHO LƯU TRỮ TRẠNG THÁI
-    const [cafes, setCafes] = useState([]);
+    const [cafes, setCafes] = useState(() => {
+        const savedCafes = sessionStorage.getItem('savedCafes');
+        return savedCafes ? JSON.parse(savedCafes) : [];
+    });
     const [routeData, setRouteData] = useState(null);
-    const [searchKeyword, setSearchKeyword] = useState('');
-
+    const [searchKeyword, setSearchKeyword] = useState(() => {
+        return sessionStorage.getItem('savedKeyword') || '';
+    });
     // 3. ĐỌC THÔNG SỐ TỪ URL (Chức năng của File 2)
     const [searchParams, setSearchParams] = useSearchParams();
     const keywordFromUrl = searchParams.get('keyword');
@@ -53,7 +57,10 @@ const HomePage = () => {
         if (!keywordFromUrl) return;
         setSearchKeyword(keywordFromUrl);
     }, [keywordFromUrl]);
-
+    useEffect(() => {
+        sessionStorage.setItem('savedCafes', JSON.stringify(cafes));
+        sessionStorage.setItem('savedKeyword', searchKeyword);
+    }, [cafes, searchKeyword]);
     // 4. PHÉP THUẬT DỊCH THUẬT (Chức năng của File 1)
     const translateStep = (step) => {
         if (step.maneuver.type === 'depart') return t('depart');
@@ -157,6 +164,7 @@ const HomePage = () => {
                         <SearchBar
                             onSearchData={setCafes}
                             initialKeyword={searchKeyword}
+                            onKeywordChange={setSearchKeyword}
                         />
                     </div>
 
