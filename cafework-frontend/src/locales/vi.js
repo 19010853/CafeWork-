@@ -249,4 +249,5 @@ export default {
     currentPassword: 'Mật khẩu hiện tại',
     newPassword: 'Mật khẩu mới',
     translateToCurrentLang: 'Dịch',
+    phoneLengthError: 'Định dạng số điện thoại không hợp lệ (phải đủ 10 chữ số)',
 }

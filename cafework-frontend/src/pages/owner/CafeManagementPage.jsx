@@ -101,10 +101,40 @@ const CafeManagementPage = () => {
         setFormData(prev => ({ ...prev, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
       });
 
-      map.on('click', (e) => {
+      map.on('click', async (e) => {
         const { lat, lng } = e.coords || e.latlng;
         marker.setLatLng([lat, lng]);
         setFormData(prev => ({ ...prev, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
+        setFormData((prev) => ({
+          ...prev,
+          latitude: lat,
+          longitude: lng,
+          address: 'Đang tải địa chỉ...' // Hiệu ứng chờ cho bá tánh đỡ sốt ruột
+        }));
+        try {
+          // Có thể thay '&accept-language=vi' thành 'ja' hoặc ngôn ngữ động tùy ý bệ hạ
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=vi`);
+          const data = await response.json();
+
+          if (data && data.display_name) {
+              // Nếu tìm thấy, cập nhật tên đường phố vào biến address
+              setFormData((prev) => ({
+                  ...prev,
+                  address: data.display_name
+              }));
+          } else {
+              setFormData((prev) => ({
+                  ...prev,
+                  address: 'Không xác định được địa chỉ'
+              }));
+          }
+        } catch (error) {
+          console.error("Lỗi khi dịch tọa độ:", error);
+          setFormData((prev) => ({
+              ...prev,
+              address: 'Lỗi khi tải địa chỉ'
+          }));
+        }
       });
 
       mapInstanceRef.current = map;
@@ -156,10 +186,6 @@ const CafeManagementPage = () => {
     if (!formData.phone?.trim()) return t('requiredPhone');
     if (!/^\d+$/.test(formData.phone)) return t('invalidPhone');
 
-    // Open hours regex (HH:MM)
-    if (formData.openHours && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(formData.openHours)) {
-      return t('invalidBusinessHours');
-    }
 
     return null;
   };
@@ -271,14 +297,51 @@ const CafeManagementPage = () => {
 
           <div className={styles.formGroup}>
             <label className={styles.label}>{t('businessHours')}</label>
-            <input
-              type="text"
-              name="openHours"
-              className={styles.input}
-              value={formData.openHours || ''}
-              onChange={handleChange}
-              placeholder="09:00"
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              
+              {/* 🕒 Ô CHỌN GIỜ MỞ CỬA */}
+              <input
+                type="time"
+                className={styles.input}
+                // Tách lấy nửa đầu (Giờ mở) từ chuỗi "HH:MM - HH:MM"
+                value={formData.openHours ? formData.openHours.split(' - ')[0] : ''}
+                onChange={(e) => {
+                  const newOpen = e.target.value;
+                  // Lấy lại giờ đóng cũ (hoặc mặc định 22:00 nếu chưa có)
+                  const currentClose = (formData.openHours && formData.openHours.includes(' - ')) 
+                    ? formData.openHours.split(' - ')[1] 
+                    : '22:00';
+                  
+                  // Đóng gói thành sự kiện giả truyền về hàm handleChange gốc
+                  handleChange({
+                    target: { name: 'openHours', value: `${newOpen} - ${currentClose}` }
+                  });
+                }}
+              />
+              
+              <span style={{ fontWeight: 'bold', color: '#555' }}>-</span>
+              
+              {/* 🕒 Ô CHỌN GIỜ ĐÓNG CỬA */}
+              <input
+                type="time"
+                className={styles.input}
+                // Tách lấy nửa sau (Giờ đóng) từ chuỗi "HH:MM - HH:MM"
+                value={(formData.openHours && formData.openHours.includes(' - ')) ? formData.openHours.split(' - ')[1] : ''}
+                onChange={(e) => {
+                  const newClose = e.target.value;
+                  // Lấy lại giờ mở cũ (hoặc mặc định 08:00 nếu chưa có)
+                  const currentOpen = formData.openHours 
+                    ? formData.openHours.split(' - ')[0] 
+                    : '08:00';
+                  
+                  // Đóng gói thành sự kiện giả truyền về hàm handleChange gốc
+                  handleChange({
+                    target: { name: 'openHours', value: `${currentOpen} - ${newClose}` }
+                  });
+                }}
+              />
+
+            </div>
           </div>
 
           <div className={`${styles.formGroup} ${styles.fullWidth}`}>
@@ -288,7 +351,12 @@ const CafeManagementPage = () => {
               name="address"
               className={styles.input}
               value={formData.address || ''}
-              onChange={handleChange}
+              readOnly
+              style={{ 
+                backgroundColor: '#e9ecef', 
+                color: '#495057', 
+                cursor: 'not-allowed' 
+              }}
               placeholder={t('placeholderAddress')}
             />
           </div>

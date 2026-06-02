@@ -249,4 +249,5 @@ export default{
     currentPassword: '現在のパスワード',
     newPassword: '新しいパスワード',
     translateToCurrentLang: '翻訳',
+    phoneLengthError: '電話番号の形式が無効です（10桁でなければなりません）',
 }
