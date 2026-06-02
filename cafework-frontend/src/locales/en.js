@@ -247,4 +247,5 @@ export default {
     newPasswordError: 'New password must be at least 8 characters, include uppercase letters and numbers/special characters.',
     currentPassword: 'Current Password',
     newPassword: 'New Password',
+    translateToCurrentLang: 'Translate',
 }

@@ -248,4 +248,5 @@ export default {
     newPasswordError: 'Mật khẩu mới phải tối thiểu 8 ký tự, gồm chữ hoa và số/ký tự đặc biệt.',
     currentPassword: 'Mật khẩu hiện tại',
     newPassword: 'Mật khẩu mới',
+    translateToCurrentLang: 'Dịch',
 }

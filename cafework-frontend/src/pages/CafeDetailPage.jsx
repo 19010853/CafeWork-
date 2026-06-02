@@ -4,7 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { isBookmarked, toggleBookmark } from '../utils/userLocalStore';
 import { t } from '../utils/i18n';
-
+import { getLang } from '../utils/userLocalStore';
 // ============================================================
 // STYLES
 // ============================================================
@@ -330,13 +330,19 @@ const getSeatStatusLabel = (status) => {
   if (status === 'FULL') return t('fullSeats');
   return t('noSeatInfo');
 };
-
-const isJapanese = (text) => {
-  if (!text) return true;
+const detectLanguage = (text) => {
+  if (!text) return 'EN';
+  
+  // Dấu hiệu tiếng Nhật (Hiragana, Katakana, Kanji)
   const jpRegex = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/;
-  return jpRegex.test(text);
+  if (jpRegex.test(text)) return 'JP';
+  
+  // Dấu hiệu tiếng Việt đặc trưng
+  const viRegex = /[àáãạảăắằẳẵặâấầẩẫậèéẹẻẽêềếểễệđìíĩỉịòóõọỏôốồổỗộơớờởỡợùúũụủưứừửữựỳýỹỷỵ]/i;
+  if (viRegex.test(text)) return 'VI';
+  
+  return 'EN'; // Nếu không phải Việt, Nhật thì mặc định là Anh
 };
-
 // ============================================================
 // COMPONENT
 // ============================================================
@@ -391,7 +397,7 @@ const CafeDetailPage = () => {
         setIsRefreshing(false);
       });
   };
-
+  
   const fetchReviews = () => {
     setReviewsLoading(true);
     axios
@@ -504,13 +510,28 @@ const CafeDetailPage = () => {
   const handleTranslate = async (reviewId, text) => {
     setTranslatingIds(prev => ({ ...prev, [reviewId]: true }));
     try {
-      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ja`;
+      // 1. Lấy ngôn ngữ App đang hiển thị (JP, VI, hoặc EN)
+      const currentAppLang = getLang() || 'JP'; 
+      
+      // 2. Nhận diện ngôn ngữ của dòng review
+      const sourceLang = detectLanguage(text);
+
+      // 3. Bản đồ chuyển đổi từ ký hiệu vương quốc sang ký hiệu quốc tế (ISO code) cho MyMemory
+      const isoMap = { JP: 'ja', VI: 'vi', EN: 'en' };
+      const sourceISO = isoMap[sourceLang] || 'en';
+      const targetISO = isoMap[currentAppLang] || 'ja';
+
+      // 4. Triển khai dịch thuật chính xác theo cặp ngôn ngữ
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceISO}|${targetISO}`;
       const response = await axios.get(url);
-      const translatedText = response.data.responseData.translatedText;
-      setTranslations(prev => ({ ...prev, [reviewId]: translatedText }));
+      
+      if (response.data && response.data.responseData) {
+        const translatedText = response.data.responseData.translatedText;
+        setTranslations(prev => ({ ...prev, [reviewId]: translatedText }));
+      }
     } catch (error) {
       console.error("Lỗi khi dịch thuật:", error);
-      toast.error(error.message);
+      toast.error(t('translationError') || 'Dịch thuật thất bại');
     } finally {
       setTranslatingIds(prev => ({ ...prev, [reviewId]: false }));
     }
@@ -740,6 +761,7 @@ const CafeDetailPage = () => {
               )}
             </div>
 
+            {/* Vòng lặp render reviews */}
             {reviewsLoading ? (
               <p style={styles.reviewEmpty}>{t('loadingReviews')}</p>
             ) : reviews.length === 0 ? (
@@ -747,6 +769,14 @@ const CafeDetailPage = () => {
             ) : (
               reviews.map((r) => {
                 const ratingNum = parseInt(r.rating, 10) || 0;
+                
+                // 👑 1. THIẾT LẬP CHỐT CHẶN DỊCH THUẬT CHO TỪNG BÌNH LUẬN 👑
+                const currentAppLang = getLang() || 'JP'; // Lấy ngôn ngữ App (JP, VI, EN)
+                const reviewLang = detectLanguage(r.content); // Lấy ngôn ngữ gốc của comment
+                
+                // Chỉ hiện khu vực dịch nếu ngôn ngữ App và ngôn ngữ comment khác nhau
+                const shouldShowTranslateArea = reviewLang !== currentAppLang;
+
                 return (
                   <div key={r.id} style={styles.reviewCard}>
                     <div style={styles.reviewTopRow}>
@@ -762,10 +792,14 @@ const CafeDetailPage = () => {
                         {'★'.repeat(Math.min(ratingNum, 5))}{'☆'.repeat(Math.max(0, 5 - ratingNum))}
                       </span>
                     </div>
+
+                    {/* Dòng này luôn hiện bản gốc trước tiên */}
                     <p style={styles.reviewContent}>{r.content}</p>
                     
-                    {!isJapanese(r.content) && (
+                    {/* 👑 2. KHU VỰC DỊCH THUẬT (Chỉ hiện khi cần thiết) 👑 */}
+                    {shouldShowTranslateArea && (
                       <>
+                        {/* Nếu CHƯA CÓ bản dịch trong kho -> Hiện nút Dịch */}
                         {!translations[r.id] ? (
                           <button
                             onClick={() => handleTranslate(r.id, r.content)}
@@ -776,15 +810,18 @@ const CafeDetailPage = () => {
                               display: 'flex', alignItems: 'center', gap: '4px'
                             }}
                           >
-                            {translatingIds[r.id] ? `⏳ ${t('translating')}` : `🌐 ${t('translateToJapanese')}`}
+                            {translatingIds[r.id] 
+                                ? `⏳ ${t('translating') || 'Đang dịch...'}` 
+                                : `🌐 ${t('translateToCurrentLang') || 'Dịch sang ngôn ngữ của bạn'}`}
                           </button>
                         ) : (
+                          /* Nếu ĐÃ CÓ bản dịch trong kho -> Hiện khung chứa bản dịch */
                           <div style={{
                             marginTop: '12px', padding: '10px', backgroundColor: '#f4f6f8',
                             borderRadius: '6px', borderLeft: '3px solid #1a73e8'
                           }}>
                             <span style={{ fontSize: '11px', color: '#5f6368', marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>
-                              🌐 {t('translatedText')}
+                              🌐 {t('translatedText') || 'Bản dịch tự động'}
                             </span>
                             <p style={{ margin: 0, fontSize: '14px', color: '#333' }} dangerouslySetInnerHTML={{ __html: translations[r.id] }} />
                           </div>

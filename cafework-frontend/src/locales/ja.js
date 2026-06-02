@@ -248,4 +248,5 @@ export default{
     newPasswordError: '新しいパスワードは8文字以上で、大文字と数字/特殊文字を含める必要があります。',
     currentPassword: '現在のパスワード',
     newPassword: '新しいパスワード',
+    translateToCurrentLang: '翻訳',
 }
