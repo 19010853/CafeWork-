@@ -44,8 +44,13 @@ const CafeManagementPage = () => {
           setFormData(response.data);
         }
       } catch (error) {
-        console.error('Error fetching cafe data:', error);
-        toast.error(t('fetchCafeFailed'));
+        // Hóa giải lỗi 404: Nếu chưa có quán thì im lặng để điền form trống
+        if (error.response && error.response.status === 404) {
+          console.log('Bẩm, chủ quán mới chưa có dữ liệu. Sẵn sàng tạo quán mới!');
+        } else {
+          console.error('Error fetching cafe data:', error);
+          toast.error(t('fetchCafeFailed'));
+        }
       } finally {
         setLoading(false);
       }
@@ -110,12 +115,12 @@ const CafeManagementPage = () => {
     if (!formData.ownerName?.trim()) return t('requiredOwnerName');
     if (!formData.address?.trim()) return t('requiredAddress');
     
-    // Latitude & Longitude validation (Mandatory)
+    // Đã thay thế chuỗi tiếng Việt cứng nhắc bằng hàm dịch thuật i18n
     if (formData.latitude === '' || formData.latitude === null || isNaN(parseFloat(formData.latitude))) {
-        return 'Vĩ độ (Latitude) không được để trống và phải là số hợp lệ.';
+        return t('invalidLatitude');
     }
     if (formData.longitude === '' || formData.longitude === null || isNaN(parseFloat(formData.longitude))) {
-        return 'Kinh độ (Longitude) không được để trống và phải là số hợp lệ.';
+        return t('invalidLongitude');
     }
 
     // Email regex
@@ -274,24 +279,13 @@ const CafeManagementPage = () => {
             />
           </div>
 
+          {/* Đã thêm i18n cho khối bản đồ */}
           <div className={styles.fullWidth}>
-            <label className={styles.label}>Bản đồ vị trí (Map Picker)</label>
+            <label className={styles.label}>{t('mapLocation')}</label>
             <div ref={mapRef} className={styles.mapContainer}></div>
             <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              * Bạn có thể kéo thả Marker hoặc click trực tiếp lên bản đồ để chọn vị trí.
+              * {t('mapInstruction')}
             </p>
-          </div>
-
-          <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-            <label className={styles.label}>住所 (Địa chỉ bổ trợ)</label>
-            <input
-              type="text"
-              name="address"
-              className={styles.input}
-              value={formData.address || ''}
-              onChange={handleChange}
-              placeholder="東京都渋谷区..."
-            />
           </div>
 
           <div className={`${styles.formGroup} ${styles.fullWidth}`}>
