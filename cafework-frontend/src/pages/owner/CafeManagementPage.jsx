@@ -35,7 +35,7 @@ const CafeManagementPage = () => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
-
+  const [isNewCafe, setIsNewCafe] = useState(false);
   useEffect(() => {
     // 1. Lục tìm Tên và Email trong Thẻ bài (localStorage) làm vốn liếng ban đầu
     let defaultOwnerName = '';
@@ -66,6 +66,7 @@ const CafeManagementPage = () => {
         // Hóa giải lỗi 404: Nếu chưa có quán, châm sẵn Tên và Email vào giấy trắng
         if (error.response && error.response.status === 404) {
           console.log('Bẩm, chủ quán mới chưa có dữ liệu. Sẵn sàng tạo quán mới!');
+          setIsNewCafe(true);
           setFormData(prev => ({
             ...prev,
             ownerName: defaultOwnerName,
@@ -182,13 +183,29 @@ const CafeManagementPage = () => {
 
     setSubmitting(true);
     try {
-      await axiosClient.put('/cafes/my-cafe', formData);
-      toast.success(t('updateSuccess'));
+      if (isNewCafe) {
+        // 👑 NGẢ RẼ 1: TẠO QUÁN MỚI 👑
+        // (Lưu ý: Ngài hãy kiểm tra lại Backend xem API tạo quán có đúng là POST /cafes không nhé)
+        const res = await axiosClient.post('/cafes', formData); 
+        toast.success(t('createSuccess') || 'Tạo quán mới thành công!');
+        
+        // Cực kỳ quan trọng: Lấy thẻ bài cafeId mới tinh gắn vào người chủ quán
+        if (res.data && res.data.id) {
+          localStorage.setItem('cafeId', res.data.id);
+        }
+      } else {
+        // 👑 NGẢ RẼ 2: CẬP NHẬT QUÁN CŨ 👑
+        await axiosClient.put('/cafes/my-cafe', formData);
+        toast.success(t('updateSuccess'));
+      }
+
+      // Xong việc thì hộ giá bệ hạ vào thẳng Dashboard luôn cho tiện
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = '/owner/dashboard';
       }, 1000);
+
     } catch (error) {
-      console.error('Error updating cafe:', error);
+      console.error('Error saving cafe:', error);
       const errorMsg = error.response?.data || t('updateFailed');
       toast.error(typeof errorMsg === 'string' ? errorMsg : t('updateError'));
     } finally {
@@ -328,7 +345,8 @@ const CafeManagementPage = () => {
           className={styles.saveButton}
           disabled={submitting}
         >
-          {submitting ? t('saving') : t('update')}
+          {/* Tự động đổi chữ: Đang lưu... / Tạo quán mới / Cập nhật */}
+          {submitting ? t('saving') : (isNewCafe ? t('createCafe') : t('update'))}
         </button>
       </form>
     </div>

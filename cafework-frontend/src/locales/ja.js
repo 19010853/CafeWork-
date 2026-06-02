@@ -1,4 +1,5 @@
 export default{
+    cafeWork: 'カフェワーク',
     // Login and Header
     login: 'ログイン',
     email: 'メールアドレス',
@@ -6,6 +7,21 @@ export default{
     register: '登録',
     logout: 'ログアウト',
     profile: 'プロフィール',
+    errorOccurred: 'エラーが発生しました。',
+    nameRequired: '名前は必須です。',
+    phoneRequired: '電話番号は必須です。',
+    phoneInvalid: '電話番号は数字のみで入力してください。',
+    profileUpdated: 'プロフィールが更新されました。',
+    profileLoginRequired: 'プロフィールを更新するにはログインが必要です。',
+    goToLogin: 'ログインへ',
+    roleOwner: 'オーナー',
+    roleUser: 'ユーザー',
+    editProfile: 'プロフィール編集',
+    changePassword: 'パスワード変更',
+    basicInfo: '基本情報',
+    placeholderName: '名前を入力してください',
+    placeholderPhone: '電話番号を入力してください',
+    updating: '更新中...',
     forgotPassword: 'お忘れですか？',
     createAccount: '作成',
 
@@ -197,7 +213,7 @@ export default{
     cafeManagement: 'カフェ情報の管理',
     setupCafeInfo: 'ダッシュボードに入る前に、カフェ情報を設定してください！',
     fetchCafeFailed: 'カフェ情報の取得に失敗しました。',
-
+    createCafe: 'カフェを作成',
     cafeName: 'カフェ名',
     ownerName: '店主名',
     emailAddress: 'メールアドレス',
@@ -224,5 +240,8 @@ export default{
     updateError: '更新エラー',
 
     saving: '保存中...',
-    update: '更新'
+    update: '更新',
+    mapLocation: '地図の位置',
+    mapInstruction: '地図をクリックしてカフェの位置を設定してください。',
+    reviewsCount: '件のレビュー'
 }

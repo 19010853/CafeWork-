@@ -102,6 +102,25 @@ public class CafeController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    
+    @PostMapping
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<?> createMyCafe(@RequestBody CafeRequest request) {
+        try {
+            // Lấy email từ lệnh bài bảo mật Token
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = userRepository.findByEmailIgnoreCase(email)
+                    .orElseThrow(() -> new Exception("User not found"));
+            
+            // Phái binh sang tầng Service thực hiện chiêu thức đúc thực thể Cafe mới
+            Cafe newCafe = cafeService.createCafe(user.getId(), request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newCafe);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("System error: " + e.getMessage());
+        }
+    }
 
     @PutMapping("/my-cafe")
     @PreAuthorize("hasRole('OWNER')")

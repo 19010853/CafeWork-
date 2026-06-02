@@ -149,4 +149,22 @@ public class CafeServiceImpl implements CafeService {
     private boolean isBlank(String str) {
         return str == null || str.trim().isEmpty();
     }
+    
+    @Override
+    public Cafe createCafe(UUID ownerId, CafeRequest request) {
+        Cafe cafe = new Cafe();
+        cafe.setId(UUID.randomUUID());
+        cafe.setOwnerId(ownerId); // Gắn ID chủ quán làm khóa ngoại
+        cafe.setName(request.getName());
+        cafe.setOwnerName(request.getOwnerName());
+        cafe.setEmail(request.getEmail());
+        cafe.setPhone(request.getPhone());
+        cafe.setOpenHours(request.getOpenHours());
+        cafe.setAddress(request.getAddress());
+        cafe.setLatitude(request.getLatitude());
+        cafe.setLongitude(request.getLongitude());
+        cafe.setDescription(request.getDescription());
+        
+        return cafeRepository.save(cafe); // Lưu sổ sách thành công!
+    }
 }

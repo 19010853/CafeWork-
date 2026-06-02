@@ -584,7 +584,7 @@ const OwnerDashboardPage = () => {
         {/* KHỐI 3: QUẢN LÝ ẢNH ({t('photoManagement')}) */}
         {/* ========================================= */}
         <div style={styles.card}>
-          <h2 style={styles.sectionTitle}>写真管理</h2>
+          <h2 style={styles.sectionTitle}>{t('photoManagement')}</h2>
           
           <div style={styles.imageContainer}>
             <input 

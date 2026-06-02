@@ -1,4 +1,5 @@
 export default {
+    cafeWork: 'CafeWork',
     // Login and Header
     login: 'Login',
     email: 'Email',
@@ -6,7 +7,21 @@ export default {
     register: 'Register',
     logout: 'Logout',
     profile: 'Profile',
-
+    errorOccurred: 'An error occurred.',
+    nameRequired: 'Name is required.',
+    phoneRequired: 'Phone number is required.',
+    phoneInvalid: 'Phone number must contain digits only.',
+    profileUpdated: 'Profile updated successfully.',
+    profileLoginRequired: 'Login required to update profile.',
+    goToLogin: 'Go to Login',
+    roleOwner: 'Owner',
+    roleUser: 'User',
+    editProfile: 'Edit Profile',
+    changePassword: 'Change Password',
+    basicInfo: 'Basic Information',
+    placeholderName: 'Enter your name',
+    placeholderPhone: 'Enter your phone number',
+    updating: 'Updating...',
     forgotPassword: 'Forgot Password?',
     createAccount: 'Create Account',
 
@@ -197,7 +212,7 @@ export default {
     cafeManagement: 'Cafe Management',
     setupCafeInfo: 'Please set up your cafe information before entering the Dashboard!',
     fetchCafeFailed: 'Failed to load cafe information.',
-
+    createCafe: 'Create Cafe',
     cafeName: 'Cafe Name',
     ownerName: 'Owner Name',
     emailAddress: 'Email Address',
@@ -224,5 +239,8 @@ export default {
     updateError: 'Update error',
 
     saving: 'Saving...',
-    update: 'Update'
+    update: 'Update',
+    mapLocation: 'Map Location',
+    mapInstruction: 'Please click the map to set the cafe location.',
+    reviewsCount: 'reviews'
 }

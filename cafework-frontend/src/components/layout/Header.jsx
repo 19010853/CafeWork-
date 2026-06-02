@@ -77,11 +77,7 @@ const Header = () => {
               aria-expanded={langOpen}
             >
               <span className={styles.flag}>
-                {{
-                  JP: '🇯🇵',
-                  VI: '🇻🇳',
-                  EN: '🇺🇸'
-                }[lang]}
+                🌐
               </span>
               <span>{langLabel}</span>
               <svg className={styles.arrowIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,13 +87,13 @@ const Header = () => {
             {langOpen && (
               <div className={styles.langMenu} role="menu">
                 <button type="button" className={styles.langMenuItem} role="menuitem" onClick={() => handleSelectLang('JP')}>
-                  🇯🇵 JP 日本語
+                  JP 日本語
                 </button>
                 <button type="button" className={styles.langMenuItem} role="menuitem" onClick={() => handleSelectLang('VI')}>
-                  🇻🇳 VI Tiếng Việt
+                  VI Tiếng Việt
                 </button>
                 <button type="button" className={styles.langMenuItem} role="menuitem" onClick={() => handleSelectLang('EN')}>
-                  🇺🇸 EN English
+                  EN English
                 </button>
               </div>
             )}
@@ -107,7 +103,7 @@ const Header = () => {
         {/* Middle: Logo */}
         <div className={styles.centerSection}>
           <Link to="/" className={styles.logo}>
-            ☕カフェワーク
+            ☕ {t('cafeWork')}
           </Link>
         </div>
 
@@ -179,6 +175,7 @@ const Header = () => {
         ) : (
           /* --- 🧑‍🌾 GIAO DIỆN DÀNH CHO KHÁCH HÀNG (USER / KHÁCH VÃNG LAI) --- */
           <>
+            {/* Nút Trang chủ luôn mở để chào đón toàn thể bá tánh */}
             <button
               className={isActive('/') ? styles.activeTab : styles.navTab}
               onClick={() => navigate('/')}
@@ -186,19 +183,24 @@ const Header = () => {
               {t('home')}
             </button>
 
-            <button
-              className={isActive('/my-list') ? styles.activeTab : styles.navTab}
-              onClick={() => navigate('/my-list')}
-            >
-              {t('myList')}
-            </button>
+            {/* 🔐 CHỐT CHẶN BẢO MẬT: Chỉ khi xuất trình được Token (đã đăng nhập) thì hai mật khu mới hiện hình */}
+            {token && (
+              <>
+                <button
+                  className={isActive('/my-list') ? styles.activeTab : styles.navTab}
+                  onClick={() => navigate('/my-list')}
+                >
+                  {t('myList')}
+                </button>
 
-            <button
-              className={isActive('/search-history') ? styles.activeTab : styles.navTab}
-              onClick={() => navigate('/search-history')}
-            >
-              {t('searchHistory')}
-            </button>
+                <button
+                  className={isActive('/search-history') ? styles.activeTab : styles.navTab}
+                  onClick={() => navigate('/search-history')}
+                >
+                  {t('searchHistory')}
+                </button>
+              </>
+            )}
           </>
         )}
 

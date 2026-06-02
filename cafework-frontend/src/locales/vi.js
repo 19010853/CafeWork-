@@ -1,4 +1,5 @@
 export default {
+    cafeWork: 'CafeWork',
     // Login and Header
     login: 'Đăng nhập',
     email: 'Email',
@@ -6,7 +7,21 @@ export default {
     register: 'Đăng ký',
     logout: 'Đăng xuất',
     profile: 'Hồ sơ',
-
+    errorOccurred: 'Đã xảy ra lỗi.',
+    nameRequired: 'Tên là bắt buộc.',
+    phoneRequired: 'Số điện thoại là bắt buộc.',
+    phoneInvalid: 'Số điện thoại chỉ được chứa chữ số.',
+    profileUpdated: 'Cập nhật hồ sơ thành công.',
+    profileLoginRequired: 'Vui lòng đăng nhập để cập nhật hồ sơ.',
+    goToLogin: 'Đến trang đăng nhập',
+    roleOwner: 'Chủ quán',
+    roleUser: 'Người dùng',
+    editProfile: 'Chỉnh sửa hồ sơ',
+    changePassword: 'Đổi mật khẩu',
+    basicInfo: 'Thông tin cơ bản',
+    placeholderName: 'Nhập tên của bạn',
+    placeholderPhone: 'Nhập số điện thoại của bạn',
+    updating: 'Đang cập nhật...',
     forgotPassword: 'Quên mật khẩu?',
     createAccount: 'Tạo tài khoản',
 
@@ -198,7 +213,7 @@ export default {
     cafeManagement: 'Quản lý quán cà phê',
     setupCafeInfo: 'Vui lòng thiết lập thông tin quán trước khi vào Bảng điều khiển!',
     fetchCafeFailed: 'Không thể tải thông tin quán.',
-
+    createCafe: 'Tạo quán mới',
     cafeName: 'Tên quán',
     ownerName: 'Tên chủ quán',
     emailAddress: 'Email',
@@ -225,5 +240,8 @@ export default {
     updateError: 'Lỗi cập nhật',
 
     saving: 'Đang lưu...',
-    update: 'Cập nhật'
+    update: 'Cập nhật',
+    mapLocation: 'Vị trí trên bản đồ',
+    mapInstruction: 'Vui lòng click vào bản đồ để đặt vị trí quán.',
+    reviewsCount: 'đánh giá'
 }
