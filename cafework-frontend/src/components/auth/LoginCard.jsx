@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './LoginCard.module.css';
@@ -11,6 +11,7 @@ const LoginCard = ({ onSwitchToSignup }) => {
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -44,17 +45,21 @@ const LoginCard = ({ onSwitchToSignup }) => {
       if (response.status === 200) {
         const data = response.data;
         toast.success('ログインに成功しました！');
-        
+
         // Save token and user info
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
         localStorage.setItem('fullName', data.fullName);
         localStorage.setItem('user', JSON.stringify(data));
-        if(response.data.cafeId) {
+        if (response.data.cafeId) {
           localStorage.setItem('cafeId', response.data.cafeId);
         }
         if (data.role === 'OWNER') {
-          navigate('/owner/dashboard'); // Cổng VIP phi thẳng vào Điện điều hành
+          if(data.cafeId) {
+            navigate('/owner/dashboard'); // Cổng VIP phi thẳng vào Điện điều hành
+          } else {
+            navigate('/owner/management'); // Chưa có quán -> Bắt đi tạo quán
+          }
         } else {
           navigate('/'); // Cổng thường dành cho bách tính
         }

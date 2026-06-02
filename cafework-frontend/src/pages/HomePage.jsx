@@ -10,8 +10,16 @@ const HomePage = () => {
     // 1. Kiểm tra phân quyền
     useEffect(() => {
         const userRole = localStorage.getItem('role');
+        const cafeId = localStorage.getItem('cafeId'); // 👈 Lục soát xem có thẻ bài quán chưa
+        
         if (userRole === 'OWNER') {
-            navigation('/owner/dashboard');
+            // Nếu có ID quán đàng hoàng -> Cho vào Bảng điều khiển (Dashboard)
+            if (cafeId && cafeId !== 'null' && cafeId !== 'undefined') {
+                navigation('/owner/dashboard');
+            } else {
+                // Nếu chưa có quán -> Bắt bẻ lái sang trang Quản lý (để tạo quán)
+                navigation('/owner/management');
+            }
         }
     }, [navigation]);
 

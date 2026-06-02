@@ -48,7 +48,7 @@ const AppShell = () => {
 
         {/* Các route dành cho chủ quán (Owner) */}
         <Route path="/owner/dashboard" element={<OwnerDashboardPage />} />
-        <Route path="/owner/cafe-management" element={<CafeManagementPage />} />
+        <Route path="/owner/management" element={<CafeManagementPage />} />
 
         {/* Route quản lý hồ sơ (Người dùng / Chủ quán) */}
         <Route path="/profile" element={<ProfilePage />} />

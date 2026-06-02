@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 import cafework.model.Coupon;
 import cafework.repository.CouponRepository;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api/coupons")
@@ -47,4 +49,10 @@ public class CouponController {
     public void deleteCoupon(@PathVariable UUID id) {
         couponRepository.deleteById(id);
     }
+
+    @GetMapping("cafe/{cafeId}")
+    public List<Coupon> getCouponsByCafe(@PathVariable UUID cafeId) {
+        return couponRepository.findByCafeId(cafeId);
+    }
+    
 }

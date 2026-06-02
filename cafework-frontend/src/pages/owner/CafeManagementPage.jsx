@@ -37,15 +37,44 @@ const CafeManagementPage = () => {
   const markerRef = useRef(null);
 
   useEffect(() => {
+    // 1. Lục tìm Tên và Email trong Thẻ bài (localStorage) làm vốn liếng ban đầu
+    let defaultOwnerName = '';
+    let defaultEmail = '';
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userObj = JSON.parse(userStr);
+        defaultOwnerName = userObj.fullName || userObj.username || '';
+        defaultEmail = userObj.email || '';
+      }
+    } catch (e) {
+      console.error("Lỗi đọc thẻ bài từ localStorage", e);
+    }
+
     const fetchMyCafe = async () => {
       try {
         const response = await axiosClient.get('/cafes/my-cafe');
         if (response.data) {
-          setFormData(response.data);
+          // Gộp dữ liệu: Ưu tiên dữ liệu từ Database, nếu DB thiếu thì tự động đắp dữ liệu từ Thẻ bài vào
+          setFormData({
+            ...response.data,
+            ownerName: response.data.ownerName || defaultOwnerName,
+            email: response.data.email || defaultEmail,
+          });
         }
       } catch (error) {
-        console.error('Error fetching cafe data:', error);
-        toast.error(t('fetchCafeFailed'));
+        // Hóa giải lỗi 404: Nếu chưa có quán, châm sẵn Tên và Email vào giấy trắng
+        if (error.response && error.response.status === 404) {
+          console.log('Bẩm, chủ quán mới chưa có dữ liệu. Sẵn sàng tạo quán mới!');
+          setFormData(prev => ({
+            ...prev,
+            ownerName: defaultOwnerName,
+            email: defaultEmail,
+          }));
+        } else {
+          console.error('Error fetching cafe data:', error);
+          toast.error(t('fetchCafeFailed'));
+        }
       } finally {
         setLoading(false);
       }
@@ -53,7 +82,6 @@ const CafeManagementPage = () => {
 
     fetchMyCafe();
   }, []);
-
   // Initialize Map
   useEffect(() => {
     if (!loading && mapRef.current && !mapInstanceRef.current) {
@@ -110,12 +138,12 @@ const CafeManagementPage = () => {
     if (!formData.ownerName?.trim()) return t('requiredOwnerName');
     if (!formData.address?.trim()) return t('requiredAddress');
     
-    // Latitude & Longitude validation (Mandatory)
+    // Đã thay thế chuỗi tiếng Việt cứng nhắc bằng hàm dịch thuật i18n
     if (formData.latitude === '' || formData.latitude === null || isNaN(parseFloat(formData.latitude))) {
-        return 'Vĩ độ (Latitude) không được để trống và phải là số hợp lệ.';
+        return t('invalidLatitude');
     }
     if (formData.longitude === '' || formData.longitude === null || isNaN(parseFloat(formData.longitude))) {
-        return 'Kinh độ (Longitude) không được để trống và phải là số hợp lệ.';
+        return t('invalidLongitude');
     }
 
     // Email regex
@@ -274,24 +302,13 @@ const CafeManagementPage = () => {
             />
           </div>
 
+          {/* Đã thêm i18n cho khối bản đồ */}
           <div className={styles.fullWidth}>
-            <label className={styles.label}>Bản đồ vị trí (Map Picker)</label>
+            <label className={styles.label}>{t('mapLocation')}</label>
             <div ref={mapRef} className={styles.mapContainer}></div>
             <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-              * Bạn có thể kéo thả Marker hoặc click trực tiếp lên bản đồ để chọn vị trí.
+              * {t('mapInstruction')}
             </p>
-          </div>
-
-          <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-            <label className={styles.label}>住所 (Địa chỉ bổ trợ)</label>
-            <input
-              type="text"
-              name="address"
-              className={styles.input}
-              value={formData.address || ''}
-              onChange={handleChange}
-              placeholder="東京都渋谷区..."
-            />
           </div>
 
           <div className={`${styles.formGroup} ${styles.fullWidth}`}>
