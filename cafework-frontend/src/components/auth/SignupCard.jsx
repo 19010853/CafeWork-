@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './SignupCard.module.css';
@@ -13,6 +13,8 @@ const SignupCard = ({ onSwitchToLogin }) => {
     confirmPassword: '',
     role: 'USER',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -114,25 +116,47 @@ const SignupCard = ({ onSwitchToLogin }) => {
 
         <div className={styles.formGroup}>
           <label className={styles.label}>パスワード</label>
-          <input
-            type="password"
-            className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-            placeholder="********"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          />
+          <div className={styles.passwordWrapper}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              className={`${styles.input} ${styles.inputWithToggle} ${errors.password ? styles.inputError : ''}`}
+              placeholder="********"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              className={styles.togglePasswordBtn}
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'パスワードを非表示' : 'パスワードを表示'}
+            >
+              {showPassword ? '非表示' : '表示'}
+            </button>
+          </div>
           {errors.password && <p className={styles.errorMessage}>{errors.password}</p>}
         </div>
 
         <div className={styles.formGroup}>
           <label className={styles.label}>パスワード（確認）</label>
-          <input
-            type="password"
-            className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
-            placeholder="********"
-            value={formData.confirmPassword}
-            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-          />
+          <div className={styles.passwordWrapper}>
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              className={`${styles.input} ${styles.inputWithToggle} ${errors.confirmPassword ? styles.inputError : ''}`}
+              placeholder="********"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              className={styles.togglePasswordBtn}
+              onClick={() => setShowConfirmPassword((v) => !v)}
+              aria-label={showConfirmPassword ? 'パスワード（確認）を非表示' : 'パスワード（確認）を表示'}
+            >
+              {showConfirmPassword ? '非表示' : '表示'}
+            </button>
+          </div>
           {errors.confirmPassword && <p className={styles.errorMessage}>{errors.confirmPassword}</p>}
         </div>
 
@@ -146,7 +170,7 @@ const SignupCard = ({ onSwitchToLogin }) => {
       </form>
 
       <div className={styles.footer}>
-        <button 
+        <button
           type="button"
           onClick={onSwitchToLogin}
           className={styles.link}

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { profileService } from '../../api/profileService';
-import TopNavTabs from '../../components/layout/TopNavTabs';
 import ChangePasswordModal from '../../components/profile/ChangePasswordModal';
 import { getLang, getPhoneLocal, setPhoneLocal } from '../../utils/userLocalStore';
 import { confirmToast } from '../../utils/confirmToast';
@@ -179,8 +178,7 @@ const ProfilePage = () => {
     }
 
     return (
-        <div>
-            <TopNavTabs />
+        <>
             <div className={styles.page}>
                 <div className={styles.container}>
                     <aside className={styles.sidebar}>
@@ -299,7 +297,7 @@ const ProfilePage = () => {
                 isOpen={isPasswordModalOpen}
                 onClose={() => setIsPasswordModalOpen(false)}
             />
-        </div>
+        </>
     );
 };
 

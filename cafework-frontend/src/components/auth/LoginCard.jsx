@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './LoginCard.module.css';
@@ -10,6 +10,7 @@ const LoginCard = ({ onSwitchToSignup }) => {
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -43,13 +44,13 @@ const LoginCard = ({ onSwitchToSignup }) => {
       if (response.status === 200) {
         const data = response.data;
         toast.success('ログインに成功しました！');
-        
+
         // Save token and user info
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
         localStorage.setItem('fullName', data.fullName);
         localStorage.setItem('user', JSON.stringify(data));
-        if(response.data.cafeId) {
+        if (response.data.cafeId) {
           localStorage.setItem('cafeId', response.data.cafeId);
         }
         if (data.role === 'OWNER') {
@@ -69,7 +70,7 @@ const LoginCard = ({ onSwitchToSignup }) => {
   return (
     <div className={styles.card}>
       <h2 className={styles.title}>ログイン</h2>
-      
+
       <form onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
           <label className={styles.label}>メールアドレス</label>
@@ -85,13 +86,24 @@ const LoginCard = ({ onSwitchToSignup }) => {
 
         <div className={styles.formGroup}>
           <label className={styles.label}>パスワード</label>
-          <input
-            type="password"
-            className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-            placeholder="********"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          />
+          <div className={styles.passwordWrapper}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              className={`${styles.input} ${styles.inputWithToggle} ${errors.password ? styles.inputError : ''}`}
+              placeholder="********"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              className={styles.togglePasswordBtn}
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'パスワードを非表示' : 'パスワードを表示'}
+            >
+              {showPassword ? '非表示' : '表示'}
+            </button>
+          </div>
           {errors.password && <p className={styles.errorMessage}>{errors.password}</p>}
         </div>
 
@@ -99,8 +111,8 @@ const LoginCard = ({ onSwitchToSignup }) => {
           <a href="#" className={styles.link}>
             パスワードを<span className={styles.linkStrong}>お忘れですか？</span>
           </a>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onSwitchToSignup}
             className={styles.link}
           >

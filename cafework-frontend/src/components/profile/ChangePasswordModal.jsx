@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import styles from './ChangePasswordModal.module.css';
 
@@ -8,6 +8,9 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         newPassword: '',
         confirmPassword: '',
     });
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
@@ -18,7 +21,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         if (!form.currentPassword) {
             newErrors.currentPassword = '現在のパスワードを入力してください。';
         }
-        
+
         // Password regex: ít nhất 8 ký tự, có chữ hoa, số hoặc ký tự đặc biệt
         const passwordRegex = /^(?=.*[A-Z])(?=.*[\d!@#$%^&*])(?=.{8,})/;
         if (!form.newPassword) {
@@ -62,34 +65,67 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 <form className={styles.form} onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
                         <label className={styles.label}>Mật khẩu hiện tại</label>
-                        <input
-                            type="password"
-                            className={`${styles.input} ${errors.currentPassword ? styles.inputError : ''}`}
-                            value={form.currentPassword}
-                            onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
-                        />
+                        <div className={styles.passwordWrapper}>
+                            <input
+                                type={showCurrentPassword ? 'text' : 'password'}
+                                className={`${styles.input} ${styles.inputWithToggle} ${errors.currentPassword ? styles.inputError : ''}`}
+                                value={form.currentPassword}
+                                onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
+                                autoComplete="current-password"
+                            />
+                            <button
+                                type="button"
+                                className={styles.togglePasswordBtn}
+                                onClick={() => setShowCurrentPassword((v) => !v)}
+                                aria-label={showCurrentPassword ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'}
+                            >
+                                {showCurrentPassword ? 'Ẩn' : 'Hiện'}
+                            </button>
+                        </div>
                         {errors.currentPassword && <span className={styles.errorText}>{errors.currentPassword}</span>}
                     </div>
 
                     <div className={styles.formGroup}>
                         <label className={styles.label}>Mật khẩu mới</label>
-                        <input
-                            type="password"
-                            className={`${styles.input} ${errors.newPassword ? styles.inputError : ''}`}
-                            value={form.newPassword}
-                            onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
-                        />
+                        <div className={styles.passwordWrapper}>
+                            <input
+                                type={showNewPassword ? 'text' : 'password'}
+                                className={`${styles.input} ${styles.inputWithToggle} ${errors.newPassword ? styles.inputError : ''}`}
+                                value={form.newPassword}
+                                onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
+                                autoComplete="new-password"
+                            />
+                            <button
+                                type="button"
+                                className={styles.togglePasswordBtn}
+                                onClick={() => setShowNewPassword((v) => !v)}
+                                aria-label={showNewPassword ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới'}
+                            >
+                                {showNewPassword ? 'Ẩn' : 'Hiện'}
+                            </button>
+                        </div>
                         {errors.newPassword && <span className={styles.errorText}>{errors.newPassword}</span>}
                     </div>
 
                     <div className={styles.formGroup}>
                         <label className={styles.label}>Xác nhận mật khẩu mới</label>
-                        <input
-                            type="password"
-                            className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
-                            value={form.confirmPassword}
-                            onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                        />
+                        <div className={styles.passwordWrapper}>
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                className={`${styles.input} ${styles.inputWithToggle} ${errors.confirmPassword ? styles.inputError : ''}`}
+                                value={form.confirmPassword}
+                                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                                autoComplete="new-password"
+                            />
+                            <button
+                                type="button"
+                                className={styles.togglePasswordBtn}
+                                onClick={() => setShowConfirmPassword((v) => !v)}
+                                aria-label={showConfirmPassword ? 'Ẩn xác nhận mật khẩu' : 'Hiện xác nhận mật khẩu'}
+                            >
+                                {showConfirmPassword ? 'Ẩn' : 'Hiện'}
+                            </button>
+                        </div>
                         {errors.confirmPassword && <span className={styles.errorText}>{errors.confirmPassword}</span>}
                     </div>
 
