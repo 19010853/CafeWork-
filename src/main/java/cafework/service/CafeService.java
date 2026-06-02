@@ -16,4 +16,5 @@ public interface CafeService {
     // Feature 11b
     Cafe getCafeByOwnerId(UUID ownerId);
     Cafe updateCafe(UUID ownerId, CafeRequest request);
+    Cafe createCafe(UUID ownerId, CafeRequest request);
 }

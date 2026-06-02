@@ -198,7 +198,7 @@ export default {
     cafeManagement: 'Quản lý quán cà phê',
     setupCafeInfo: 'Vui lòng thiết lập thông tin quán trước khi vào Bảng điều khiển!',
     fetchCafeFailed: 'Không thể tải thông tin quán.',
-
+    createCafe: 'Tạo quán mới',
     cafeName: 'Tên quán',
     ownerName: 'Tên chủ quán',
     emailAddress: 'Email',

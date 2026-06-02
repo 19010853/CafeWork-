@@ -197,7 +197,7 @@ export default {
     cafeManagement: 'Cafe Management',
     setupCafeInfo: 'Please set up your cafe information before entering the Dashboard!',
     fetchCafeFailed: 'Failed to load cafe information.',
-
+    createCafe: 'Create Cafe',
     cafeName: 'Cafe Name',
     ownerName: 'Owner Name',
     emailAddress: 'Email Address',
