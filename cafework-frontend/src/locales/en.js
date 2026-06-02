@@ -248,4 +248,5 @@ export default {
     currentPassword: 'Current Password',
     newPassword: 'New Password',
     translateToCurrentLang: 'Translate',
+    phoneLengthError: 'Invalid phone number format (must be exactly 10 digits)',
 }

@@ -102,7 +102,10 @@ const ProfilePage = () => {
             toast.error(t('phoneInvalid'));
             return;
         }
-
+        if (form.phone.length < 10) {
+            toast.error(t('phoneLengthError'));
+            return;
+        }
         if (!token) {
             toast.error(t('loginRequired'));
             navigate('/login');
@@ -140,7 +143,32 @@ const ProfilePage = () => {
             setSaving(false);
         }
     };
+    // 👑 QUAN THỊ THƯ: XỬ LÝ ĐỊNH DẠNG TÊN NGƯỜI DÙNG 👑
+    const handleNameChange = (e) => {
+        let val = e.target.value;
 
+        // 1. Chém bỏ mọi con số và ký tự đặc biệt (chỉ giữ lại chữ cái và khoảng trắng)
+        // Lệnh này cực kỳ linh hoạt, vẫn bao dung cho chữ tiếng Việt (có dấu) và tiếng Nhật.
+        val = val.replace(/[0-9!@#$%^&*()_+=[\]{};':"\\|,.<>/?-]/g, '');
+
+        // 2. Phép thuật viết hoa chữ cái đầu của mỗi từ
+        // Tìm chữ cái đầu tiên của câu hoặc chữ cái đứng ngay sau khoảng trắng để in hoa
+        val = val.replace(/(?:^|\s)\S/g, (match) => match.toUpperCase());
+
+        // 3. Ghi vào sổ sách
+        setForm((p) => ({ ...p, fullName: val }));
+    };
+    // 👑 LÍNH GÁC Ô ĐIỆN THOẠI: CHỈ CHO PHÉP NHẬP SỐ VÀ TỐI ĐA 10 SỐ 👑
+    const handlePhoneChange = (e) => {
+        // 1. Chém bay tất cả các ký tự không phải là số (chữ cái, khoảng trắng, ký tự đặc biệt)
+        let val = e.target.value.replace(/\D/g, '');
+        
+        // 2. Chặn đứng ở con số thứ 10 (cắt bỏ phần thừa nếu có kẻ cố tình dán 1 chuỗi dài vào)
+        val = val.slice(0, 10);
+        
+        // 3. Ghi vào sổ sách
+        setForm((p) => ({ ...p, phone: val }));
+    };
     if (!token) {
         return (
             <div className={styles.centerWrap}>
@@ -232,7 +260,7 @@ const ProfilePage = () => {
                                     id="fullName"
                                     className={styles.input}
                                     value={form.fullName}
-                                    onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
+                                    onChange={handleNameChange} /* 👈 CHÉM ĐƯỜNG KIẾM MỚI VÀO ĐÂY */
                                     placeholder={t('placeholderName')}
                                 />
                             </div>
@@ -261,7 +289,8 @@ const ProfilePage = () => {
                                     id="phone"
                                     className={styles.input}
                                     value={form.phone}
-                                    onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                                    onChange={handlePhoneChange} /* 👈 Giao cho lính gác xử lý */
+                                    maxLength={10} /* 👈 Chốt chặn vật lý: Không cho gõ quá 10 ký tự */
                                     placeholder={t('placeholderPhone')}
                                 />
                             </div>
