@@ -271,11 +271,6 @@ const SearchBar = ({ onSearchData, initialKeyword = '' }) => {
                                     <span style={{ fontSize: '13px', color: '#555' }}>{cafe.seatStatus || '不明'}</span>
                                 </div>
                             </div>
-
-                            <div style={statusWrapperStyle}>
-                                <span style={getStatusDotStyle(cafe.seatStatus)}></span>
-                                <span style={{ fontSize: '13px', color: '#555' }}>{cafe.seatStatus || t('unknownStatus')}</span>
-                            </div>
                         </div>
                     );
                 })}
