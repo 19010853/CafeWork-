@@ -269,12 +269,12 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
                 
                 <div style="display: flex; gap: 8px;">
                   <button class="detail-btn" data-id="${cafe.id}" style="flex: 1; padding: 8px; background-color: #5c4033; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
-                    詳細を見る
+                    ${t('viewDetails')}
                   </button>
                   
                   <button class="route-btn" data-lat="${cafe.latitude}" data-lng="${cafe.longitude}" style="flex: 1; padding: 8px; background-color: #f0f0f0; color: #333; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                    {t('routeTarget')}
+                    ${t('routeTarget')}
                   </button>
                 </div>
               </div>

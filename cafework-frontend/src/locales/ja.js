@@ -264,4 +264,5 @@ export default{
     minute: '分',
     hour: '時間',
     day: '日',
+    viewDetails: '詳細を見る',
 }

@@ -264,4 +264,5 @@ export default {
     minute: 'min',
     hour: 'hr',
     day: 'day',
+    viewDetails: 'View Details',
 }
