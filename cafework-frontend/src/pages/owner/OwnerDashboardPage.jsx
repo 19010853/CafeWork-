@@ -8,7 +8,7 @@ const OwnerDashboardPage = () => {
   // ==========================================
   // 1. KHO CHỨA (STATE)
   // ==========================================
-  const [cafeStatus, setCafeStatus] = useState('AVAILABLE');
+  const [cafeStatus, setCafeStatus] = useState('FULL');
   const [seats, setSeats] = useState([]);
   const [showAddPopup, setShowAddPopup] = useState(false);
   const [addAmount, setAddAmount] = useState(1);
@@ -496,9 +496,9 @@ const OwnerDashboardPage = () => {
                 <span style={{ color: '#ea4335' }}> {t('seatOccupied')}: {occupiedSeats}</span>
               </p>
             </div>
-            {/* Tích hợp nút refresh gọi lại API lấy ghế mới nhất */}
+            {/* Tích hợp nút update gọi lại API lấy ghế mới nhất */}
             <button style={styles.autoUpdateButton} onClick={saveSeats}>
-              {t('refreshLatest')}
+              {t('updateLatest')}
             </button>
           </div>
           {/* Lưới hiển thị 30 ghế ngồi */}

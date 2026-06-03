@@ -185,7 +185,9 @@ const CafeManagementPage = () => {
     // Phone regex (only numbers)
     if (!formData.phone?.trim()) return t('requiredPhone');
     if (!/^\d+$/.test(formData.phone)) return t('invalidPhone');
-
+    if (formData.phone.length < 10) {
+        return t('phoneLengthError');
+    }
 
     return null;
   };

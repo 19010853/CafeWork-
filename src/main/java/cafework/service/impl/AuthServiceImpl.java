@@ -192,6 +192,13 @@ public class AuthServiceImpl implements AuthService {
         otpRepository.save(otp);
     }
 
+    @Override
+    public void verifyOtp(VerifyOtpRequest request) throws Exception {
+        otpRepository.findByEmailAndOtpCodeAndIsUsedFalseAndExpiresAtAfter(
+                request.getEmail(), request.getOtpCode(), LocalDateTime.now())
+                .orElseThrow(() -> new Exception("Mã OTP không hợp lệ hoặc đã hết hạn"));
+    }
+
     // --- Cập nhật Sprint 4: Change Password ---
 
     @Override

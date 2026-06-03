@@ -10,12 +10,11 @@ const dictionaries = {
     VI: vi
 };
 
-export const t = (key) => {
-    const lang = getLang();
+export const t = (key, params) => {
+  const lang = getLang();
+  const text = dictionaries[lang]?.[key] || dictionaries.JP[key] || key;
 
-    return (
-        dictionaries[lang]?.[key]
-        || dictionaries.JP[key]
-        || key
-    );
+  return params
+    ? text.replace(/\{(\w+)\}/g, (_, name) => params[name] ?? `{${name}}`)
+    : text;
 };

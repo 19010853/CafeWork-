@@ -629,9 +629,6 @@ const CafeDetailPage = () => {
                 <span style={styles.statusDot(statusCls)} />
                 {getSeatStatusLabel(cafe.seatStatus)}
               </div>
-              <button style={styles.refreshBtn} onClick={fetchCafeDetails} disabled={isRefreshing}>
-                🔄 {isRefreshing ? t('refreshing') : t('refresh')}
-              </button>
             </div>
 
             {/* Action Buttons */}

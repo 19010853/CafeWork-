@@ -24,14 +24,21 @@ export default {
     updating: 'Updating...',
     forgotPassword: 'Forgot Password?',
     createAccount: 'Create Account',
-
+    forgotPasswordInstruction: 'Please enter your registered email address to receive a password reset OTP.',
+    sendOtp: 'Send OTP',
     processing: 'Processing...',
-
+    resetPassword: 'Reset Password',
+    resetPasswordInstruction: 'Enter a new password for the account {email}',
+    passwordMismatch: 'Passwords do not match',
+    passwordResetSuccess: 'Password reset successfully! Please login again.',
+    passwordResetFailed: 'Failed to reset password',
+    passwordResetError: 'An error occurred while resetting the password',
+    passwordInvalid: 'Password must be at least 8 characters, include uppercase letters and numbers/special characters.',
     signup: 'Sign Up',
-
+    otpSent: 'OTP Sent',
     fullName: 'Full Name',
     confirmPassword: 'Confirm Password',
-
+    newPasswordRequired: 'New password is required.',
     normalUser: 'User',
     cafeOwner: 'Cafe Owner',
 
@@ -44,7 +51,8 @@ export default {
     backToSignup: 'Back to Signup',
     otpInstruction:
         'Enter the 6-digit verification code sent to',
-
+    otpWrong: 'Invalid OTP code. Please try again.',
+    verifing: 'Verifying...',
     home: 'Home',
     myList: 'My List',
     searchHistory: 'Search History',
@@ -177,7 +185,7 @@ export default {
     seatAvailable: 'Available',
     seatOccupied: 'Occupied',
 
-    refreshLatest: '🔄 Refresh',
+    updateLatest: '🔄 Update',
 
     addSeat: '+ Add Seats',
     deleteSeat: '- Remove Seats',
@@ -249,4 +257,11 @@ export default {
     newPassword: 'New Password',
     translateToCurrentLang: 'Translate',
     phoneLengthError: 'Invalid phone number format (must be exactly 10 digits)',
+    waitingForLocation: 'Waiting for location...',
+    routeTarget: 'Route Target',
+    locationPermissionRequired: 'Turn on location permission to display the route.',
+    yourLocation: 'Your Location',
+    minute: 'min',
+    hour: 'hr',
+    day: 'day',
 }

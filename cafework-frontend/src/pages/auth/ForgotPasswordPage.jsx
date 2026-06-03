@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './ForgotPasswordPage.module.css';
 import axiosClient from '../../api/axiosClient';
-
+import { t } from '../../utils/i18n';
 const ForgotPasswordPage = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
@@ -15,11 +15,11 @@ const ForgotPasswordPage = () => {
         // Validate định dạng email
         const emailRegex = /^\S+@\S+\.\S+$/;
         if (!email) {
-            toast.error("Vui lòng nhập địa chỉ email.");
+            toast.error(t('emailRequired'));
             return;
         }
         if (!emailRegex.test(email)) {
-            toast.error("Định dạng email không hợp lệ.");
+            toast.error(t('emailInvalid'));
             return;
         }
 
@@ -28,7 +28,7 @@ const ForgotPasswordPage = () => {
             // Gọi API gửi yêu cầu quên mật khẩu
             await axiosClient.post('/auth/forgot-password', { email });
             
-            toast.success("Mã OTP đã được gửi!");
+            toast.success(t('otpSent'));
             
             // Chuyển hướng sang trang xác thực OTP kèm theo email và intent
             navigate('/verify-otp', { 
@@ -40,7 +40,7 @@ const ForgotPasswordPage = () => {
         } catch (error) {
             console.error("Lỗi khi gửi yêu cầu quên mật khẩu:", error);
             const errorMsg = error.response?.data || "Có lỗi xảy ra, vui lòng thử lại sau.";
-            toast.error(typeof errorMsg === 'string' ? errorMsg : "Gửi yêu cầu thất bại.");
+            toast.error(typeof errorMsg === 'string' ? errorMsg : t('forgotPasswordFailed'));
         } finally {
             setIsLoading(false);
         }
@@ -49,9 +49,9 @@ const ForgotPasswordPage = () => {
     return (
         <div className={styles.container}>
             <div className={styles.card}>
-                <h1 className={styles.title}>Quên mật khẩu</h1>
+                <h1 className={styles.title}>{t('forgotPassword')}</h1>
                 <p className={styles.description}>
-                    Vui lòng nhập địa chỉ email đã đăng ký để nhận mã OTP đặt lại mật khẩu của bạn.
+                    {t('forgotPasswordInstruction')}
                 </p>
 
                 <form className={styles.form} onSubmit={handleSubmit}>
@@ -73,13 +73,13 @@ const ForgotPasswordPage = () => {
                         className={styles.submitBtn}
                         disabled={isLoading}
                     >
-                        {isLoading ? "Đang xử lý..." : "Gửi mã OTP"}
+                        {isLoading ? t('processing') : t('sendOtp')}
                     </button>
                 </form>
 
                 <div className={styles.linkWrapper}>
                     <Link to="/login" className={styles.backLink}>
-                        Quay lại Đăng nhập
+                        {t('backToLogin')}
                     </Link>
                 </div>
             </div>

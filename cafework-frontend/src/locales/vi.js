@@ -24,17 +24,25 @@ export default {
     updating: 'Đang cập nhật...',
     forgotPassword: 'Quên mật khẩu?',
     createAccount: 'Tạo tài khoản',
-
+    forgotPasswordInstruction: 'Vui lòng nhập địa chỉ email đã đăng ký để nhận mã OTP đặt lại mật khẩu của bạn.',
+    sendOtp: 'Gửi mã OTP',
     processing: 'Đang xử lý...',
+    resetPassword: 'Đặt lại mật khẩu',
+    resetPasswordInstruction: 'Nhập mật khẩu mới cho tài khoản {email}',
+    passwordMismatch: 'Mật khẩu không khớp',
+    passwordResetSuccess: 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.',
+    passwordResetFailed: 'Đặt lại mật khẩu thất bại',
+    passwordResetError: 'Đã xảy ra lỗi khi đặt lại mật khẩu',
+    passwordInvalid: 'Mật khẩu phải tối thiểu 8 ký tự, gồm chữ hoa và số/ký tự đặc biệt.',
 
     signup: 'Đăng ký',
 
     fullName: 'Họ tên',
     confirmPassword: 'Xác nhận mật khẩu',
-
+    otpSent: 'Mã OTP đã được gửi',
     normalUser: 'Người dùng',
     cafeOwner: 'Chủ quán',
-
+    newPasswordRequired: 'Mật khẩu mới là bắt buộc.',
     alreadyHaveAccount: 'Đã có tài khoản?',
     backToLogin: 'Đăng nhập',
 
@@ -44,7 +52,8 @@ export default {
     backToSignup: 'Quay lại đăng ký',
     otpInstruction:
         'Nhập mã xác thực 6 chữ số đã gửi tới',
-
+    otpWrong: 'Mã OTP không hợp lệ. Vui lòng thử lại.',
+    verifing: 'Đang xác thực...',
     home: 'Trang chủ',
     myList: 'Danh sách của tôi',
     searchHistory: 'Lịch sử tìm kiếm',
@@ -178,7 +187,7 @@ export default {
     seatAvailable: 'Ghế trống',
     seatOccupied: 'Đang sử dụng',
 
-    refreshLatest: '🔄 Làm mới',
+    updateLastest: '🔄 Cập nhật',
 
     addSeat: '+ Thêm ghế',
     deleteSeat: '- Xóa ghế',
@@ -250,4 +259,11 @@ export default {
     newPassword: 'Mật khẩu mới',
     translateToCurrentLang: 'Dịch',
     phoneLengthError: 'Định dạng số điện thoại không hợp lệ (phải đủ 10 chữ số)',
+    waitingForLocation: 'Đang chờ vị trí...',
+    routeTarget: 'Điểm đến',
+    locationPermissionRequired: 'Bật quyền truy cập vị trí để hiển thị lộ trình.',
+    yourLocation: 'Vị trí của bạn',
+    minute: 'phút',
+    hour: 'giờ',
+    day: 'ngày',
 }
