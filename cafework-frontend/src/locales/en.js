@@ -265,4 +265,7 @@ export default {
     hour: 'hr',
     day: 'day',
     viewDetails: 'View Details',
+    openHoursFormatError: 'Please enter business hours in the format HH:MM - HH:MM.',
+    phoneFormatError: 'Phone number must contain digits only.',
+    emailFormatError: 'Please enter a valid email address.',
 }

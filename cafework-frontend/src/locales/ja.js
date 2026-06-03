@@ -265,4 +265,7 @@ export default{
     hour: '時間',
     day: '日',
     viewDetails: '詳細を見る',
+    openHoursFormatError: '営業時間は HH:MM - HH:MM の形式で入力してください。',
+    phoneFormatError: '電話番号は数字のみで入力してください。',
+    emailFormatError: '有効なメールアドレスを入力してください。'
 }

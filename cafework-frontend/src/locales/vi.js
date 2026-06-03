@@ -267,4 +267,7 @@ export default {
     hour: 'giờ',
     day: 'ngày',
     viewDetails: 'Xem chi tiết',
+    openHoursFormatError: 'Vui lòng nhập đầy đủ giờ mở cửa và đóng cửa (HH:MM - HH:MM).',
+    phoneFormatError: 'Số điện thoại chỉ được chứa chữ số.',
+    emailFormatError: 'Email không đúng định dạng.',
 }
