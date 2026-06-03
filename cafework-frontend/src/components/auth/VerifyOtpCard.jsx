@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { t } from '../../utils/i18n';
 import styles from './VerifyOtpCard.module.css';
 import api from '../../api/axiosClient';
-import { t } from '../../utils/i18n';
 
 const VerifyOtpCard = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const VerifyOtpCard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (otpCode.length !== 6) {
-      toast.error('6桁の認証コードを入力してください。');
+      toast.error(t('otpValidationError'));
       return;
     }
 
@@ -28,7 +28,7 @@ const VerifyOtpCard = () => {
 
       if (response.status === 200) {
         const data = response.data;
-        toast.success('アカウント登録が完了しました！');
+        toast.success(t('signupCompleted'));
         
         // Save token and user info
         localStorage.setItem('token', data.token);
@@ -44,8 +44,8 @@ const VerifyOtpCard = () => {
         }
       }
     } catch (err) {
-      const errorMsg = err.response?.data || '認証に失敗しました。';
-      toast.error(typeof errorMsg === 'string' ? errorMsg : '認証に失敗しました。');
+      const errorMsg = err.response?.data;
+      toast.error(typeof errorMsg === 'string' ? errorMsg : t('verificationFailed'));
     } finally {
       setLoading(false);
     }

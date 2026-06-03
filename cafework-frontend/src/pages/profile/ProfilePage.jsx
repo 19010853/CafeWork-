@@ -138,7 +138,7 @@ const ProfilePage = () => {
         } catch (err) {
             const msg = getErrorMessage(err);
             setError(msg);
-            toast.error(msg);
+            toast.error(typeof msg === 'string' ? msg : t('errorOccurred'));
         } finally {
             setSaving(false);
         }

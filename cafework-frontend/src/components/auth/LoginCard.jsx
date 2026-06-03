@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { t } from '../../utils/i18n';
 import styles from './LoginCard.module.css';
 import api from '../../api/axiosClient';
-import { t } from '../../utils/i18n';
 
 const LoginCard = ({ onSwitchToSignup }) => {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ const LoginCard = ({ onSwitchToSignup }) => {
 
       if (response.status === 200) {
         const data = response.data;
-        toast.success('ログインに成功しました！');
+        toast.success(t('loginSuccess'));
 
         // Save token and user info
         localStorage.setItem('token', data.token);
@@ -65,8 +65,8 @@ const LoginCard = ({ onSwitchToSignup }) => {
         }
       }
     } catch (err) {
-      const errorMsg = err.response?.data || 'ログインに失敗しました。';
-      toast.error(typeof errorMsg === 'string' ? errorMsg : 'ログインに失敗しました。');
+      const errorMsg = err.response?.data;
+      toast.error(typeof errorMsg === 'string' ? errorMsg : t('loginFailed'));
     } finally {
       setLoading(false);
     }
