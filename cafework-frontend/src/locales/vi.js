@@ -266,4 +266,5 @@ export default {
     minute: 'phút',
     hour: 'giờ',
     day: 'ngày',
+    viewDetails: 'Xem chi tiết',
 }
