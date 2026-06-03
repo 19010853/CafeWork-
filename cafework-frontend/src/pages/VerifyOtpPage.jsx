@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './VerifyOtpPage.module.css';
 import api from '../api/axiosClient';
-
+import { toast } from 'react-hot-toast';
+import { t } from '../utils/i18n';
 const VerifyOtpPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,13 +21,25 @@ const VerifyOtpPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (otp.length !== 6) {
-      alert('Vui lòng nhập mã OTP gồm 6 chữ số.');
+      toast.error(t('otpInstruction'));
       return;
     }
 
     if (intent === 'RESET_PASSWORD') {
-      // Luồng Reset Password: Chuyển tiếp sang trang nhập mật khẩu mới
-      navigate('/reset-password', { state: { email: email, otpCode: otp } });
+      // Luồng Reset Password: Kiểm tra OTP trước khi chuyển sang trang đổi mật khẩu
+      setLoading(true);
+      try {
+        await api.post('/auth/verify-otp', {
+          email: email,
+          otpCode: otp,
+        });
+        navigate('/reset-password', { state: { email: email, otpCode: otp } });
+      } catch (err) {
+        const errorMsg = err.response?.data || 'Xác thực không thành công. Vui lòng thử lại.';
+        toast.error(typeof errorMsg === 'string' ? errorMsg : t('otpWrong'));
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
@@ -45,7 +58,7 @@ const VerifyOtpPage = () => {
       }
     } catch (err) {
       const errorMsg = err.response?.data || 'Xác thực không thành công. Vui lòng thử lại.';
-      alert(typeof errorMsg === 'string' ? errorMsg : 'Lỗi xác thực OTP');
+      toast.error(typeof errorMsg === 'string' ? errorMsg : t('otpWrong'));
     } finally {
       setLoading(false);
     }
@@ -57,9 +70,9 @@ const VerifyOtpPage = () => {
     <div className={styles.verifyContainer}>
       <main className={styles.mainContent}>
         <div className={styles.card}>
-          <h2 className={styles.title}>Xác thực OTP</h2>
+          <h2 className={styles.title}>{t('otpTitle')}</h2>
           <p className={styles.message}>
-            Vui lòng nhập mã gồm 6 chữ số đã được gửi đến email của bạn.
+            {t('otpInstruction')}
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -80,7 +93,7 @@ const VerifyOtpPage = () => {
               disabled={loading}
               className={styles.submitButton}
             >
-              {loading ? 'Đang xử lý...' : 'Xác nhận'}
+              {loading ? t('verifing') : t('verify')}
             </button>
           </form>
         </div>

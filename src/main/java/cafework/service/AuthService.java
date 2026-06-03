@@ -15,6 +15,7 @@ public interface AuthService {
     
     // Thêm mới các phương thức cho luồng Reset Password
     void processForgotPassword(String email) throws Exception;
+    void verifyOtp(VerifyOtpRequest request) throws Exception;
     void resetPassword(ResetPasswordRequest request) throws Exception;
 
     // Thêm mới phương thức cho luồng Change Password

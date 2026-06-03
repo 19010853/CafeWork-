@@ -24,17 +24,23 @@ export default{
     updating: '更新中...',
     forgotPassword: 'お忘れですか？',
     createAccount: '作成',
-
+    forgotPasswordInstruction: 'パスワードリセットのOTPを受け取るために、登録されたメールアドレスを入力してください。',
+    sendOtp: 'OTPを送信',
     processing: '処理中...',
-
+    resetPassword: 'パスワードをリセット',
     signup: 'アカウント登録',
-
+    resetPasswordInstruction: 'アカウント {email} の新しいパスワードを入力してください',
+    passwordMismatch: 'パスワードが一致しません',
+    passwordResetSuccess: 'パスワードがリセットされました！再度ログインしてください。',
+    passwordResetFailed: 'パスワードのリセットに失敗しました',
+    passwordResetError: 'パスワードのリセット中にエラーが発生しました',
+    passwordInvalid: 'パスワードは8文字以上で、大文字と数字/特殊文字を含める必要があります。',
     fullName: 'お名前',
     confirmPassword: 'パスワード（確認）',
-
+    otpSent: 'OTPが送信されました',
     normalUser: '一般ユーザー',
     cafeOwner: 'カフェオーナー',
-
+    newPasswordRequired: '新しいパスワードは必須です。',
     alreadyHaveAccount: '既にアカウントをお持ちですか？',
     backToLogin: 'ログインへ',
 
@@ -44,7 +50,8 @@ export default{
     backToSignup: '登録画面に戻る',
     otpInstruction:
         '宛に送信された6桁の認証コードを入力してください。',
-
+    otpWrong: '無効な認証コードです。もう一度お試しください。',
+    verifing: '認証中...',
     home: 'ホーム',
     myList: 'マイリスト',
     searchHistory: '検索履歴',
@@ -178,7 +185,7 @@ export default{
     seatAvailable: '空席',
     seatOccupied: '使用中',
 
-    refreshLatest: '🔄 最新に更新',
+    updateLastest: '🔄 更新',
 
     addSeat: '+ 座席追加',
     deleteSeat: '- 座席削除',
@@ -250,4 +257,11 @@ export default{
     newPassword: '新しいパスワード',
     translateToCurrentLang: '翻訳',
     phoneLengthError: '電話番号の形式が無効です（10桁でなければなりません）',
+    waitingForLocation: '位置情報取得中...',
+    routeTarget: 'ルート目標',
+    locationPermissionRequired: '位置情報の許可をオンにすると、ルートが表示されます。',
+    yourLocation: 'あなたの位置',
+    minute: '分',
+    hour: '時間',
+    day: '日',
 }

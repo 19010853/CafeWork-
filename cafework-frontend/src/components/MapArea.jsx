@@ -136,7 +136,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
 
                 L.marker(userCoordsRef.current, { icon: myCustomIcon })
                   .addTo(mapInstanceRef.current)
-                  .bindPopup('<b>あなたはここにいる!</b>')
+                  .bindPopup(`<b>${t('yourLocation')}</b>`)
                   .openPopup();
 
                 L.circle(userCoordsRef.current, { radius: 100, color: 'blue', fillOpacity: 0.1 })
@@ -258,8 +258,12 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
                     ${cafe.rating || 'N/A'}
                   </div>
                   <div style="display: inline-flex; align-items: center; padding: 4px 10px; background-color: #f5f5f5; border-radius: 20px;">
-                    <span style="width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background-color: ${cafe.seatStatus === '空席あり' ? '#10B981' : (cafe.seatStatus === '満席' ? '#EF4444' : '#F59E0B')};"></span>
-                    <span style="font-size: 12px; color: #555;">${cafe.seatStatus || '不明'}</span>
+                    <span style="width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background-color: ${cafe.seatStatus === 'AVAILABLE' ? '#10B981' : (cafe.seatStatus === 'FULL' ? '#EF4444' : '#F59E0B')};"></span>
+                    <span style={{ fontSize: '13px', color: '#555', marginLeft: '6px' }}>
+                      ${cafe.seatStatus === 'AVAILABLE' ? t('statusAvailable') : 
+                      cafe.seatStatus === 'ALMOST_FULL' ? t('statusAlmostFull') : 
+                      cafe.seatStatus === 'FULL' ? t('statusFull') : t('statusUnknown')}
+                    </span>
                   </div>
                 </div>
                 
@@ -270,7 +274,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
                   
                   <button class="route-btn" data-lat="${cafe.latitude}" data-lng="${cafe.longitude}" style="flex: 1; padding: 8px; background-color: #f0f0f0; color: #333; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-                    ルート案内
+                    {t('routeTarget')}
                   </button>
                 </div>
               </div>
@@ -353,7 +357,7 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
       {isCalculatingRoute && (
         <div className="route-loading-overlay">
           <div className="route-loading-spinner"></div>
-          <h3 style={{ margin: 0, color: '#333', fontSize: '16px' }}>ルートを計算中...</h3>
+          <h3 style={{ margin: 0, color: '#333', fontSize: '16px' }}>{t('waitingForLocation')}</h3>
         </div>
       )}
 

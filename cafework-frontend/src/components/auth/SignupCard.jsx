@@ -19,19 +19,20 @@ const SignupCard = ({ onSwitchToLogin }) => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.fullName) newErrors.fullName = 'お名前を入力してください。';
+    if (!formData.fullName) newErrors.fullName = t('nameRequired');
     if (!formData.email) {
-      newErrors.email = 'メールアドレスを入力してください。';
+      newErrors.email = t('emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = '有効なメールアドレスを入力してください。';
+      newErrors.email = t('emailInvalid');
     }
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[\d!@#$%^&*])(?=.{8,})/;
     if (!formData.password) {
-      newErrors.password = 'パスワードを入力してください。';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'パスワードは8文字以上である必要があります。';
+      newErrors.password = t('passwordRequired');
+    } else if (!passwordRegex.test(formData.password)) {
+      newErrors.password = t('passwordInvalid');
     }
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'パスワードが一致しません。';
+      newErrors.confirmPassword = t('passwordMismatch');
     }
     return newErrors;
   };
@@ -54,13 +55,13 @@ const SignupCard = ({ onSwitchToLogin }) => {
       });
 
       if (response.status === 200) {
-        toast.success('メールに認証コードを送信しました。');
+        toast.success(t('signupSuccess'));
         // Chuyển hướng sang trang nhập OTP, truyền kèm email
         navigate('/verify-otp', { state: { email: formData.email } });
       }
     } catch (err) {
-      const errorMsg = err.response?.data || '登録に失敗しました。';
-      toast.error(typeof errorMsg === 'string' ? errorMsg : '登録に失敗しました。');
+      const errorMsg = err.response?.data || t('signupFailed');
+      toast.error(typeof errorMsg === 'string' ? errorMsg : t('signupFailed'));
     } finally {
       setLoading(false);
     }

@@ -79,6 +79,22 @@ const HomePage = () => {
         }
     };
 
+    const formatDuration = (durationInMinutes) => {
+        const minutes = Number(durationInMinutes);
+        if (!Number.isFinite(minutes) || minutes < 0) return '';
+
+        const days = Math.floor(minutes / 1440);
+        const hours = Math.floor((minutes % 1440) / 60);
+        const remainingMinutes = minutes % 60;
+        const parts = [];
+
+        if (days > 0) parts.push(`${days} ${t('day')}`);
+        if (hours > 0) parts.push(`${hours} ${t('hour')}`);
+        if (remainingMinutes > 0 || parts.length === 0) parts.push(`${remainingMinutes} ${t('minute')}`);
+
+        return parts.join(' ');
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', fontFamily: 'sans-serif' }}>
 
@@ -116,7 +132,7 @@ const HomePage = () => {
                                 <>
                                     <div style={{ padding: '20px', borderBottom: '5px solid #f5f5f5' }}>
                                         <h2 style={{ margin: '0 0 10px 0', fontSize: '24px', color: '#0066ff' }}>
-                                            {routeData.distance} km <span style={{ fontSize: '16px', color: '#555' }}>/ {routeData.duration} 分</span>
+                                            {routeData.distance} km <span style={{ fontSize: '16px', color: '#555' }}>/ {formatDuration(routeData.duration)}</span>
                                         </h2>
                                         <p style={{ margin: 0, fontSize: '13px', color: '#888' }}>{t('trafficMayVary')}</p>
                                     </div>
@@ -141,15 +157,15 @@ const HomePage = () => {
                                 /* Nếu đang chờ cấp quyền định vị hoặc mạng chậm thì hiện bảng chờ này */
                                 <div style={{ padding: '20px' }}>
                                     <p style={{ margin: 0, fontSize: '14px', color: '#555', fontWeight: 700 }}>
-                                        現在地を取得中…
+                                        {t('waitingForLocation')}
                                     </p>
                                     {routeTarget?.name && (
                                         <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#333', fontWeight: 700 }}>
-                                            目的地: {routeTarget.name}
+                                            {t('routeTarget')}: {routeTarget.name}
                                         </p>
                                     )}
                                     <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#888', lineHeight: 1.5 }}>
-                                        位置情報の許可をオンにすると、ルートが表示されます。
+                                        {t('locationPermissionRequired')}
                                     </p>
                                 </div>
                             )}

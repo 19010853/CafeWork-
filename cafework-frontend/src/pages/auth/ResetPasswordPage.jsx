@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './ResetPasswordPage.module.css';
 import api from '../../api/axiosClient';
-
+import { t } from '../../utils/i18n';
 const ResetPasswordPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -19,7 +19,7 @@ const ResetPasswordPage = () => {
 
     useEffect(() => {
         if (!email || !otpCode) {
-            toast.error('Thông tin xác thực không hợp lệ. Vui lòng thử lại.');
+            toast.error(t('invalidAuthInfo'));
             navigate('/login');
         }
     }, [email, otpCode, navigate]);
@@ -29,13 +29,13 @@ const ResetPasswordPage = () => {
         const passwordRegex = /^(?=.*[A-Z])(?=.*[\d!@#$%^&*])(?=.{8,})/;
         
         if (!form.newPassword) {
-            newErrors.newPassword = 'Mật khẩu mới không được để trống';
+            newErrors.newPassword = t('newPasswordRequired');
         } else if (!passwordRegex.test(form.newPassword)) {
-            newErrors.newPassword = 'Mật khẩu phải tối thiểu 8 ký tự, gồm chữ hoa và số/ký tự đặc biệt';
+            newErrors.newPassword = t('passwordInvalid');
         }
 
         if (form.confirmPassword !== form.newPassword) {
-            newErrors.confirmPassword = 'Xác nhận mật khẩu không khớp';
+            newErrors.confirmPassword = t('passwordMismatch');
         }
 
         setErrors(newErrors);
@@ -53,11 +53,11 @@ const ResetPasswordPage = () => {
                 otpCode,
                 newPassword: form.newPassword
             });
-            toast.success('Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.');
+            toast.success(t('passwordResetSuccess'));
             navigate('/login');
         } catch (error) {
-            const errorMsg = error.response?.data || 'Đặt lại mật khẩu thất bại';
-            toast.error(typeof errorMsg === 'string' ? errorMsg : 'Lỗi đặt lại mật khẩu');
+            const errorMsg = error.response?.data || t('passwordResetFailed');
+            toast.error(typeof errorMsg === 'string' ? errorMsg : t('passwordResetError'));
         } finally {
             setLoading(false);
         }
@@ -68,12 +68,12 @@ const ResetPasswordPage = () => {
     return (
         <div className={styles.page}>
             <div className={styles.card}>
-                <h1 className={styles.title}>Đặt lại mật khẩu</h1>
-                <p className={styles.subtitle}>Nhập mật khẩu mới cho tài khoản {email}</p>
-                
+                <h1 className={styles.title}>{t('resetPassword')}</h1>
+                <p className={styles.subtitle}>{t('resetPasswordInstruction', { email })}</p>
+
                 <form className={styles.form} onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Mật khẩu mới</label>
+                        <label className={styles.label}>{t('newPassword')}</label>
                         <input
                             type="password"
                             className={`${styles.input} ${errors.newPassword ? styles.inputError : ''}`}
@@ -85,7 +85,7 @@ const ResetPasswordPage = () => {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Xác nhận mật khẩu mới</label>
+                        <label className={styles.label}>{t('confirmPassword')}</label>
                         <input
                             type="password"
                             className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
@@ -97,7 +97,7 @@ const ResetPasswordPage = () => {
                     </div>
 
                     <button type="submit" className={styles.submitBtn} disabled={loading}>
-                        {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+                        {loading ? t('processing') : t('resetPassword')}
                     </button>
                     
                     <button 
@@ -105,7 +105,7 @@ const ResetPasswordPage = () => {
                         className={styles.backBtn}
                         onClick={() => navigate('/login')}
                     >
-                        Quay lại Đăng nhập
+                        {t('backToLogin')}
                     </button>
                 </form>
             </div>
