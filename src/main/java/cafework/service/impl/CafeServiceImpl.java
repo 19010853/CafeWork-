@@ -1,5 +1,4 @@
 package cafework.service.impl;
-
 import cafework.dto.SeatStatusUpdateRequest;
 import cafework.dto.SeatStatusUpdateResponse;
 import cafework.dto.request.CafeRequest;
@@ -15,7 +14,6 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -132,17 +130,17 @@ public class CafeServiceImpl implements CafeService {
         // Email format check
         String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
         if (!Pattern.matches(emailRegex, request.getEmail())) {
-            throw new IllegalArgumentException(t("emailFormatError"));
+            throw new IllegalArgumentException("Định dạng email không hợp lệ.");
         }
 
         // Phone: chỉ chứa số
         if (!Pattern.matches("^\\d+$", request.getPhone())) {
-            throw new IllegalArgumentException(t("phoneFormatError"));
+            throw new IllegalArgumentException("Định dạng số điện thoại không hợp lệ.");
         }
 
         // OpenHours: HH:MM format
         if (request.getOpenHours() == null || !Pattern.matches("^([0-1]?[0-9]|2[0-3]):[0-5][0-9] - ([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", request.getOpenHours().trim())) {
-            throw new IllegalArgumentException(t("openHoursFormatError"));
+            throw new IllegalArgumentException("Định dạng giờ mở cửa không hợp lệ. Ví dụ: 08:00 - 22:00");
         }
     }
 
