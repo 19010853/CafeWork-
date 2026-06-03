@@ -21,7 +21,7 @@ const VerifyOtpPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (otp.length !== 6) {
-      toast.error(t('otpInstruction'));
+      toast.error(t('otpValidationError'));
       return;
     }
 

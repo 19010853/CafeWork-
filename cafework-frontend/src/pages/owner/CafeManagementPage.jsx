@@ -210,7 +210,7 @@ const CafeManagementPage = () => {
     
     const error = validate();
     if (error) {
-      toast.error(error);
+      toast.error(typeof error === 'string' ? error : t('updateFailed'));
       return;
     }
 

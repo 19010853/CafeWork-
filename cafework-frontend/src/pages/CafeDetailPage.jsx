@@ -445,11 +445,11 @@ const CafeDetailPage = () => {
       setShowReviewModal(false);
       fetchReviews();
       
-      toast.success(t('reviewSubmitted') || 'レビューを投稿しました。');
+      toast.success(t('reviewSubmitted'));
 
     } catch (error) {
       console.error("Lỗi khi gửi tấu chương:", error);
-      toast.error('レビュー投稿に失敗しました。');
+      toast.error(t('reviewSubmitFailed'));
     } finally {
       setReviewSubmitting(false);
     }

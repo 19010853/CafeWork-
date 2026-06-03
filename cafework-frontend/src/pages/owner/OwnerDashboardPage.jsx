@@ -79,13 +79,13 @@ const OwnerDashboardPage = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        toast.error('ログインしていないか、セッションが切れています。');
+        toast.error(t('loginSessionExpired'));
         return;
       }
 
       const cafeId = localStorage.getItem('cafeId'); 
       if (!cafeId) {
-        toast.error('管理するカフェが選択されていません。');
+        toast.error(t('noCafeSelected'));
         return;
       }
 
@@ -105,11 +105,12 @@ const OwnerDashboardPage = () => {
     } catch (error) {
       console.error('Truyền lệnh thất bại!', error);
       if (error.response) {
-        toast.error(`申し訳ありません、サーバーが要求を拒否しました: ${error.response.data.message || '不明なエラー'}`);
+        const msg = error.response.data?.message || t('serverRequestDenied');
+        toast.error(typeof msg === 'string' ? msg : t('serverRequestDenied'));
       } else if (error.request) {
-        toast.error('サーバーに接続できません。バックエンドを確認してください。');
+        toast.error(t('serverConnectionFailed'));
       } else {
-        toast.error('内部エラーが発生しました。');
+        toast.error(t('internalError'));
       }
     }
   };
@@ -158,12 +159,12 @@ const OwnerDashboardPage = () => {
         }
       );
 
-      toast.success('画像は正常にアップロードされました！');
+      toast.success(t('uploadSuccess'));
       fetchAllCafeData(); // Tải lại trang để ảnh hiện ra
 
     } catch (error) {
       console.error('Lỗi tải ảnh:', error);
-      toast.error('画像のアップロードに失敗しました。');
+      toast.error(t('uploadFailed'));
     } finally {
       event.target.value = null; // Dọn dẹp cơ quan ngầm
     }
@@ -213,14 +214,14 @@ const OwnerDashboardPage = () => {
 
     } catch (error) {
       console.error('Lỗi khi xóa ảnh:', error);
-      toast.error('画像の削除に失敗しました。');
+      toast.error(t('deleteImageFailed'));
     }
   };
   
   // Chiêu thức 9: Gửi lệnh đúc Coupon xuống Database
   const handleCreateCoupon = async () => {
     if (!couponForm.code || !couponForm.discountValue || !couponForm.validFrom || !couponForm.validTo) {
-      toast.error('必須項目をすべて入力してください。');
+      toast.error(t('fillAllFields'));
       return;
     }
 
@@ -242,7 +243,7 @@ const OwnerDashboardPage = () => {
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
-      toast.success('クーポンの発行に成功しました！');
+      toast.success(t('createCouponSuccess'));
       
       setShowCouponModal(false);
       setCouponForm({ code: '', description: '', discountValue: '', validFrom: '', validTo: '' });
@@ -250,7 +251,7 @@ const OwnerDashboardPage = () => {
 
     } catch (error) {
       console.error('Lỗi khi đúc vé:', error);
-      toast.error('クーポン作成中にエラーが発生しました。');
+      toast.error(t('createCouponFailed'));
     }
   };
 
@@ -280,7 +281,7 @@ const OwnerDashboardPage = () => {
 
     } catch (error) {
       console.error("Lỗi khi xé vé:", error);
-      toast.error('クーポン削除中に技術的な問題が発生しました。');
+      toast.error(t('deleteCouponFailed'));
     }
   };
   // ==========================================
@@ -354,17 +355,17 @@ const OwnerDashboardPage = () => {
         }
       );
 
-      toast.success('変更内容はデータベースに保存されました！');
+      toast.success(t('saveSeatsSuccess'));
       fetchAllCafeData(); // Tải lại dữ liệu chuẩn từ DB
     } catch (error) {
       console.error("Lưu thất bại:", error);
-      toast.error('保存中にエラーが発生しました。');
+      toast.error(t('saveSeatsFailed'));
     }
   };
   const handleAddNewSeats = () => {
     const amount = parseInt(addAmount, 10);
     if (isNaN(amount) || amount <= 0) {
-      toast.error('座席数は0より大きくなければなりません。');
+      toast.error(t('fillAllFields'));
       return;
     }
 
@@ -398,11 +399,11 @@ const OwnerDashboardPage = () => {
     console.log("🚩 ĐÃ VÀO BÊN TRONG HÀM XÓA GHẾ!");
     const amount = parseInt(deleteAmount, 10);
     if (isNaN(amount) || amount <= 0) {
-      toast.error('削除する座席数は0より大きくなければなりません。');
+      toast.error(t('fillAllFields'));
       return;
     }
     if (amount > seats.length) {
-      toast.error(`現在の座席数は${seats.length}席しかありません。${amount}席は削除できません。`);
+      toast.error(t('deleteAmountExceedsTotal'));
       return;
     }
 
