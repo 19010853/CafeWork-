@@ -132,17 +132,17 @@ public class CafeServiceImpl implements CafeService {
         // Email format check
         String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
         if (!Pattern.matches(emailRegex, request.getEmail())) {
-            throw new IllegalArgumentException("Email không đúng định dạng.");
+            throw new IllegalArgumentException(t("emailFormatError"));
         }
 
         // Phone: chỉ chứa số
         if (!Pattern.matches("^\\d+$", request.getPhone())) {
-            throw new IllegalArgumentException("Số điện thoại chỉ được chứa chữ số.");
+            throw new IllegalArgumentException(t("phoneFormatError"));
         }
 
         // OpenHours: HH:MM format
         if (request.getOpenHours() == null || !Pattern.matches("^([0-1]?[0-9]|2[0-3]):[0-5][0-9] - ([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", request.getOpenHours().trim())) {
-            throw new IllegalArgumentException("Vui lòng nhập đầy đủ giờ mở cửa và đóng cửa (HH:MM - HH:MM).");
+            throw new IllegalArgumentException(t("openHoursFormatError"));
         }
     }
 

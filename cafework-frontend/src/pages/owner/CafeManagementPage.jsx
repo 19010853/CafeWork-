@@ -187,6 +187,11 @@ const CafeManagementPage = () => {
     if (!/^\d+$/.test(formData.phone)) return t('invalidPhone');
     if (formData.phone.length < 10) {
         return t('phoneLengthError');
+  }
+
+    // OpenHours format check
+    if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9] - ([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(formData.openHours)) {
+        return t('openHoursFormatError');
     }
 
     return null;
