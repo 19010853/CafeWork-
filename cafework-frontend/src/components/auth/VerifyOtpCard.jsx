@@ -37,7 +37,11 @@ const VerifyOtpCard = () => {
         localStorage.setItem('user', JSON.stringify(data));
         
         // Redirect to Home
-        navigate('/');
+        if(data.role === 'OWNER') {
+          navigate('/owner/dashboard');
+        } else {
+          navigate('/');
+        }
       }
     } catch (err) {
       const errorMsg = err.response?.data || '認証に失敗しました。';
