@@ -14,6 +14,14 @@ This guide connects the Vercel frontend to a public Spring Boot backend on Railw
 https://<backend-service>.up.railway.app
 ```
 
+The repository includes `railway.toml` to force Railway to build with the root `Dockerfile` and to use `/actuator/health` as the service healthcheck. In the deployment logs, the build should show Dockerfile steps such as:
+
+```text
+[internal] load build definition from Dockerfile
+```
+
+If Railway logs a command like `mvn ... -Pproduction`, the service is still using Railpack/buildpack settings or an old deployment. Check the service source branch and redeploy the latest `Bamia-Update` commit.
+
 ## 2. Backend Variables
 
 Set these variables on the Railway backend service:
