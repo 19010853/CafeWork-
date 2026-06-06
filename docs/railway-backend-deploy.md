@@ -27,12 +27,36 @@ If Railway logs a command like `mvn ... -Pproduction`, the service is still usin
 Set these variables on the Railway backend service:
 
 ```env
-DB_URL=jdbc:postgresql://<railway-postgres-host>:<railway-postgres-port>/<railway-postgres-db>?sslmode=require&stringtype=unspecified
+DB_URL=jdbc:postgresql://<railway-postgres-host>:<railway-postgres-port>/<railway-postgres-db>?stringtype=unspecified
 DB_USERNAME=<railway-postgres-user>
 DB_PASSWORD=<railway-postgres-password>
 MAIL_USERNAME=<smtp-user>
 MAIL_PASSWORD=<smtp-app-password>
 APP_CORS_ALLOWED_ORIGINS=https://<vercel-frontend-domain>
+```
+
+Use the PostgreSQL service values from Railway's `Connect` or `Variables` tab:
+
+```text
+PGHOST
+PGPORT
+PGDATABASE
+PGUSER
+PGPASSWORD
+```
+
+For a backend service in the same Railway project, prefer the private/internal host. For example:
+
+```env
+DB_URL=jdbc:postgresql://postgres.railway.internal:5432/railway?stringtype=unspecified
+DB_USERNAME=<PGUSER>
+DB_PASSWORD=<PGPASSWORD>
+```
+
+Only use `sslmode=require` when the URL points to Railway's public TCP proxy host:
+
+```env
+DB_URL=jdbc:postgresql://<public-host>:<public-port>/<database>?sslmode=require&stringtype=unspecified
 ```
 
 Do not add Railway's suggested local variables. Remove these if they were added:
@@ -57,6 +81,8 @@ psql "<railway-postgres-url>" -f UpdateDBSeat.sql
 ```
 
 If `psql` is not installed locally, use Railway's database query console or install PostgreSQL client tools.
+
+Do not paste SQL into the backend service `CafeWork-` console. That console is a Linux shell inside the app container, so `select ...` will be interpreted as a bash command. Open the Railway PostgreSQL service instead, then use its query/data console or a `psql` connection string from the PostgreSQL service `Connect` tab.
 
 If `/actuator/health/readiness` is `UP` but `/api/cafes` returns `500`, the database connection is alive but the schema or seed data may be incomplete. Check the Railway backend HTTP/deploy logs for `PSQLException`, `SQLGrammarException`, `relation ... does not exist`, or `column ... does not exist`, then verify the main tables:
 
