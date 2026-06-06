@@ -35,7 +35,17 @@ MAIL_PASSWORD=<smtp-app-password>
 APP_CORS_ALLOWED_ORIGINS=https://<vercel-frontend-domain>
 ```
 
-Do not set `SERVER_PORT` on Railway unless you need a local override. Railway provides `PORT`, and the app reads it automatically.
+Do not add Railway's suggested local variables. Remove these if they were added:
+
+```env
+SERVER_PORT=8081
+DB_URL=jdbc:postgresql://localhost:5400/CafeWork?stringtype=unspecified
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+APP_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
+Railway provides `PORT`, and the app reads it automatically. The backend service should use Railway PostgreSQL variables, not local Docker PostgreSQL values.
 
 ## 3. Import Database
 
