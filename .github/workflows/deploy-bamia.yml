@@ -88,11 +88,8 @@ jobs:
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Build Vercel output
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy Vercel output
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy frontend
+        run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
 
   docker-publish:
     name: Publish Docker images
