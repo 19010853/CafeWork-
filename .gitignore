@@ -131,3 +131,5 @@ desktop.ini
 tmp/
 temp/
 src/main/resources/application.properties
+.vercel
+.env*
