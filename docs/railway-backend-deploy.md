@@ -14,7 +14,7 @@ This guide connects the Vercel frontend to a public Spring Boot backend on Railw
 https://<backend-service>.up.railway.app
 ```
 
-The repository includes `railway.toml` to force Railway to build with the root `Dockerfile` and to use `/actuator/health` as the service healthcheck. In the deployment logs, the build should show Dockerfile steps such as:
+The repository includes `railway.toml` to force Railway to build with the root `Dockerfile` and to use `/actuator/health/liveness` as the service healthcheck. The liveness endpoint only confirms that the app process has started; database connectivity is checked separately through readiness or API requests. In the deployment logs, the build should show Dockerfile steps such as:
 
 ```text
 [internal] load build definition from Dockerfile
@@ -60,10 +60,16 @@ Redeploy the Vercel production deployment after changing this value.
 
 ## 5. Verify
 
-Check the backend:
+Check that the backend process is live:
 
 ```text
-https://<backend-service>.up.railway.app/actuator/health
+https://<backend-service>.up.railway.app/actuator/health/liveness
+```
+
+After Railway PostgreSQL variables are set and the SQL files are imported, check database readiness and API data:
+
+```text
+https://<backend-service>.up.railway.app/actuator/health/readiness
 https://<backend-service>.up.railway.app/api/cafes
 ```
 
