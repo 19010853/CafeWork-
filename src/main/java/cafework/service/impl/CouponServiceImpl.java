@@ -14,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -86,7 +85,7 @@ public class CouponServiceImpl implements CouponService {
     }
 
     @Override
-    public void deleteCoupon(String couponId) {
+        public void deleteCoupon(UUID couponId) {
 
         if (!couponRepository.existsById(couponId)) {
             throw new RuntimeException("Coupon not found");
@@ -107,13 +106,13 @@ public class CouponServiceImpl implements CouponService {
         CouponResponse response = new CouponResponse();
 
         response.setId(coupon.getId());
+        response.setCafeId(coupon.getCafeId());
         response.setCode(coupon.getCode());
         response.setDescription(coupon.getDescription());
         response.setDiscountValue(coupon.getDiscountValue());
         response.setValidFrom(coupon.getValidFrom());
         response.setValidTo(coupon.getValidTo());
-
-        LocalDate today = LocalDate.now();
+        response.setCreatedAt(coupon.getCreatedAt());
 
         boolean active =
                 LocalDateTime.now().isAfter(coupon.getValidFrom())

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './VerifyOtpPage.module.css';
 import api from '../api/axiosClient';
@@ -9,6 +9,7 @@ const VerifyOtpPage = () => {
   const location = useLocation();
   const email = location.state?.email;
   const intent = location.state?.intent;
+  const roleFromSignup = location.state?.role;
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -52,9 +53,20 @@ const VerifyOtpPage = () => {
       });
 
       if (response.status === 200) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data));
-        navigate('/');
+        const data = response.data;
+        const role = data.role || roleFromSignup || 'USER';
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', role);
+        localStorage.setItem('fullName', data.fullName);
+        localStorage.setItem('user', JSON.stringify({ ...data, role }));
+        if (data.cafeId) {
+          localStorage.setItem('cafeId', data.cafeId);
+        } else {
+          localStorage.removeItem('cafeId');
+        }
+
+        navigate(role === 'OWNER' ? '/owner/management' : '/');
       }
     } catch (err) {
       const errorMsg = err.response?.data || 'Xác thực không thành công. Vui lòng thử lại.';

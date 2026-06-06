@@ -1,0 +1,52 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "db: up",
+            "type": "shell",
+            "command": "docker compose up -d cafework-postgres",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "db: logs",
+            "type": "shell",
+            "command": "docker compose logs -f cafework-postgres",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "isBackground": true
+        },
+        {
+            "label": "db: reset-import",
+            "type": "shell",
+            "command": "docker compose down -v; docker compose up -d cafework-postgres",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "frontend: install",
+            "type": "shell",
+            "command": "npm ci",
+            "options": {
+                "cwd": "${workspaceFolder}/cafework-frontend"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "frontend: dev",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": {
+                "cwd": "${workspaceFolder}/cafework-frontend"
+            },
+            "problemMatcher": [],
+            "isBackground": true
+        }
+    ]
+}

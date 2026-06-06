@@ -1,0 +1,22 @@
+services:
+  cafework-postgres:
+    image: postgres:17
+    container_name: cafework-postgres
+    environment:
+      POSTGRES_DB: CafeWork
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5400:5432"
+    volumes:
+      - cafework_pgdata:/var/lib/postgresql/data
+      - ./CafeWork.sql:/docker-entrypoint-initdb.d/01-CafeWork.sql:ro
+      - ./UpdateDBSeat.sql:/docker-entrypoint-initdb.d/02-UpdateDBSeat.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d CafeWork"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  cafework_pgdata:

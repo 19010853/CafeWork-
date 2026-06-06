@@ -3,7 +3,8 @@ package cafework.model;
 import jakarta.persistence.*;
 import java.util.UUID;
 import java.time.LocalDateTime;
-import org.hibernate.validator.constraints.br.CNPJ;
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "coupons")
 public class Coupon {
@@ -22,7 +23,7 @@ public class Coupon {
     private String description;
 
     @Column(name = "discount_value")
-    private String discountValue;
+    private BigDecimal discountValue;
 
     @Column(name = "valid_from")
     private LocalDateTime validFrom;
@@ -68,11 +69,11 @@ public class Coupon {
         this.description = description;
     }
 
-    public String getDiscountValue() {
+    public BigDecimal getDiscountValue() {
         return discountValue;
     }
 
-    public void setDiscountValue(String discountValue) {
+    public void setDiscountValue(BigDecimal discountValue) {
         this.discountValue = discountValue;
     }
 

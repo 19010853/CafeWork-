@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import axiosClient from '../api/axiosClient';
 import { isBookmarked, toggleBookmark } from '../utils/userLocalStore';
 import { t } from '../utils/i18n';
 import { getLang } from '../utils/userLocalStore';
@@ -383,8 +384,8 @@ const CafeDetailPage = () => {
 
   const fetchCafeDetails = () => {
     setIsRefreshing(true);
-    axios
-      .get(`http://localhost:8080/api/cafes/${id}`)
+    axiosClient
+      .get(`/cafes/${id}`)
       .then((res) => {
         setCafe(res.data);
         setLoading(false);
@@ -400,8 +401,8 @@ const CafeDetailPage = () => {
   
   const fetchReviews = () => {
     setReviewsLoading(true);
-    axios
-      .get(`http://localhost:8080/api/reviews`)
+    axiosClient
+      .get('/reviews')
       .then((res) => {
         const cafeReviews = res.data.filter((r) => r.cafeId === id);
         setReviews(cafeReviews);
@@ -416,7 +417,7 @@ const CafeDetailPage = () => {
 
   const fetchCoupons = async () => {
     try {
-      const res = await axios.get(`http://localhost:8080/api/coupons/cafe/${id}`);
+      const res = await axiosClient.get(`/coupons/cafe/${id}`);
       setCoupons(res.data);
     } catch (err) {
       console.error('Coupon fetch error:', err);
@@ -436,7 +437,7 @@ const CafeDetailPage = () => {
         content: newReviewContent,
       };
 
-      await axios.post('http://localhost:8080/api/reviews', payload, {
+      await axiosClient.post('/reviews', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

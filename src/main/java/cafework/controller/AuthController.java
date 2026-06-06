@@ -9,6 +9,8 @@ import cafework.dto.request.ChangePasswordRequest;
 import cafework.dto.response.AuthResponse;
 import cafework.service.AuthService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +23,8 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private AuthService authService;
@@ -35,7 +39,8 @@ public class AuthController {
             pendingRegistrations.put(request.getEmail(), request);
             return ResponseEntity.ok("OTP sent to your email.");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.error("Failed to initiate signup for email={}", request.getEmail(), e);
+            return ResponseEntity.badRequest().body(toClientErrorMessage(e, "Failed to send OTP email."));
         }
     }
 
@@ -109,5 +114,10 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Có lỗi xảy ra: " + e.getMessage());
         }
+    }
+
+    private String toClientErrorMessage(Exception e, String fallback) {
+        String message = e.getMessage();
+        return message == null || message.isBlank() ? fallback : message;
     }
 }

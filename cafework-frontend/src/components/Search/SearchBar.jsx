@@ -149,7 +149,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
 
             <div style={{ padding: '10px 15px', backgroundColor: 'white', zIndex: 10 }}>
                 <form onSubmit={onSubmit} className="search-box-modern" ref={searchBoxRef}>
-                    <div className="input-wrapper" style={{ position: 'relative', width: '100%' }}>
+                    <div className="input-wrapper">
                         <span className="search-icon">🔍</span>
                         <input
                             type="text"
@@ -158,7 +158,6 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
                             onChange={handleInputChange}
                             onFocus={() => { if (keyword.trim().length > 0) setShowDropdown(true) }}
                             className="search-input-modern"
-                            style={{ width: '100%', padding: '10px 10px 10px 35px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none' }}
                         />
 
                         {showDropdown && keyword.trim().length > 0 && (
@@ -177,7 +176,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
 
                     {/* BỘ LỌC CÓ MENU DROPDOWN TÍCH HỢP */}
                     <div style={{ position: 'relative' }} ref={sortMenuRef}>
-                        <button type="button" style={filterBtnStyle} onClick={() => setShowSortMenu(!showSortMenu)}>
+                        <button type="button" className="filter-btn-square" onClick={() => setShowSortMenu(!showSortMenu)}>
                             <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none">
                                 <line x1="4" y1="21" x2="4" y2="14"></line>
                                 <line x1="4" y1="10" x2="4" y2="3"></line>
@@ -327,12 +326,6 @@ const autocompleteStyle = {
     boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: '250px', overflowY: 'auto'
 };
 const acItemStyle = { padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f5f5f5', transition: 'background-color 0.2s' };
-const filterBtnStyle = {
-    marginLeft: '8px', padding: '10px', backgroundColor: '#f8f9fa',
-    border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center'
-};
-
 const sortDropdownStyle = {
     position: 'absolute', top: '110%', right: 0, width: '220px',
     backgroundColor: '#fff', border: '1px solid #eee', borderRadius: '8px',

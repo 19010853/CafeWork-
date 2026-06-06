@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import styles from './SignupCard.module.css';
@@ -16,6 +16,7 @@ const SignupCard = ({ onSwitchToLogin }) => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
 
   const validate = () => {
     const newErrors = {};
@@ -39,12 +40,15 @@ const SignupCard = ({ onSwitchToLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submittingRef.current) return;
+
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
     try {
       const response = await api.post('/auth/signup/initiate', {
@@ -57,12 +61,13 @@ const SignupCard = ({ onSwitchToLogin }) => {
       if (response.status === 200) {
         toast.success(t('signupSuccess'));
         // Chuyển hướng sang trang nhập OTP, truyền kèm email
-        navigate('/verify-otp', { state: { email: formData.email } });
+        navigate('/verify-otp', { state: { email: formData.email, role: formData.role } });
       }
     } catch (err) {
       const errorMsg = err.response?.data || t('signupFailed');
       toast.error(typeof errorMsg === 'string' ? errorMsg : t('signupFailed'));
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };
@@ -96,6 +101,8 @@ const SignupCard = ({ onSwitchToLogin }) => {
           <label className={styles.label}>{t('fullName')}</label>
           <input
             type="text"
+            name="name"
+            autoComplete="name"
             className={`${styles.input} ${errors.fullName ? styles.inputError : ''}`}
             placeholder="山田 太郎"
             value={formData.fullName}
@@ -108,6 +115,8 @@ const SignupCard = ({ onSwitchToLogin }) => {
           <label className={styles.label}>{t('email')}</label>
           <input
             type="email"
+            name="email"
+            autoComplete="email"
             className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
             placeholder="example@mail.com"
             value={formData.email}
@@ -120,6 +129,8 @@ const SignupCard = ({ onSwitchToLogin }) => {
           <label className={styles.label}>{t('password')}</label>
           <input
             type="password"
+            name="password"
+            autoComplete="new-password"
             className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
             placeholder="********"
             value={formData.password}
@@ -132,6 +143,8 @@ const SignupCard = ({ onSwitchToLogin }) => {
           <label className={styles.label}>{t('confirmPassword')}</label>
           <input
             type="password"
+            name="confirmPassword"
+            autoComplete="new-password"
             className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
             placeholder="********"
             value={formData.confirmPassword}

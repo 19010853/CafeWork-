@@ -1,16 +1,18 @@
 package cafework.dto.response;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class CouponResponse {
 
-    private String id;
-    private String cafeId;
+    private UUID id;
+    private UUID cafeId;
 
     private String code;
     private String description;
 
-    private Integer discountValue;
+    private BigDecimal discountValue;
 
     private LocalDateTime validFrom;
     private LocalDateTime validTo;
@@ -22,19 +24,19 @@ public class CouponResponse {
     public CouponResponse() {
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
-    public String getCafeId() {
+    public UUID getCafeId() {
         return cafeId;
     }
 
-    public void setCafeId(String cafeId) {
+    public void setCafeId(UUID cafeId) {
         this.cafeId = cafeId;
     }
 
@@ -54,11 +56,11 @@ public class CouponResponse {
         this.description = description;
     }
 
-    public Integer getDiscountValue() {
+    public BigDecimal getDiscountValue() {
         return discountValue;
     }
 
-    public void setDiscountValue(Integer discountValue) {
+    public void setDiscountValue(BigDecimal discountValue) {
         this.discountValue = discountValue;
     }
 

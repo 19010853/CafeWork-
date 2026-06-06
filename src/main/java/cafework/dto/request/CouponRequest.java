@@ -1,12 +1,13 @@
 package cafework.dto.request;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class CouponRequest {
 
     private String code;
     private String description;
-    private Integer discountValue;
+    private BigDecimal discountValue;
     private LocalDateTime validFrom;
     private LocalDateTime validTo;
 
@@ -29,11 +30,11 @@ public class CouponRequest {
         this.description = description;
     }
 
-    public Integer getDiscountValue() {
+    public BigDecimal getDiscountValue() {
         return discountValue;
     }
 
-    public void setDiscountValue(Integer discountValue) {
+    public void setDiscountValue(BigDecimal discountValue) {
         this.discountValue = discountValue;
     }
 

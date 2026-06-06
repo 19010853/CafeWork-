@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom';;
 import toast from 'react-hot-toast';
+import axiosClient from '../../api/axiosClient';
 import { t } from '../../utils/i18n';
 const OwnerDashboardPage = () => {
   // ==========================================
@@ -44,9 +45,9 @@ const OwnerDashboardPage = () => {
 
       // Cử 3 đạo quân đi lấy dữ liệu cùng một lúc cho nhanh (Promise.all)
       const [seatsRes, imagesRes, couponsRes] = await Promise.all([
-        axios.get(`http://localhost:8080/api/cafes/${cafeId}/seats`, { headers }),
-        axios.get(`http://localhost:8080/api/cafes/${cafeId}/images`, { headers }),
-        axios.get(`http://localhost:8080/api/cafes/${cafeId}/coupons`, { headers })
+        axiosClient.get(`/cafes/${cafeId}/seats`, { headers }),
+        axiosClient.get(`/cafes/${cafeId}/images`, { headers }),
+        axiosClient.get(`/cafes/${cafeId}/coupons`, { headers })
       ]);
       
       // Nhận hàng về và cất vào kho
@@ -89,8 +90,8 @@ const OwnerDashboardPage = () => {
         return;
       }
 
-      const response = await axios.patch(
-        `http://localhost:8080/api/cafes/${cafeId}/seat-status`, 
+      const response = await axiosClient.patch(
+        `/cafes/${cafeId}/seat-status`, 
         { seatStatus: newStatus },
         {
           headers: {
@@ -148,8 +149,8 @@ const OwnerDashboardPage = () => {
       const token = localStorage.getItem('token');
       const cafeId = localStorage.getItem('cafeId');
       
-      await axios.post(
-        `http://localhost:8080/api/cafes/${cafeId}/images`, 
+      await axiosClient.post(
+        `/cafes/${cafeId}/images`, 
         { imageUrl: uploadedImageUrl }, // Chỉ gửi một cục JSON chứa URL
         {
           headers: {
@@ -197,8 +198,8 @@ const OwnerDashboardPage = () => {
       if (!cafeId) return;
 
       // Phái sứ giả mang lệnh chém xuống Spring Boot
-      await axios.delete(
-        `http://localhost:8080/api/cafes/${cafeId}/images/${imageId}`,
+      await axiosClient.delete(
+        `/cafes/${cafeId}/images/${imageId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -237,8 +238,8 @@ const OwnerDashboardPage = () => {
       };
 
       // Sứ giả mang tờ khai chuẩn (submitData) xuống Spring Boot
-      await axios.post(
-        `http://localhost:8080/api/cafes/${cafeId}/coupons`,
+      await axiosClient.post(
+        `/cafes/${cafeId}/coupons`,
         submitData, // 👈 Truyền submitData thay vì couponForm
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -267,8 +268,8 @@ const OwnerDashboardPage = () => {
       if (!cafeId) return;
 
       // Phái Sứ giả mang lệnh hành quyết xuống Spring Boot
-      await axios.delete(
-        `http://localhost:8080/api/cafes/${cafeId}/coupons/${couponId}`,
+      await axiosClient.delete(
+        `/cafes/${cafeId}/coupons/${couponId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -328,8 +329,8 @@ const OwnerDashboardPage = () => {
       
       // 👉 BƯỚC MỚI: Nếu có ghế trong danh sách đen, bắt Backend xóa trước!
       if (blacklistIds.length > 0) {
-        await axios.post(
-          `http://localhost:8080/api/cafes/${cafeId}/seats/batch-delete`, 
+        await axiosClient.post(
+          `/cafes/${cafeId}/seats/batch-delete`, 
           blacklistIds, // Gửi mảng các ID cần xóa đi
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -344,8 +345,8 @@ const OwnerDashboardPage = () => {
         return seat;
       });
 
-      await axios.put(
-        `http://localhost:8080/api/cafes/${cafeId}/seats`, 
+      await axiosClient.put(
+        `/cafes/${cafeId}/seats`, 
         seatsToSend, 
         {
           headers: {

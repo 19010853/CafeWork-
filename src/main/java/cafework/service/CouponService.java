@@ -12,6 +12,6 @@ public interface CouponService {
 
     List<CouponResponse> getMyCoupons();
 
-    void deleteCoupon(String couponId);
+    void deleteCoupon(UUID couponId);
     List<CouponResponse> getCouponsByCafe(UUID cafeId);
 }

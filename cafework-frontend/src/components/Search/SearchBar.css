@@ -9,10 +9,12 @@
 .search-box-modern {
     display: flex;
     gap: 10px;
+    align-items: stretch;
     margin-bottom: 15px;
 }
 
 .input-wrapper {
+    position: relative;
     flex: 1;
     display: flex;
     align-items: center;
@@ -20,6 +22,8 @@
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 0 12px;
+    min-height: 42px;
+    box-sizing: border-box;
 }
 
 .input-wrapper:focus-within {
@@ -35,6 +39,7 @@
 
 .search-input-modern {
     flex: 1;
+    min-width: 0;
     border: none;
     padding: 10px 0;
     font-size: 14px;
@@ -45,10 +50,11 @@
 .filter-btn-square {
     width: 42px;
     height: 42px;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fff;
+    background-color: #f8f9fa;
     border: 1px solid #ddd;
     border-radius: 8px;
     color: #555;

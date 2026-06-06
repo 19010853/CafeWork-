@@ -62,8 +62,8 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         otpRepository.save(otp);
 
-        // 4. Send Real Email
-        emailUtil.sendOtpEmail(request.getEmail(), code);
+        // 4. Send signup OTP without blocking the signup screen on SMTP latency.
+        emailUtil.sendOtpEmailAsync(request.getEmail(), code);
     }
 
     @Override

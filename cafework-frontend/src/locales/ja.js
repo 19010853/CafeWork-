@@ -57,7 +57,7 @@ export default{
     searchHistory: '検索履歴',
 
     dashboard: 'ダッシュボード',
-    storeManagement: '店舗管理',
+    storeManagement: 'カフェー管理',
 
     confirmLogout: 'ログアウトしますか？',
     user: 'ユーザー',
@@ -90,7 +90,7 @@ export default{
 
     directions: '現在地からの道案内',
 
-    storeInfo: '店舗情報',
+    storeInfo: 'カフェー情報',
 
     address: '住所',
     businessHours: '営業時間',

@@ -11,10 +11,10 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 
 # ==================== MAVEN WRAPPER SCRIPTS ====================
-mvnw
-mvnw.cmd
-mvnwDebug
-mvnwDebug.cmd
+!mvnw
+!mvnw.cmd
+!mvnwDebug
+!mvnwDebug.cmd
 
 # ==================== SPRING BOOT ====================
 .springBeans
@@ -29,7 +29,8 @@ spring-shell.log
 out/
 
 # VS Code
-.vscode/
+.vscode/*
+!.vscode/
 !.vscode/extensions.json
 !.vscode/launch.json
 !.vscode/tasks.json
@@ -105,6 +106,8 @@ logs/
 log/
 
 # ==================== MAVEN WRAPPER (không cần commit JAR) ====================
+.mvn/apache-maven-*/
+.mvn/apache-maven-*-bin.zip
 apache-maven-*/
 !apache-maven-*/.mvn/
 
