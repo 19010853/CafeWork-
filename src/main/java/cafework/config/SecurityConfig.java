@@ -51,8 +51,8 @@ public class SecurityConfig {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
         String allowedOrigins = System.getenv().getOrDefault(
                 "APP_CORS_ALLOWED_ORIGINS",
-                "http://localhost:5173,http://localhost:3000");
-        configuration.setAllowedOrigins(
+                "http://localhost:5173,http://localhost:3000,https://cafe-work.vercel.app,https://*.vercel.app");
+        configuration.setAllowedOriginPatterns(
                 java.util.Arrays.stream(allowedOrigins.split(","))
                         .map(String::trim)
                         .filter(origin -> !origin.isBlank())

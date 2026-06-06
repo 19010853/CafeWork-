@@ -32,8 +32,10 @@ DB_USERNAME=<railway-postgres-user>
 DB_PASSWORD=<railway-postgres-password>
 MAIL_USERNAME=<smtp-user>
 MAIL_PASSWORD=<smtp-app-password>
-APP_CORS_ALLOWED_ORIGINS=https://<vercel-frontend-domain>
+APP_CORS_ALLOWED_ORIGINS=https://cafe-work.vercel.app,https://*.vercel.app
 ```
+
+`APP_CORS_ALLOWED_ORIGINS` supports comma-separated origin patterns. Keep `https://*.vercel.app` when you want Vercel preview deployments to call the Railway backend.
 
 Use the PostgreSQL service values from Railway's `Connect` or `Variables` tab:
 

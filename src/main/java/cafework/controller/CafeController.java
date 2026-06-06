@@ -27,7 +27,6 @@ import cafework.repository.CafeImageRepository;
 
 @RestController
 @RequestMapping("/api/cafes")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class CafeController {
 
     @Autowired
