@@ -68,9 +68,6 @@ jobs:
     needs:
       - frontend-build
     if: github.event_name == 'push'
-    defaults:
-      run:
-        working-directory: cafework-frontend
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
