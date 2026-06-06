@@ -58,6 +58,22 @@ psql "<railway-postgres-url>" -f UpdateDBSeat.sql
 
 If `psql` is not installed locally, use Railway's database query console or install PostgreSQL client tools.
 
+If `/actuator/health/readiness` is `UP` but `/api/cafes` returns `500`, the database connection is alive but the schema or seed data may be incomplete. Check the Railway backend HTTP/deploy logs for `PSQLException`, `SQLGrammarException`, `relation ... does not exist`, or `column ... does not exist`, then verify the main tables:
+
+```sql
+select table_name
+from information_schema.tables
+where table_schema = 'public'
+order by table_name;
+
+select count(*) from cafes;
+select count(*) from cafe_images;
+select count(*) from reviews;
+select count(*) from seats;
+```
+
+`UpdateDBSeat.sql` is safe to run again for the seeded cafes; it inserts missing seats and skips existing cafe/seat-number pairs.
+
 ## 4. Update Vercel Frontend
 
 In the Vercel project settings, update the frontend environment variable:
