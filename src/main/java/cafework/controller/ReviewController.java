@@ -1,8 +1,13 @@
 package cafework.controller;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID; // Thần thêm thư viện này để xử lý ID của bá tánh
+
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,13 +38,12 @@ public class ReviewController {
     private UserRepository userRepository;
 
     @GetMapping
-    public List<Review> getAllReviews() {
-        List<Review> reviews = reviewRepository.findAll();
-        
-        // CHIÊU KIẾM MỚI: Tự động lùng sục tên bá tánh cho toàn bộ tấu chương
-        for (Review r : reviews) {
-            enrichReviewWithUserName(r);
-        }
+    public List<Review> getAllReviews(@RequestParam(required = false) String cafeId) {
+        List<Review> reviews = (cafeId == null || cafeId.isBlank())
+                ? reviewRepository.findAllByOrderByCreatedAtDesc()
+                : reviewRepository.findByCafeIdOrderByCreatedAtDesc(cafeId);
+
+        enrichReviewsWithUserNames(reviews);
         return reviews;
     }
 
@@ -47,7 +52,7 @@ public class ReviewController {
         Review review = reviewRepository.findById(id).orElse(null);
         if (review != null) {
             // Đắp tên vào cho cả trường hợp lấy 1 tấu chương
-            enrichReviewWithUserName(review);
+            enrichReviewsWithUserNames(List.of(review));
         }
         return review;
     }
@@ -91,21 +96,30 @@ public class ReviewController {
         reviewRepository.deleteById(id);
     }
 
-    // --- CÔNG CỤ HỖ TRỢ BÍ MẬT ---
-    // Hàm này giúp mã nguồn của ngài gọn gàng hơn, không bị lặp lại
-    private void enrichReviewWithUserName(Review r) {
-        if (r.getUserId() != null) {
-            try {
-                UUID userUuid = UUID.fromString(r.getUserId());
-                userRepository.findById(userUuid).ifPresent(user -> {
-                    r.setUserName(user.getFullName());
-                });
-            } catch (Exception e) {
-                // Nếu ID rỗng hoặc sai chuẩn UUID
-                r.setUserName("匿名ユーザー");
+    private void enrichReviewsWithUserNames(List<Review> reviews) {
+        Set<UUID> userIds = new HashSet<>();
+
+        for (Review review : reviews) {
+            if (review.getUserId() == null) {
+                continue;
             }
-        } else {
-            r.setUserName("匿名ユーザー");
+
+            try {
+                userIds.add(UUID.fromString(review.getUserId()));
+            } catch (IllegalArgumentException ignored) {
+                // Invalid stored user id; it will fall back to anonymous below.
+            }
+        }
+
+        Map<String, String> userNamesById = userRepository.findAllById(userIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        user -> user.getId().toString(),
+                        User::getFullName
+                ));
+
+        for (Review review : reviews) {
+            review.setUserName(userNamesById.getOrDefault(review.getUserId(), "Anonymous User"));
         }
     }
 }

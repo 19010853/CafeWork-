@@ -402,10 +402,9 @@ const CafeDetailPage = () => {
   const fetchReviews = () => {
     setReviewsLoading(true);
     axiosClient
-      .get('/reviews')
+      .get('/reviews', { params: { cafeId: id } })
       .then((res) => {
-        const cafeReviews = res.data.filter((r) => r.cafeId === id);
-        setReviews(cafeReviews);
+        setReviews(res.data);
         setReviewsLoading(false);
       })
       .catch((err) => {
@@ -437,14 +436,14 @@ const CafeDetailPage = () => {
         content: newReviewContent,
       };
 
-      await axiosClient.post('/reviews', payload, {
+      const res = await axiosClient.post('/reviews', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       setNewReviewContent('');
       setNewReviewRating(5);
       setShowReviewModal(false);
-      fetchReviews();
+      setReviews(prevReviews => [res.data, ...prevReviews]);
       
       toast.success(t('reviewSubmitted'));
 

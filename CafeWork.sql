@@ -133,6 +133,9 @@ CREATE TABLE public.reviews (
 
 ALTER TABLE public.reviews OWNER TO postgres;
 
+CREATE INDEX IF NOT EXISTS idx_reviews_cafe_id_created_at
+    ON public.reviews USING btree (cafe_id, created_at DESC);
+
 --
 -- TOC entry 223 (class 1259 OID 21235)
 -- Name: search_histories; Type: TABLE; Schema: public; Owner: postgres
