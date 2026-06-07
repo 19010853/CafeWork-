@@ -1,6 +1,7 @@
 package cafework.controller;
 
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -230,7 +231,10 @@ public class CafeController {
     // Lộ trình 2: Lấy danh sách Khuyến mãi
     @GetMapping("/{id}/coupons")
     public ResponseEntity<?> getCafeCoupons(@PathVariable UUID id) {
-        return ResponseEntity.ok(couponRepository.findByCafeId(id));
+        return ResponseEntity.ok(couponRepository.findByCafeId(id)
+                .stream()
+                .filter(this::isActiveCoupon)
+                .toList());
     }
 
     // Lộ trình 3: Tạo Khuyến mãi mới
@@ -290,5 +294,13 @@ public class CafeController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa ảnh: " + e.getMessage());
         }
+    }
+
+    private boolean isActiveCoupon(Coupon coupon) {
+        LocalDateTime now = LocalDateTime.now();
+        return coupon.getValidFrom() != null
+                && coupon.getValidTo() != null
+                && !now.isBefore(coupon.getValidFrom())
+                && !now.isAfter(coupon.getValidTo());
     }
 }

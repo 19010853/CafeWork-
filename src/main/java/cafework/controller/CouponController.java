@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import cafework.model.Coupon;
 import cafework.repository.CouponRepository;
@@ -51,7 +52,18 @@ public class CouponController {
 
     @GetMapping("cafe/{cafeId}")
     public List<Coupon> getCouponsByCafe(@PathVariable UUID cafeId) {
-        return couponRepository.findByCafeId(cafeId);
+        return couponRepository.findByCafeId(cafeId)
+                .stream()
+                .filter(this::isActiveCoupon)
+                .toList();
+    }
+
+    private boolean isActiveCoupon(Coupon coupon) {
+        LocalDateTime now = LocalDateTime.now();
+        return coupon.getValidFrom() != null
+                && coupon.getValidTo() != null
+                && !now.isBefore(coupon.getValidFrom())
+                && !now.isAfter(coupon.getValidTo());
     }
     
 }

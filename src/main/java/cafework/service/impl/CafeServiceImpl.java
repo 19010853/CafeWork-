@@ -18,8 +18,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URLEncoder;
+import java.net.URI;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.text.Normalizer;
@@ -287,20 +289,42 @@ public class CafeServiceImpl implements CafeService {
         if (source.equals(target)) return text;
 
         try {
-            String url = "https://api.mymemory.translated.net/get?q="
-                    + URLEncoder.encode(text, StandardCharsets.UTF_8)
-                    + "&langpair=" + toIsoLang(source) + "|" + toIsoLang(target);
+            URI uri = UriComponentsBuilder
+                    .fromUriString("https://api.mymemory.translated.net/get")
+                    .queryParam("q", text)
+                    .queryParam("langpair", toIsoLang(source) + "|" + toIsoLang(target))
+                    .build()
+                    .encode(StandardCharsets.UTF_8)
+                    .toUri();
             @SuppressWarnings("unchecked")
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            Map<String, Object> response = restTemplate.getForObject(uri, Map.class);
             if (response == null) return text;
             Object responseData = response.get("responseData");
             if (!(responseData instanceof Map<?, ?> data)) return text;
             Object translatedText = data.get("translatedText");
-            return translatedText instanceof String translated && !translated.isBlank() ? translated : text;
+            return translatedText instanceof String translated && !translated.isBlank()
+                    ? sanitizeTranslatedText(translated)
+                    : text;
         } catch (Exception e) {
             System.err.println("Translation request failed: " + e.getMessage());
             return text;
         }
+    }
+
+    private String sanitizeTranslatedText(String translated) {
+        String sanitized = translated;
+        for (int i = 0; i < 2 && containsPercentEncodedToken(sanitized); i++) {
+            try {
+                sanitized = URLDecoder.decode(sanitized, StandardCharsets.UTF_8);
+            } catch (IllegalArgumentException ignored) {
+                break;
+            }
+        }
+        return sanitized;
+    }
+
+    private boolean containsPercentEncodedToken(String value) {
+        return value != null && Pattern.compile("%[0-9A-Fa-f]{2}").matcher(value).find();
     }
 
     private String detectLanguage(String text) {

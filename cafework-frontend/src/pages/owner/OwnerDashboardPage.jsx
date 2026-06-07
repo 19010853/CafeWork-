@@ -6,6 +6,15 @@ import toast from 'react-hot-toast';
 import axiosClient from '../../api/axiosClient';
 import { t } from '../../utils/i18n';
 import './OwnerDashboardPage.css';
+
+const isActiveCoupon = (coupon) => {
+  if (!coupon?.validFrom || !coupon?.validTo) return false;
+  const now = new Date();
+  const validFrom = new Date(coupon.validFrom);
+  const validTo = new Date(coupon.validTo);
+  return validFrom <= now && now <= validTo;
+};
+
 const OwnerDashboardPage = () => {
   // ==========================================
   // 1. KHO CHỨA (STATE)
@@ -68,7 +77,7 @@ const OwnerDashboardPage = () => {
       setSeats(seatsRes.data);
       originalSeatsRef.current = seatsRes.data;
       setImages(imagesRes.data);
-      setCoupons(couponsRes.data);
+      setCoupons((couponsRes.data || []).filter(isActiveCoupon));
       setCafeStatus(getOverallSeatStatus(seatsRes.data));
     } catch (error) {
       console.error("Lỗi khi tải tài sản quán:", error);

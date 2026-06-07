@@ -345,6 +345,14 @@ const detectLanguage = (text) => {
   
   return 'EN'; // Nếu không phải Việt, Nhật thì mặc định là Anh
 };
+
+const isActiveCoupon = (coupon) => {
+  if (!coupon?.validFrom || !coupon?.validTo) return false;
+  const now = new Date();
+  const validFrom = new Date(coupon.validFrom);
+  const validTo = new Date(coupon.validTo);
+  return validFrom <= now && now <= validTo;
+};
 // ============================================================
 // COMPONENT
 // ============================================================
@@ -419,7 +427,7 @@ const CafeDetailPage = () => {
   const fetchCoupons = async () => {
     try {
       const res = await axiosClient.get(`/coupons/cafe/${id}`);
-      setCoupons(res.data);
+      setCoupons((res.data || []).filter(isActiveCoupon));
     } catch (err) {
       console.error('Coupon fetch error:', err);
       setCoupons([]);
