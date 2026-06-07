@@ -1,0 +1,286 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 109px);
+  height: calc(100dvh - 109px);
+  min-height: 0;
+  font-family: sans-serif;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 400px;
+  min-width: 360px;
+  max-width: 42vw;
+  background-color: #fff;
+  border-right: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.mapPane {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.routePanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.routeHeader {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.backButton {
+  min-height: 36px;
+  padding: 6px 12px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  color: #333;
+}
+
+.routeTitle {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.routeSummary {
+  padding: 20px;
+  border-bottom: 5px solid #f5f5f5;
+  flex-shrink: 0;
+}
+
+.routeDistance {
+  margin: 0 0 10px;
+  font-size: 24px;
+  color: #0066ff;
+}
+
+.routeDuration {
+  font-size: 16px;
+  color: #555;
+}
+
+.routeNote {
+  margin: 0;
+  font-size: 13px;
+  color: #888;
+}
+
+.routeSteps {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.routeList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.routeStep {
+  padding: 15px 0;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.routeStepText {
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+  min-width: 0;
+}
+
+.routeStepName {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.routeStepDistance {
+  font-size: 13px;
+  color: #888;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.routeWaiting {
+  padding: 20px;
+}
+
+.waitingTitle {
+  margin: 0;
+  font-size: 14px;
+  color: #555;
+  font-weight: 700;
+}
+
+.waitingTarget {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #333;
+  font-weight: 700;
+}
+
+.waitingText {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #888;
+  line-height: 1.5;
+}
+
+.searchPanel {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sheetHandle {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .page {
+    height: calc(100vh - 105px);
+    height: calc(100dvh - 105px);
+  }
+
+  .sidebar {
+    width: 360px;
+    min-width: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    height: calc(100vh - var(--cw-header-stack-height, 101px));
+    height: calc(100dvh - var(--cw-header-stack-height, 101px));
+    position: relative;
+  }
+
+  .content {
+    display: block;
+    position: relative;
+  }
+
+  .mapPane {
+    position: absolute;
+    inset: 0;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: min(72vh, 620px);
+    padding-bottom: env(safe-area-inset-bottom);
+    border-right: 0;
+    border-top: 1px solid #ddd;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.18);
+    transform: translateY(calc(100% - 168px - env(safe-area-inset-bottom)));
+    transition: transform 0.24s ease;
+    z-index: 500;
+    overflow: hidden;
+    will-change: transform;
+  }
+
+  .sidebarExpanded {
+    transform: translateY(0);
+  }
+
+  .sheetHandle {
+    appearance: none;
+    display: flex;
+    min-height: 32px;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: #fff;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .sheetHandle::before {
+    content: "";
+    width: 44px;
+    height: 5px;
+    border-radius: 999px;
+    background: #c9c1bc;
+  }
+
+  .routePanel,
+  .searchPanel {
+    height: calc(100% - 32px);
+  }
+
+  .routeHeader {
+    padding: 10px 14px;
+  }
+
+  .routeSummary {
+    padding: 14px 16px;
+  }
+
+  .routeDistance {
+    font-size: 20px;
+  }
+
+  .routeSteps {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .sidebar {
+    height: min(76vh, 620px);
+    transform: translateY(calc(100% - 156px - env(safe-area-inset-bottom)));
+  }
+
+  .sidebarExpanded {
+    transform: translateY(0);
+  }
+
+  .routeHeader {
+    gap: 8px;
+  }
+
+  .backButton {
+    padding-inline: 10px;
+  }
+}

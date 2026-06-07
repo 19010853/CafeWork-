@@ -271,6 +271,52 @@
     }
 }
 
+@media (max-width: 768px) {
+    .page {
+        padding: 16px 12px;
+    }
+
+    .container {
+        gap: 16px;
+    }
+
+    .mainCard {
+        padding: 18px;
+    }
+
+    .pageTitle {
+        font-size: 18px;
+    }
+
+    .actions {
+        flex-direction: column-reverse;
+    }
+
+    .primaryButton,
+    .secondaryButton,
+    .menuButton,
+    .input {
+        min-height: 44px;
+    }
+
+    .primaryButton,
+    .secondaryButton {
+        width: 100%;
+    }
+}
+
+@media (max-width: 390px) {
+    .page {
+        padding-inline: 10px;
+    }
+
+    .mainCard,
+    .profileCard,
+    .messageCard {
+        padding: 16px;
+    }
+}
+
 /* --- Toast --- */
 .toast {
     position: fixed;

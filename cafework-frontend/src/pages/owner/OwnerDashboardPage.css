@@ -1,0 +1,207 @@
+.owner-dashboard-page {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.owner-dashboard-main {
+  min-width: 0;
+  width: 100%;
+}
+
+.owner-status-cards,
+.owner-seat-footer,
+.owner-seat-controls,
+.owner-coupon-header,
+.owner-coupon-card,
+.owner-coupon-actions {
+  min-width: 0;
+}
+
+.owner-seat-grid-box {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.owner-seat-grid {
+  min-width: 520px;
+}
+
+.owner-image-container {
+  -webkit-overflow-scrolling: touch;
+}
+
+.owner-coupon-info {
+  min-width: 0;
+}
+
+.owner-coupon-title-row {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.owner-coupon-title-row span,
+.owner-coupon-title-row p {
+  overflow-wrap: anywhere;
+}
+
+.owner-coupon-date {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1023px) {
+  .owner-dashboard-main {
+    padding: 20px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .owner-dashboard-page {
+    min-height: calc(100dvh - var(--cw-header-stack-height, 101px)) !important;
+  }
+
+  .owner-dashboard-main {
+    padding: 16px 12px 24px !important;
+  }
+
+  .owner-dashboard-main > div {
+    padding: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .owner-status-cards {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .owner-status-card {
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+
+  .owner-seat-header {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .owner-seat-header button {
+    width: 100% !important;
+    min-height: 44px !important;
+  }
+
+  .owner-seat-grid-box {
+    padding: 14px !important;
+  }
+
+  .owner-seat-grid {
+    grid-template-columns: repeat(10, minmax(42px, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .owner-seat-grid > div {
+    min-height: 42px !important;
+    padding: 10px 0 !important;
+  }
+
+  .owner-seat-footer {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  .owner-seat-legend,
+  .owner-seat-controls {
+    flex-wrap: wrap !important;
+  }
+
+  .owner-seat-controls {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .owner-seat-controls > div,
+  .owner-seat-controls button {
+    width: 100% !important;
+    min-height: 44px !important;
+  }
+
+  .owner-seat-popup {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(100% + 8px) !important;
+    transform: none !important;
+    width: max-content !important;
+    max-width: calc(100vw - 40px) !important;
+  }
+
+  .owner-image-container {
+    gap: 12px !important;
+  }
+
+  .owner-add-image,
+  .owner-image-wrapper,
+  .owner-image-item {
+    width: 128px !important;
+    height: 128px !important;
+  }
+
+  .owner-coupon-header {
+    align-items: stretch !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .owner-coupon-header button {
+    min-height: 44px !important;
+  }
+
+  .owner-coupon-card {
+    align-items: stretch !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .owner-coupon-actions {
+    justify-content: space-between !important;
+  }
+
+  .owner-form-modal {
+    width: calc(100vw - 24px) !important;
+    max-width: 400px !important;
+    max-height: calc(100dvh - 24px) !important;
+    overflow-y: auto !important;
+    padding: 20px !important;
+  }
+
+  .owner-form-date-row,
+  .owner-form-actions {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .owner-form-actions button {
+    width: 100% !important;
+    min-height: 44px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .owner-dashboard-main {
+    padding-inline: 10px !important;
+  }
+
+  .owner-dashboard-main > div {
+    padding: 14px !important;
+  }
+
+  .owner-seat-controls {
+    grid-template-columns: 1fr !important;
+  }
+
+  .owner-add-image,
+  .owner-image-wrapper,
+  .owner-image-item {
+    width: 116px !important;
+    height: 116px !important;
+  }
+}

@@ -1,6 +1,59 @@
 /* react-hot-toast */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    min-width: 0;
+    min-height: 100%;
+}
+
+html {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+    max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+    touch-action: manipulation;
+}
+
+:root {
+    --cw-header-height: 64px;
+    --cw-nav-height: 45px;
+    --cw-header-stack-height: 109px;
+}
+
 #_rht_toaster {
     z-index: 99999 !important;
+    max-width: 100vw !important;
 }
 
 .cw-toast {
@@ -47,4 +100,25 @@
 .cw-toast a {
     color: inherit;
     text-decoration: underline;
+}
+
+@media (max-width: 1023px) {
+    :root {
+        --cw-header-height: 60px;
+        --cw-nav-height: 45px;
+        --cw-header-stack-height: 105px;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --cw-header-height: 58px;
+        --cw-nav-height: 43px;
+        --cw-header-stack-height: 101px;
+    }
+
+    .cw-toast {
+        max-width: calc(100vw - 20px) !important;
+        margin-inline: 10px !important;
+    }
 }

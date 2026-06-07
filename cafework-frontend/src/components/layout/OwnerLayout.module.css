@@ -43,4 +43,45 @@
   flex: 1;
   padding: 32px;
   overflow-y: auto;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    padding: 0;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .menuItem {
+    flex: 0 0 auto;
+    min-height: 48px;
+    border-left: 0;
+    border-bottom: 4px solid transparent;
+    padding: 12px 16px;
+  }
+
+  .activeMenuItem {
+    border-left-color: transparent;
+    border-bottom-color: #8d6e63;
+  }
+
+  .content {
+    padding: 20px 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .content {
+    padding: 16px 10px;
+  }
 }

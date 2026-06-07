@@ -106,10 +106,40 @@
 }
 
 @media (max-width: 600px) {
+  .container {
+    padding: 20px 16px;
+    border-radius: 10px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
   .formGrid {
     grid-template-columns: 1fr;
   }
   .fullWidth {
     grid-column: span 1;
+  }
+
+  .input,
+  .textarea,
+  .saveButton {
+    min-height: 44px;
+  }
+
+  .saveButton {
+    width: 100%;
+    padding-inline: 18px;
+  }
+
+  .mapContainer {
+    height: 240px;
+  }
+}
+
+@media (max-width: 390px) {
+  .container {
+    padding: 18px 14px;
   }
 }

@@ -546,9 +546,32 @@ const CafeDetailPage = () => {
         button { font-family: inherit; }
         @media (max-width: 768px) {
           .detail-layout { grid-template-columns: 1fr !important; }
+          .detail-layout { gap: 16px !important; padding: 16px 12px 24px !important; }
+          .detail-gallery-wrap { padding: 0 12px !important; }
           .gallery-grid { grid-template-columns: 1fr !important; max-height: none !important; }
           .gallery-main { grid-column: 1 / 2 !important; grid-row: auto !important; }
-          .gallery-main img { height: 220px !important; }
+          .gallery-grid img { height: 220px !important; }
+          .detail-layout > div { min-width: 0 !important; }
+          .detail-layout > div > div { border-radius: 10px !important; padding: 16px !important; }
+          .detail-layout h1 { font-size: 21px !important; overflow-wrap: anywhere !important; }
+          .detail-layout button { min-height: 44px !important; }
+          .detail-layout iframe { height: 220px !important; }
+          .detail-name-row { flex-direction: column !important; gap: 10px !important; }
+          .detail-rating { margin-left: 0 !important; align-self: flex-start !important; }
+          .detail-action-row { display: grid !important; grid-template-columns: 1fr !important; gap: 10px !important; }
+          .detail-action-row button { width: 100% !important; justify-content: center !important; }
+          .detail-review-header { align-items: flex-start !important; flex-direction: column !important; gap: 12px !important; }
+          .detail-review-header button { width: 100% !important; }
+          .detail-modal-card { width: calc(100vw - 24px) !important; max-width: calc(100vw - 24px) !important; padding: 20px !important; }
+          .detail-modal-actions { display: grid !important; grid-template-columns: 1fr !important; gap: 10px !important; }
+          .detail-photo-stage { padding: 0 48px !important; }
+        }
+        @media (max-width: 390px) {
+          .detail-layout { padding-inline: 10px !important; }
+          .detail-gallery-wrap { padding-inline: 10px !important; }
+          .gallery-grid img { height: 196px !important; }
+          .detail-layout > div > div { padding: 14px !important; }
+          .detail-photo-stage { padding: 0 40px !important; }
         }
       `}</style>
 
@@ -560,7 +583,7 @@ const CafeDetailPage = () => {
       </div>
 
       {/* ── HERO GALLERY ── */}
-      <div style={styles.galleryWrap}>
+      <div className="detail-gallery-wrap" style={styles.galleryWrap}>
         <div className="gallery-grid" style={styles.gallery}>
           {images.length === 0 ? (
             <div style={{
@@ -616,9 +639,9 @@ const CafeDetailPage = () => {
 
           {/* Name & Rating & Status */}
           <div style={styles.nameCard}>
-            <div style={styles.nameRow}>
+            <div className="detail-name-row" style={styles.nameRow}>
               <h1 style={styles.cafeName}>{cafe.name}</h1>
-              <div style={styles.ratingBadge}>
+              <div className="detail-rating" style={styles.ratingBadge}>
                 ★ {cafe.rating ? Number(cafe.rating).toFixed(1) : t('noReviewYet')}
               </div>
             </div>
@@ -632,7 +655,7 @@ const CafeDetailPage = () => {
             </div>
 
             {/* Action Buttons */}
-            <div style={styles.actionRow}>
+            <div className="detail-action-row" style={styles.actionRow}>
               <button
                 style={styles.btnFavorite(isFavorite)}
                 onClick={() => {
@@ -742,7 +765,7 @@ const CafeDetailPage = () => {
 
           {/* Reviews */}
           <div style={styles.sectionCard}>
-            <div style={styles.reviewHeader}>
+            <div className="detail-review-header" style={styles.reviewHeader}>
               <h2 style={styles.reviewTitle}>
                 💬 {t('reviews')}
                 {!reviewsLoading && (
@@ -894,6 +917,7 @@ const CafeDetailPage = () => {
           onClick={() => setShowReviewModal(false)}
         >
           <div
+            className="detail-modal-card"
             style={{
               backgroundColor: '#fff', borderRadius: '14px', padding: '28px 28px',
               width: '440px', maxWidth: '90vw', boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
@@ -950,7 +974,7 @@ const CafeDetailPage = () => {
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+            <div className="detail-modal-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 style={{ ...styles.btnLogin, padding: '9px 20px' }}
                 onClick={() => { setShowReviewModal(false); setNewReviewContent(''); setNewReviewRating(5); }}
@@ -983,7 +1007,7 @@ const CafeDetailPage = () => {
           }}
           onClick={() => setShowPhotoModal(false)}
         >
-          <div style={{
+          <div className="detail-photo-toolbar" style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             padding: '14px 20px', color: '#fff', flexShrink: 0,
           }} onClick={(e) => e.stopPropagation()}>
@@ -1001,7 +1025,7 @@ const CafeDetailPage = () => {
             </button>
           </div>
 
-          <div style={{
+          <div className="detail-photo-stage" style={{
             flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
             position: 'relative', padding: '0 60px',
           }} onClick={(e) => e.stopPropagation()}>

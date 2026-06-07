@@ -28,7 +28,7 @@ const myCustomIcon = L.icon({
   shadowSize: [41, 41]
 });
 
-const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
+const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget, resizeSignal }) => {
   const navigate = useNavigate();
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -53,6 +53,27 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget }) => {
       polylineRef.current = null;
     }
   }, [isRouting]);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 260);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [resizeSignal]);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || typeof ResizeObserver === 'undefined' || !mapContainerRef.current) return;
+
+    const observer = new ResizeObserver(() => {
+      mapInstanceRef.current?.invalidateSize();
+    });
+    observer.observe(mapContainerRef.current);
+
+    return () => observer.disconnect();
+  }, [mapReady]);
 
   // ----------------------------------------------------
   // HÀM VẼ ĐƯỜNG MÀU XANH TỪ VỊ TRÍ HIỆN TẠI ĐẾN QUÁN

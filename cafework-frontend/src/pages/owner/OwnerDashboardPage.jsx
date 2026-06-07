@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';;
 import toast from 'react-hot-toast';
 import axiosClient from '../../api/axiosClient';
 import { t } from '../../utils/i18n';
+import './OwnerDashboardPage.css';
 const OwnerDashboardPage = () => {
   // ==========================================
   // 1. KHO CHỨA (STATE)
@@ -473,20 +474,21 @@ const OwnerDashboardPage = () => {
   // 👇 DƯỚI NÀY LÀ KHÚC RETURN CỦA BỆ HẠ 👇
   
   return (
-    <div style={styles.container}>
+    <div className="owner-dashboard-page" style={styles.container}>
 
 
       {/* --- PHẦN 3: NỘI DUNG CHÍNH --- */}
-      <main style={styles.main}>
+      <main className="owner-dashboard-main" style={styles.main}>
         <h1 style={styles.pageTitle}>{t('ownerDashboard')}</h1>
 
         {/* Khối 1: Cập nhật trạng thái tổng quan (Mục 8, 9, 10, 11) */}
         <div style={styles.card}>
           <h2 style={styles.sectionTitle}>{t('seatStatusUpdate')}</h2>
-          <div style={styles.statusCardsContainer}>
+          <div className="owner-status-cards" style={styles.statusCardsContainer}>
             
             {/* Nút 1: Còn trống (AVAILABLE) */}
             <button 
+              className="owner-status-card"
               style={{ 
                 ...styles.statusCard, 
                 ...(cafeStatus === 'AVAILABLE' ? styles.activeStatusCard : {}) 
@@ -497,6 +499,7 @@ const OwnerDashboardPage = () => {
 
             {/* Nút 2: Sắp hết chỗ (ALMOST_FULL) */}
             <button 
+              className="owner-status-card"
               style={{ 
                 ...styles.statusCard, 
                 ...(cafeStatus === 'ALMOST_FULL' ? styles.activeStatusCard : {}) 
@@ -507,6 +510,7 @@ const OwnerDashboardPage = () => {
 
             {/* Nút 3: Kín chỗ (FULL) */}
             <button 
+              className="owner-status-card"
               style={{ 
                 ...styles.statusCard, 
                 ...(cafeStatus === 'FULL' ? styles.activeStatusCard : {}) 
@@ -521,7 +525,7 @@ const OwnerDashboardPage = () => {
         {/* Khối 2: Quản lý chi tiết ghế ngồi (Mục 12 đến 17) */}
         <div style={styles.card}>
           {/* Tiêu đề & Thống kê ghế THEO DỮ LIỆU THẬT */}
-          <div style={styles.seatHeader}>
+          <div className="owner-seat-header" style={styles.seatHeader}>
             <div>
               <h2 style={styles.sectionTitle}>{t('seatManagement')}</h2>
               <p style={styles.seatStats}>
@@ -543,8 +547,8 @@ const OwnerDashboardPage = () => {
             </button>
           </div>
           {/* Lưới hiển thị 30 ghế ngồi */}
-          <div style={styles.seatGridBox}>
-            <div style={styles.seatGrid}>
+          <div className="owner-seat-grid-box" style={styles.seatGridBox}>
+            <div className="owner-seat-grid" style={styles.seatGrid}>
               {seats.map((seat) => (
                 <div 
                   key={seat.id} 
@@ -559,8 +563,8 @@ const OwnerDashboardPage = () => {
           </div>
 
           {/* Chú thích & Nút Thêm/Xóa ghế (Mục 14, 15, 16, 17) */}
-          <div style={styles.seatFooter}>
-            <div style={styles.legend}>
+          <div className="owner-seat-footer" style={styles.seatFooter}>
+            <div className="owner-seat-legend" style={styles.legend}>
               <span style={styles.legendItem}>
                 <div style={styles.legendBoxVacant}></div> {t('seatAvailable')}
               </span>
@@ -568,12 +572,12 @@ const OwnerDashboardPage = () => {
                 <div style={styles.legendBoxOccupied}></div> {t('seatOccupied')}
               </span>
             </div>
-            <div style={styles.controls}>
+            <div className="owner-seat-controls" style={styles.controls}>
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 
                 {/* Cái Pop-up nhỏ xíu sẽ hiện lên khi showAddPopup = true */}
                 {showAddPopup && (
-                  <div style={styles.popup}>
+                  <div className="owner-seat-popup" style={styles.popup}>
                     <input 
                       type="number" 
                       min="1" 
@@ -598,7 +602,7 @@ const OwnerDashboardPage = () => {
               {/* --- KHỐI XÓA GHẾ MỚI TOANH --- */}
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 {showDeletePopup && (
-                  <div style={styles.popup}>
+                  <div className="owner-seat-popup" style={styles.popup}>
                     <input 
                       type="number" 
                       min="1" 
@@ -627,7 +631,7 @@ const OwnerDashboardPage = () => {
         <div style={styles.card}>
           <h2 style={styles.sectionTitle}>{t('photoManagement')}</h2>
           
-          <div style={styles.imageContainer}>
+          <div className="owner-image-container" style={styles.imageContainer}>
             <input 
               type="file" 
               ref={imageInputRef} 
@@ -636,7 +640,7 @@ const OwnerDashboardPage = () => {
               onChange={handleImageUpload} 
             />
             {/* Nút thêm ảnh */}
-            <div style={styles.addImageBox} onClick={() => imageInputRef.current.click()}>
+            <div className="owner-add-image" style={styles.addImageBox} onClick={() => imageInputRef.current.click()}>
               <span style={styles.addImageIcon}>+</span>
               <span style={styles.addImageText}>{t('addImage')}</span>
             </div>
@@ -645,6 +649,7 @@ const OwnerDashboardPage = () => {
             {images.map(image => (
               <div 
                 key={image.id} 
+                className="owner-image-wrapper"
                 style={styles.imageWrapper}
                 onMouseEnter={() => setHoveredImageId(image.id)}
                 onMouseLeave={() => setHoveredImageId(null)}
@@ -653,6 +658,7 @@ const OwnerDashboardPage = () => {
                 <img 
                   src={image.imageUrl} 
                   alt="Cafe" 
+                  className="owner-image-item"
                   style={styles.imageItem} 
                 />
                 
@@ -683,7 +689,7 @@ const OwnerDashboardPage = () => {
         {/* KHỐI 4: QUẢN LÝ KHUYẾN MÃI (割引・プロモーション管理) */}
         {/* ========================================= */}
         <div style={styles.card}>
-          <div style={styles.couponHeader}>
+          <div className="owner-coupon-header" style={styles.couponHeader}>
             <h2 style={styles.sectionTitle}>{t('couponManagement')}</h2>
             <button style={styles.createCouponBtn} onClick={() => setShowCouponModal(true)}>
               {t('createCoupon')}
@@ -692,24 +698,24 @@ const OwnerDashboardPage = () => {
 
           <div style={styles.couponList}>
             {coupons.map(coupon => (
-              <div key={coupon.id} style={styles.couponCard}>
+              <div key={coupon.id} className="owner-coupon-card" style={styles.couponCard}>
                 
                 {/* Cột trái: Tên, Mô tả & Ngày tháng */}
-                <div style={styles.couponInfo}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="owner-coupon-info" style={styles.couponInfo}>
+                  <div className="owner-coupon-title-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <p style={styles.couponTitle}>{coupon.code || t('sale')}</p>
                     {/* Giả sử ngài có trường description, nếu tên trường khác ngài tự đổi nhé */}
                     <span style={{ fontSize: '14px', color: '#666' }}>
                       {coupon.description || t('defaultCouponDescription')}
                     </span>
                   </div>
-                  <p style={styles.couponDate}>
+                  <p className="owner-coupon-date" style={styles.couponDate}>
                     {formatDate(coupon.validFrom)} - {formatDate(coupon.validTo)}
                   </p>
                 </div>
                 
                 {/* Cột phải: Trạng thái & Nút xóa */}
-                <div style={styles.couponActions}>
+                <div className="owner-coupon-actions" style={styles.couponActions}>
                   <span style={styles.validBadge}>{coupon.status || t('valid')}</span>
                   <button style={styles.deleteCouponBtn}
                     onClick={() => handleDeleteCoupon(coupon.id)}
@@ -746,7 +752,7 @@ const OwnerDashboardPage = () => {
       )}
       {showCouponModal && (
         <div style={styles.fullscreenModal}>
-          <div style={styles.formModalCard}>
+          <div className="owner-form-modal" style={styles.formModalCard}>
             <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>{t('createCouponTitle')}</h3>
             
             <label style={styles.formLabel}>{t('couponCode')}*</label>
@@ -776,7 +782,7 @@ const OwnerDashboardPage = () => {
               onChange={e => setCouponForm({...couponForm, discountValue: e.target.value})} 
             />
 
-            <div style={{ display: 'flex', gap: '16px' }}>
+            <div className="owner-form-date-row" style={{ display: 'flex', gap: '16px' }}>
               <div style={{ flex: 1 }}>
                 <label style={styles.formLabel}>{t('validFrom')}*</label>
                 <input 
@@ -797,7 +803,7 @@ const OwnerDashboardPage = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+            <div className="owner-form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
               <button 
                 style={{ ...styles.popupBtn, backgroundColor: '#ccc', color: '#333' }} 
                 onClick={() => setShowCouponModal(false)}

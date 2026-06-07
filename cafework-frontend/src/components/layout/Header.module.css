@@ -1,5 +1,5 @@
 .header {
-  height: 64px;
+  min-height: var(--cw-header-height, 64px);
   width: 100%;
   display: flex;
   align-items: center;
@@ -17,6 +17,7 @@
   flex: 1;
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .languageWrap {
@@ -84,6 +85,7 @@
 
 .centerSection {
   flex: none;
+  min-width: 0;
 }
 
 .logo {
@@ -99,6 +101,7 @@
   justify-content: flex-end;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 .loginButton {
@@ -138,6 +141,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .profileLink {
@@ -146,6 +150,7 @@
   gap: 12px;
   text-decoration: none;
   color: inherit;
+  min-width: 0;
 }
 
 .profileLink:hover .userName {
@@ -170,6 +175,10 @@
   font-size: 14px;
   font-weight: 500;
   color: #4a4a4a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }
 
 .logoutButton {
@@ -197,6 +206,14 @@
   padding: 0 20px;
   background: #fff;
   border-bottom: 1px solid #eaeaea;
+  min-height: var(--cw-nav-height, 45px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.navTabs::-webkit-scrollbar {
+  display: none;
 }
 
 .navTab {
@@ -224,4 +241,132 @@
   color: #333;
   font-weight: 700;
   border-bottom: 3px solid #8b5a2b;
+}
+
+@media (max-width: 1023px) {
+  .header {
+    padding: 0 18px;
+  }
+
+  .logo {
+    font-size: 21px;
+  }
+
+  .rightSection {
+    gap: 10px;
+  }
+
+  .loginButton,
+  .registerButton {
+    min-height: 38px;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .leftSection,
+  .rightSection {
+    flex: 1 1 0;
+  }
+
+  .languageDropdown {
+    min-height: 40px;
+    max-width: 44px;
+    padding: 6px 10px;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  .languageDropdown span:not(.flag),
+  .arrowIcon {
+    display: none;
+  }
+
+  .flag {
+    font-size: 18px;
+  }
+
+  .langMenu {
+    min-width: min(190px, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
+  }
+
+  .logo {
+    display: block;
+    font-size: 18px;
+    max-width: 40vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rightSection {
+    gap: 6px;
+  }
+
+  .loginButton,
+  .registerButton,
+  .logoutButton {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .profileSection {
+    gap: 6px;
+  }
+
+  .profileLink {
+    gap: 0;
+  }
+
+  .userName {
+    display: none;
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .logoutButton {
+    max-width: 44px;
+    overflow: hidden;
+  }
+
+  .navTabs {
+    padding: 0 10px;
+  }
+
+  .navTab,
+  .activeTab {
+    flex: 0 0 auto;
+    min-height: 43px;
+    padding: 11px 12px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 390px) {
+  .header {
+    padding-inline: 8px;
+  }
+
+  .logo {
+    font-size: 16px;
+    max-width: 36vw;
+  }
+
+  .loginButton,
+  .registerButton,
+  .logoutButton {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
 }

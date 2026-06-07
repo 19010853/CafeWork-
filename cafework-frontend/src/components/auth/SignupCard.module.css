@@ -122,3 +122,31 @@
   color: #8d6e63;
   text-decoration: underline;
 }
+
+@media (max-width: 480px) {
+  .card {
+    padding: 24px 18px;
+    border-radius: 12px;
+  }
+
+  .title {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .roleToggle {
+    border-radius: 12px;
+  }
+
+  .roleButton {
+    min-height: 42px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+
+  .input,
+  .submitButton {
+    min-height: 44px;
+  }
+}
