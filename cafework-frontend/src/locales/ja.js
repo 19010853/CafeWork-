@@ -182,6 +182,7 @@ export default{
 
     seatManagement: '座席管理',
     seatTotal: '合計',
+    seatCount: '{count}席',
     seatAvailable: '空席',
     seatOccupied: '使用中',
 

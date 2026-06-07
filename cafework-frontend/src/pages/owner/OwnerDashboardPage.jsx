@@ -437,6 +437,7 @@ const OwnerDashboardPage = () => {
   const totalSeats = seats.length;
   const availableSeats = seats.filter(seat => seat.status === 'AVAILABLE').length;
   const occupiedSeats = seats.filter(seat => seat.status === 'OCCUPIED').length;
+  const formatSeatCount = (count) => t('seatCount', { count });
 
   // 👇 DƯỚI NÀY LÀ KHÚC RETURN CỦA BỆ HẠ 👇
   
@@ -493,7 +494,7 @@ const OwnerDashboardPage = () => {
             <div>
               <h2 style={styles.sectionTitle}>{t('seatManagement')}</h2>
               <p style={styles.seatStats}>
-                {t('seatTotal')}: <strong>{totalSeats}席</strong> &nbsp;|&nbsp;
+                {t('seatTotal')}: <strong>{formatSeatCount(totalSeats)}</strong> &nbsp;|&nbsp;
                 <span style={{ color: '#34a853' }}> {t('seatAvailable')}: {availableSeats}</span> &nbsp;|&nbsp;
                 <span style={{ color: '#ea4335' }}> {t('seatOccupied')}: {occupiedSeats}</span>
               </p>

@@ -184,6 +184,7 @@ export default {
 
     seatManagement: 'Quản lý ghế',
     seatTotal: 'Tổng',
+    seatCount: '{count} ghế',
     seatAvailable: 'Ghế trống',
     seatOccupied: 'Đang sử dụng',
 

@@ -182,6 +182,7 @@ export default {
 
     seatManagement: 'Seat Management',
     seatTotal: 'Total',
+    seatCount: '{count} seats',
     seatAvailable: 'Available',
     seatOccupied: 'Occupied',
 
