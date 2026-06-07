@@ -1,13 +1,15 @@
 import api from '../api/axiosClient';
 import { getLang } from '../utils/userLocalStore';
 
-export const searchCafes = async (keyword) => {
+export const searchCafes = async (keyword, options = {}) => {
     try {
         const response = await api.get('/cafes/search', {
             params: {
                 keyword,
                 lang: getLang(),
+                recordHistory: options.recordHistory ?? true,
             },
+            signal: options.signal,
         });
         return response.data;
     } catch (error) {

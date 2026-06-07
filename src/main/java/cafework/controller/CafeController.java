@@ -56,7 +56,7 @@ public class CafeController {
     @GetMapping
     public List<Cafe> getAllCafes(@RequestParam(value = "lang", required = false, defaultValue = "VI") String lang) {
         // Keeping as is, but ensuring service handles it
-        return cafeService.searchByName("", lang);
+        return cafeService.searchByName("", lang, false);
     }
 
     @GetMapping("/{id}")
@@ -73,9 +73,20 @@ public class CafeController {
     @GetMapping("/search")
     public ResponseEntity<List<Cafe>> searchCafes(
             @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
-            @RequestParam(value = "lang", required = false, defaultValue = "VI") String lang) {
-        List<Cafe> results = cafeService.searchByName(keyword, lang);
+            @RequestParam(value = "lang", required = false, defaultValue = "VI") String lang,
+            @RequestParam(value = "recordHistory", required = false, defaultValue = "true") boolean recordHistory) {
+        List<Cafe> results = cafeService.searchByName(keyword, lang, recordHistory);
         return ResponseEntity.ok(results);
+    }
+
+    @PostMapping("/translations/warmup")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<?> warmupCafeTranslations(
+            @RequestParam(value = "lang", required = false, defaultValue = "JP") String lang) {
+        int warmed = cafeService.warmupTranslations(lang);
+        return ResponseEntity.ok(Map.of(
+                "lang", lang,
+                "warmed", warmed));
     }
 
     @PatchMapping("/{id}/seat-status")

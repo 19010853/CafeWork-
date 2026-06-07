@@ -43,7 +43,6 @@ public class CafeServiceImpl implements CafeService {
     private static final List<String> VALID_SEAT_STATUSES = Arrays.asList(
             "AVAILABLE", "ALMOST_FULL", "FULL");
     private static final List<String> SUPPORTED_LANGS = Arrays.asList("VI", "EN", "JP");
-    private static final int MAX_TRANSLATION_CANDIDATES = 50;
 
     @Autowired
     private CafeRepository cafeRepository;
@@ -66,23 +65,26 @@ public class CafeServiceImpl implements CafeService {
 
     @Override
     public List<Cafe> searchByName(String keyword, String lang) {
-        saveSearchHistory(keyword);
+        return searchByName(keyword, lang, true);
+    }
+
+    @Override
+    public List<Cafe> searchByName(String keyword, String lang, boolean recordHistory) {
+        if (recordHistory) {
+            saveSearchHistory(keyword);
+        }
 
         String targetLang = normalizeLang(lang);
         String normalizedKeyword = normalizeForSearch(keyword);
         List<Cafe> cafes = cafeRepository.findAll();
-        localizeCafes(cafes, targetLang);
+        applyCachedLocalization(cafes, targetLang);
 
         if (normalizedKeyword.isEmpty()) {
             return cafes;
         }
 
-        String translatedKeyword = targetLang.equals("VI")
-                ? ""
-                : normalizeForSearch(translateTextSafely(keyword, targetLang, "VI"));
-
         List<Cafe> matched = cafes.stream()
-                .filter(cafe -> matchesCafe(cafe, normalizedKeyword, translatedKeyword))
+                .filter(cafe -> matchesCafe(cafe, normalizedKeyword))
                 .sorted(Comparator.comparing(Cafe::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
 
@@ -101,6 +103,21 @@ public class CafeServiceImpl implements CafeService {
             localizeCafe(cafe, normalizeLang(lang));
         }
         return cafe;
+    }
+
+    @Override
+    public int warmupTranslations(String lang) {
+        String targetLang = normalizeLang(lang);
+        if (targetLang.equals("VI")) {
+            return 0;
+        }
+
+        int warmed = 0;
+        for (Cafe cafe : cafeRepository.findAll()) {
+            getOrCreateTranslation(cafe, targetLang);
+            warmed++;
+        }
+        return warmed;
     }
 
     @Override
@@ -195,10 +212,43 @@ public class CafeServiceImpl implements CafeService {
         }
     }
 
-    private void localizeCafes(List<Cafe> cafes, String targetLang) {
-        cafes.stream()
-                .limit(MAX_TRANSLATION_CANDIDATES)
-                .forEach(cafe -> localizeCafe(cafe, targetLang));
+    private void applyCachedLocalization(List<Cafe> cafes, String targetLang) {
+        if (cafes == null || cafes.isEmpty()) {
+            return;
+        }
+
+        if (targetLang.equals("VI")) {
+            cafes.forEach(this::clearLocalizedFields);
+            return;
+        }
+
+        List<UUID> cafeIds = cafes.stream()
+                .map(Cafe::getId)
+                .filter(id -> id != null)
+                .toList();
+        if (cafeIds.isEmpty()) {
+            return;
+        }
+
+        Map<UUID, CafeTranslation> translationsByCafeId = cafeTranslationRepository
+                .findByLangAndCafeIdIn(targetLang, cafeIds)
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        CafeTranslation::getCafeId,
+                        translation -> translation,
+                        (first, ignored) -> first));
+
+        for (Cafe cafe : cafes) {
+            CafeTranslation translation = translationsByCafeId.get(cafe.getId());
+            if (translation == null || !sourceHash(cafe).equals(translation.getSourceHash())) {
+                clearLocalizedFields(cafe);
+                continue;
+            }
+
+            cafe.setLocalizedName(nonBlankOrNull(translation.getName()));
+            cafe.setLocalizedAddress(nonBlankOrNull(translation.getAddress()));
+            cafe.setLocalizedDescription(nonBlankOrNull(translation.getDescription()));
+        }
     }
 
     private void localizeCafe(Cafe cafe, String targetLang) {
@@ -244,7 +294,7 @@ public class CafeServiceImpl implements CafeService {
         cafe.setLocalizedDescription(null);
     }
 
-    private boolean matchesCafe(Cafe cafe, String normalizedKeyword, String translatedKeyword) {
+    private boolean matchesCafe(Cafe cafe, String normalizedKeyword) {
         List<String> fields = Arrays.asList(
                 cafe.getName(),
                 cafe.getAddress(),
@@ -253,9 +303,7 @@ public class CafeServiceImpl implements CafeService {
                 cafe.getLocalizedAddress(),
                 cafe.getLocalizedDescription());
 
-        return fields.stream().anyMatch(field -> containsNormalized(field, normalizedKeyword))
-                || (!translatedKeyword.isEmpty()
-                && fields.stream().anyMatch(field -> containsNormalized(field, translatedKeyword)));
+        return fields.stream().anyMatch(field -> containsNormalized(field, normalizedKeyword));
     }
 
     private boolean containsNormalized(String text, String keyword) {

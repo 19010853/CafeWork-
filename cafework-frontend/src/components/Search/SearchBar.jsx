@@ -34,6 +34,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
     const searchBoxRef = useRef(null);
     const sortMenuRef = useRef(null);
     const typingTimeoutRef = useRef(null); // Debounce cho Autocomplete
+    const autocompleteAbortRef = useRef(null);
     const didInitRef = useRef(false);
     useEffect(() => {
         // Nếu vừa mở trang mà đã có kết quả trong bụng (do phục hồi trí nhớ)
@@ -42,13 +43,42 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    const handleSearchEvent = async (searchKeyword) => {
+    const getCachedSearch = (searchKeyword) => {
+        const cacheKey = `search:${getLang()}:${searchKeyword.trim().toLowerCase()}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (!cached) return null;
+
+        try {
+            const parsed = JSON.parse(cached);
+            if (Date.now() - parsed.createdAt > 120000) return null;
+            return parsed.data;
+        } catch {
+            return null;
+        }
+    };
+
+    const setCachedSearch = (searchKeyword, data) => {
+        const cacheKey = `search:${getLang()}:${searchKeyword.trim().toLowerCase()}`;
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+            createdAt: Date.now(),
+            data,
+        }));
+    };
+
+    const handleSearchEvent = async (searchKeyword, options = {}) => {
         setShowDropdown(false);
         setLoading(true);
         setError(null);
         try {
-            addSearchHistory(searchKeyword);
-            const data = await searchCafes(searchKeyword);
+            const shouldRecordHistory = options.recordHistory ?? true;
+            if (shouldRecordHistory) {
+                addSearchHistory(searchKeyword);
+            }
+            const cachedData = getCachedSearch(searchKeyword);
+            const data = cachedData || await searchCafes(searchKeyword, { recordHistory: shouldRecordHistory });
+            if (!cachedData) {
+                setCachedSearch(searchKeyword, data);
+            }
             setResults(data);
             onSearchData(data);
         } catch (err) {
@@ -78,7 +108,11 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
             if (sortMenuRef.current && !sortMenuRef.current.contains(event.target)) setShowSortMenu(false);
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            if (autocompleteAbortRef.current) autocompleteAbortRef.current.abort();
+        };
     }, []);
 
     useEffect(() => {
@@ -93,7 +127,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
         const hasRestoredData = savedCafes && savedLang === getLang() && JSON.parse(savedCafes).length > 0;
         if (!hasRestoredData) {
             const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
-            handleSearchEvent(kw);
+            handleSearchEvent(kw, { recordHistory: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialKeyword]);
@@ -110,22 +144,43 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-        if (value.trim().length > 0) {
+        if (value.trim().length >= 2) {
             typingTimeoutRef.current = setTimeout(async () => {
                 try {
-                    const data = await searchCafes(value);
+                    if (autocompleteAbortRef.current) {
+                        autocompleteAbortRef.current.abort();
+                    }
+
+                    const cachedData = getCachedSearch(value);
+                    if (cachedData) {
+                        setSuggestions(cachedData.slice(0, 5));
+                        setShowDropdown(true);
+                        return;
+                    }
+
+                    const controller = new AbortController();
+                    autocompleteAbortRef.current = controller;
+                    const data = await searchCafes(value, {
+                        recordHistory: false,
+                        signal: controller.signal,
+                    });
+                    setCachedSearch(value, data);
                     setSuggestions(data.slice(0, 5));
                     setShowDropdown(true);
                 } catch (error) {
-                    console.error("Lỗi lấy gợi ý:", error);
+                    if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+                        console.error("Lỗi lấy gợi ý:", error);
+                    }
                 }
-            }, 300);
+            }, 600);
         } else {
             setShowDropdown(false);
             setSuggestions([]);
 
             // When cleared, show all cafes
-            handleSearchEvent('');
+            if (value.trim().length === 0) {
+                handleSearchEvent('', { recordHistory: false });
+            }
         }
     };
 
