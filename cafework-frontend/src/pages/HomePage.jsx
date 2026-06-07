@@ -4,6 +4,7 @@ import MapArea from '../components/MapArea';
 import SearchBar from '../components/Search/SearchBar';
 import { t } from '../utils/i18n';
 import styles from './HomePage.module.css';
+import { getLang } from '../utils/userLocalStore';
 
 const HomePage = () => {
     const navigation = useNavigate();
@@ -23,7 +24,8 @@ const HomePage = () => {
 
     const [cafes, setCafes] = useState(() => {
         const savedCafes = sessionStorage.getItem('savedCafes');
-        return savedCafes ? JSON.parse(savedCafes) : [];
+        const savedLang = sessionStorage.getItem('savedCafeLang');
+        return savedCafes && savedLang === getLang() ? JSON.parse(savedCafes) : [];
     });
     const [routeData, setRouteData] = useState(null);
     const [searchKeyword, setSearchKeyword] = useState(() => {
@@ -62,6 +64,7 @@ const HomePage = () => {
     useEffect(() => {
         sessionStorage.setItem('savedCafes', JSON.stringify(cafes));
         sessionStorage.setItem('savedKeyword', searchKeyword);
+        sessionStorage.setItem('savedCafeLang', getLang());
     }, [cafes, searchKeyword]);
 
     const translateStep = (step) => {

@@ -10,7 +10,9 @@ import java.util.UUID;
 
 public interface CafeService {
     List<Cafe> searchByName(String keyword);
+    List<Cafe> searchByName(String keyword, String lang);
     Cafe getCafeDetailsById(UUID id);
+    Cafe getCafeDetailsById(UUID id, String lang);
     SeatStatusUpdateResponse updateSeatStatus(UUID cafeId, SeatStatusUpdateRequest request);
     
     // Feature 11b

@@ -53,14 +53,16 @@ public class CafeController {
     @Autowired
     private CouponRepository couponRepository;
     @GetMapping
-    public List<Cafe> getAllCafes() {
+    public List<Cafe> getAllCafes(@RequestParam(value = "lang", required = false, defaultValue = "VI") String lang) {
         // Keeping as is, but ensuring service handles it
-        return cafeService.searchByName("");
+        return cafeService.searchByName("", lang);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cafe> getCafeById(@PathVariable UUID id) {
-        Cafe cafe = cafeService.getCafeDetailsById(id);
+    public ResponseEntity<Cafe> getCafeById(
+            @PathVariable UUID id,
+            @RequestParam(value = "lang", required = false, defaultValue = "VI") String lang) {
+        Cafe cafe = cafeService.getCafeDetailsById(id, lang);
         if (cafe != null) {
             return ResponseEntity.ok(cafe);
         }
@@ -68,8 +70,10 @@ public class CafeController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Cafe>> searchCafes(@RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
-        List<Cafe> results = cafeService.searchByName(keyword);
+    public ResponseEntity<List<Cafe>> searchCafes(
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword,
+            @RequestParam(value = "lang", required = false, defaultValue = "VI") String lang) {
+        List<Cafe> results = cafeService.searchByName(keyword, lang);
         return ResponseEntity.ok(results);
     }
 

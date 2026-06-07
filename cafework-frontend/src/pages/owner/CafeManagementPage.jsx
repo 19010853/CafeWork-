@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import styles from './CafeManagementPage.module.css';
 import axiosClient from '../../api/axiosClient';
 import { t } from '../../utils/i18n';
+import { getIsoLang } from '../../services/translationService';
 
 // Fix Leaflet marker icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -113,7 +114,7 @@ const CafeManagementPage = () => {
         }));
         try {
           // Có thể thay '&accept-language=vi' thành 'ja' hoặc ngôn ngữ động tùy ý bệ hạ
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=vi`);
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=${getIsoLang()}`);
           const data = await response.json();
 
           if (data && data.display_name) {

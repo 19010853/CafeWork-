@@ -6,6 +6,7 @@ import customPinImage from '../assets/my-custom-pin.png';
 import defaultShadow from 'leaflet/dist/images/marker-shadow.png';
 import { toast } from 'react-hot-toast';
 import { t } from '../utils/i18n';
+import { getCafeAddress, getCafeName } from '../services/translationService';
 
 // Sửa lỗi icon marker
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -46,6 +47,13 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget, resizeSigna
   const lastRequestedRouteKeyRef = useRef(null);
   const drawRouteRef = useRef(null);
   const polylineRef = useRef(null);
+
+  const escapeHtml = (value) => String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 
   useEffect(() => {
     if (!isRouting && polylineRef.current && mapInstanceRef.current) {
@@ -265,13 +273,15 @@ const MapArea = ({ cafes, onRouteCalculated, isRouting, routeTarget, resizeSigna
           const imageUrl = cafe.images && cafe.images.length > 0
             ? cafe.images[0].imageUrl
             : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=300&q=80';
+          const cafeName = escapeHtml(getCafeName(cafe));
+          const cafeAddress = escapeHtml(getCafeAddress(cafe));
 
           const marker = L.marker([cafe.latitude, cafe.longitude])
             .bindPopup(`
               <div className="custom-popup-card" style="width: 250px; font-family: sans-serif; padding: 5px;">
                 <img src="${imageUrl}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" />
-                <h3 style="margin: 0 0 5px 0; font-size: 16px; font-weight: bold; color: #333;">${cafe.name}</h3>
-                <p style="margin: 0 0 10px 0; font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px;">📍 ${cafe.address}</p>
+                <h3 style="margin: 0 0 5px 0; font-size: 16px; font-weight: bold; color: #333;">${cafeName}</h3>
+                <p style="margin: 0 0 10px 0; font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px;">📍 ${cafeAddress}</p>
                 
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                   <div style="display: flex; align-items: center; font-size: 14px; font-weight: bold; color: #333;">

@@ -6,6 +6,7 @@ import axiosClient from '../api/axiosClient';
 import { isBookmarked, toggleBookmark } from '../utils/userLocalStore';
 import { t } from '../utils/i18n';
 import { getLang } from '../utils/userLocalStore';
+import { getCafeAddress, getCafeDescription, getCafeName, getIsoLang, translateText } from '../services/translationService';
 // ============================================================
 // STYLES
 // ============================================================
@@ -362,6 +363,7 @@ const CafeDetailPage = () => {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [coupons, setCoupons] = useState([]);
+  const [couponTranslations, setCouponTranslations] = useState({});
   
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -385,7 +387,7 @@ const CafeDetailPage = () => {
   const fetchCafeDetails = () => {
     setIsRefreshing(true);
     axiosClient
-      .get(`/cafes/${id}`)
+      .get(`/cafes/${id}`, { params: { lang: getLang() } })
       .then((res) => {
         setCafe(res.data);
         setLoading(false);
@@ -423,6 +425,31 @@ const CafeDetailPage = () => {
       setCoupons([]);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    const targetLang = getLang();
+
+    if (!coupons.length) {
+      setCouponTranslations({});
+      return;
+    }
+
+    Promise.all(
+      coupons.map(async (coupon) => {
+        const translated = await translateText(coupon.description || '', targetLang);
+        return [coupon.id, translated];
+      })
+    ).then((entries) => {
+      if (!cancelled) {
+        setCouponTranslations(Object.fromEntries(entries));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [coupons]);
 
   const handleSubmitReview = async () => {
     if (!newReviewContent.trim()) return;
@@ -499,11 +526,15 @@ const CafeDetailPage = () => {
   const images = cafe.images && cafe.images.length > 0 ? cafe.images : [];
   const lat = cafe.latitude || 21.028511;
   const lng = cafe.longitude || 105.804817;
+  const displayName = getCafeName(cafe);
+  const displayAddress = getCafeAddress(cafe);
+  const displayDescription = getCafeDescription(cafe);
+  const mapLanguage = getIsoLang(getLang());
 
   // Gọi trực tiếp đến HomePage với các tham số chỉ đường
   const goToDirectionsPage = () => {
     if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return;
-    const destName = cafe?.name ? `&destName=${encodeURIComponent(cafe.name)}` : '';
+    const destName = displayName ? `&destName=${encodeURIComponent(displayName)}` : '';
     navigate(`/?destLat=${encodeURIComponent(lat)}&destLng=${encodeURIComponent(lng)}${destName}`);
   };
 
@@ -596,24 +627,24 @@ const CafeDetailPage = () => {
           ) : images.length === 1 ? (
             <div style={{ gridColumn: '1 / -1', position: 'relative', cursor: 'pointer' }}
               onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
-              <img src={images[0].imageUrl} alt={cafe.name} style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block' }} onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.style.display = 'none'; }} />
+              <img src={images[0].imageUrl} alt={displayName} style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block' }} onError={(e) => { e.target.onerror = null; e.target.src = ''; e.target.style.display = 'none'; }} />
             </div>
           ) : (
             <>
               <div className="gallery-main" style={styles.galleryMain}
                 onClick={() => { setSelectedPhotoIndex(0); setShowPhotoModal(true); }}>
-                <img src={images[0].imageUrl} alt={cafe.name} style={{ ...styles.galleryMainImg, cursor: 'pointer' }} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+                <img src={images[0].imageUrl} alt={displayName} style={{ ...styles.galleryMainImg, cursor: 'pointer' }} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
               </div>
               {images[1] && (
                 <div style={{ ...styles.gallerySub, position: 'relative' }}
                   onClick={() => { setSelectedPhotoIndex(1); setShowPhotoModal(true); }}>
-                  <img src={images[1].imageUrl} alt={`${cafe.name} 2`} style={{ ...styles.gallerySubImg, cursor: 'pointer' }} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+                  <img src={images[1].imageUrl} alt={`${displayName} 2`} style={{ ...styles.gallerySubImg, cursor: 'pointer' }} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
                 </div>
               )}
               {images[2] && (
                 <div style={{ ...styles.gallerySub, position: 'relative', cursor: 'pointer' }}
                   onClick={() => { setSelectedPhotoIndex(2); setShowPhotoModal(true); }}>
-                  <img src={images[2].imageUrl} alt={`${cafe.name} 3`} style={{ ...styles.gallerySubImg, cursor: 'pointer' }} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+                  <img src={images[2].imageUrl} alt={`${displayName} 3`} style={{ ...styles.gallerySubImg, cursor: 'pointer' }} onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
                   {images.length > 3 && (
                     <div style={{
                       position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.52)', display: 'flex', flexDirection: 'column',
@@ -640,7 +671,7 @@ const CafeDetailPage = () => {
           {/* Name & Rating & Status */}
           <div style={styles.nameCard}>
             <div className="detail-name-row" style={styles.nameRow}>
-              <h1 style={styles.cafeName}>{cafe.name}</h1>
+              <h1 style={styles.cafeName}>{displayName}</h1>
               <div className="detail-rating" style={styles.ratingBadge}>
                 ★ {cafe.rating ? Number(cafe.rating).toFixed(1) : t('noReviewYet')}
               </div>
@@ -705,7 +736,7 @@ const CafeDetailPage = () => {
                         <span style={styles.couponIcon}>{expired ? '⏰' : '🎫'}</span>
                         <div style={styles.couponText}>
                           <p style={styles.couponTitle}>{coupon.code} {' · '} {coupon.discountValue}% OFF</p>
-                          <p style={styles.couponSub}>{coupon.description}</p>
+                          <p style={styles.couponSub}>{couponTranslations[coupon.id] || coupon.description}</p>
                           <p style={{ marginTop: '4px', fontSize: '11px', color: '#777' }}>
                             {new Date(coupon.validFrom).toLocaleDateString('ja-JP')}
                             {' ~ '}
@@ -739,7 +770,7 @@ const CafeDetailPage = () => {
             <div style={styles.detailRow}>
               <span style={styles.detailIcon}>📍</span>
               <span style={styles.detailLabel}>{t('address')}</span>
-              <span style={styles.detailValue}>{cafe.address || t('noInfo')}</span>
+              <span style={styles.detailValue}>{displayAddress || t('noInfo')}</span>
             </div>
             <div style={styles.detailRow}>
               <span style={styles.detailIcon}>🕒</span>
@@ -756,10 +787,10 @@ const CafeDetailPage = () => {
           </div>
 
           {/* Description */}
-          {cafe.description && (
+          {displayDescription && (
             <div style={styles.sectionCard}>
               <h2 style={styles.sectionTitle}>📖 {t('aboutCafe')}</h2>
-              <p style={styles.description}>{cafe.description}</p>
+              <p style={styles.description}>{displayDescription}</p>
             </div>
           )}
 
@@ -866,7 +897,7 @@ const CafeDetailPage = () => {
               style={styles.mapFrame}
               loading="lazy"
               allowFullScreen
-              src={`https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed`}
+              src={`https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed&language=${mapLanguage}`}
             />
             <div style={{ padding: '12px 18px' }}>
               <button
@@ -1012,7 +1043,7 @@ const CafeDetailPage = () => {
             padding: '14px 20px', color: '#fff', flexShrink: 0,
           }} onClick={(e) => e.stopPropagation()}>
             <span style={{ fontSize: '14px', color: '#ccc' }}>
-              {cafe.name} — {selectedPhotoIndex + 1} / {images.length} {t('photos')}
+              {displayName} — {selectedPhotoIndex + 1} / {images.length} {t('photos')}
             </span>
             <button
               onClick={() => setShowPhotoModal(false)}
@@ -1041,7 +1072,7 @@ const CafeDetailPage = () => {
             </button>
             <img
               src={images[selectedPhotoIndex]?.imageUrl}
-              alt={`${cafe.name} ${selectedPhotoIndex + 1}`}
+              alt={`${displayName} ${selectedPhotoIndex + 1}`}
               style={{
                 maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain',
                 borderRadius: '8px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',

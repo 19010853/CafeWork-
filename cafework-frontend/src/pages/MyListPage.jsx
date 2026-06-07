@@ -5,6 +5,7 @@ import { getBookmarks, isBookmarked, toggleBookmark } from '../utils/userLocalSt
 import { getCafeById } from '../services/cafeService';
 import styles from './profile/ProfilePage.module.css';
 import { t } from '../utils/i18n';
+import { getCafeName } from '../services/translationService';
 
 const MyListPage = () => {
     const navigate = useNavigate();
@@ -207,7 +208,7 @@ const MyListPage = () => {
                                             <div style={{ position: 'relative' }}>
                                                 <img
                                                     src={cafe.images && cafe.images.length > 0 ? cafe.images[0].imageUrl : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80'}
-                                                    alt={cafe.name}
+                                                    alt={getCafeName(cafe)}
                                                     style={gridStyles.image}
                                                     onError={(e) => {
                                                         e.target.onerror = null;
@@ -242,7 +243,7 @@ const MyListPage = () => {
 
                                             <div style={gridStyles.content}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                                                    <h3 style={gridStyles.title}>{cafe.name}</h3>
+                                                    <h3 style={gridStyles.title}>{getCafeName(cafe)}</h3>
                                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                                                         <div style={gridStyles.rating}>
                                                             <span style={{ color: '#F59E0B', marginRight: 4 }}>★</span>

@@ -1,8 +1,14 @@
 import api from '../api/axiosClient';
+import { getLang } from '../utils/userLocalStore';
 
 export const searchCafes = async (keyword) => {
     try {
-        const response = await api.get(`/cafes/search?keyword=${encodeURIComponent(keyword)}`);
+        const response = await api.get('/cafes/search', {
+            params: {
+                keyword,
+                lang: getLang(),
+            },
+        });
         return response.data;
     } catch (error) {
         console.error("Lỗi searchCafes:", error);
@@ -13,7 +19,7 @@ export const searchCafes = async (keyword) => {
 
 export const getAllCafes = async () => {
     try {
-        const response = await api.get('/cafes');
+        const response = await api.get('/cafes', { params: { lang: getLang() } });
         return response.data;
     } catch (error) {
         console.error("Lỗi getAllCafes:", error);
@@ -23,7 +29,7 @@ export const getAllCafes = async () => {
 
 export const getCafeById = async (id) => {
     try {
-        const response = await api.get(`/cafes/${id}`);
+        const response = await api.get(`/cafes/${id}`, { params: { lang: getLang() } });
         return response.data;
     } catch (error) {
         console.error("Lỗi getCafeById:", error);

@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchCafes } from '../../services/cafeService';
 import L from 'leaflet'; // Bổ sung Leaflet để tính khoảng cách
-import { addSearchHistory, isBookmarked, toggleBookmark } from '../../utils/userLocalStore';
+import { addSearchHistory, getLang, isBookmarked, toggleBookmark } from '../../utils/userLocalStore';
 import './SearchBar.css';
 import { t } from '../../utils/i18n';
+import { getCafeAddress, getCafeName } from '../../services/translationService';
 const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
     const navigate = useNavigate();
     const userRole = localStorage.getItem('role');
@@ -13,7 +14,8 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
     });
     const [results, setResults] = useState(() => {
         const savedCafes = sessionStorage.getItem('savedCafes');
-        return savedCafes ? JSON.parse(savedCafes) : [];
+        const savedLang = sessionStorage.getItem('savedCafeLang');
+        return savedCafes && savedLang === getLang() ? JSON.parse(savedCafes) : [];
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -87,7 +89,8 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
         if (didInitRef.current) return;
         didInitRef.current = true;
         const savedCafes = sessionStorage.getItem('savedCafes');
-        const hasRestoredData = savedCafes && JSON.parse(savedCafes).length > 0;
+        const savedLang = sessionStorage.getItem('savedCafeLang');
+        const hasRestoredData = savedCafes && savedLang === getLang() && JSON.parse(savedCafes).length > 0;
         if (!hasRestoredData) {
             const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
             handleSearchEvent(kw);
@@ -126,7 +129,8 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
         }
     };
 
-    const handleSuggestionClick = (cafeName) => {
+    const handleSuggestionClick = (cafe) => {
+        const cafeName = getCafeName(cafe);
         setKeyword(cafeName);
         setShowDropdown(false);
         handleSearchEvent(cafeName);
@@ -163,10 +167,10 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
                         {showDropdown && keyword.trim().length > 0 && (
                             <ul className="autocomplete-dropdown" style={autocompleteStyle}>
                                 {suggestions.map((cafe) => (
-                                    <li key={cafe.id} style={acItemStyle} onClick={() => handleSuggestionClick(cafe.name)}>
+                                    <li key={cafe.id} style={acItemStyle} onClick={() => handleSuggestionClick(cafe)}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#333' }}>📍 {cafe.name}</span>
-                                            <span style={{ fontSize: '11px', color: '#888', marginLeft: '16px' }}>{cafe.address}</span>
+                                            <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#333' }}>📍 {getCafeName(cafe)}</span>
+                                            <span style={{ fontSize: '11px', color: '#888', marginLeft: '16px' }}>{getCafeAddress(cafe)}</span>
                                         </div>
                                     </li>
                                 ))}
@@ -232,7 +236,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
                             <div style={{ position: 'relative' }}>
                                 <img
                                     src={cafe.images && cafe.images.length > 0 ? cafe.images[0].imageUrl : 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80'}
-                                    alt={cafe.name}
+                                    alt={getCafeName(cafe)}
                                     style={imageStyle}
                                     onError={(e) => {
                                         e.target.onerror = null;
@@ -270,7 +274,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
                             <div style={cardContentStyle}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                                     <div style={{ flex: 1, paddingRight: '10px' }}>
-                                        <h3 style={titleStyle}>{cafe.name}</h3>
+                                        <h3 style={titleStyle}>{getCafeName(cafe)}</h3>
                                         <div style={{ fontSize: '12px', color: '#888', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             {/* NẾU LỌC THEO KHOẢNG CÁCH THÌ HIỆN SỐ KM Ở ĐÂY */}
                                             {sortBy === 'distance_asc' && (

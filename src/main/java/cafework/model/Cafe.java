@@ -35,6 +35,15 @@ public class Cafe {
     
     private String address;
     private String description;
+
+    @Transient
+    private String localizedName;
+
+    @Transient
+    private String localizedAddress;
+
+    @Transient
+    private String localizedDescription;
     
     @Column(name = "seat_status")
     private String seatStatus;
