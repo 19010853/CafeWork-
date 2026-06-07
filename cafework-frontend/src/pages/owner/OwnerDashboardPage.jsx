@@ -16,6 +16,8 @@ const OwnerDashboardPage = () => {
   const [showDeletePopup, setShowDeletePopup] = useState(false); // Ẩn/hiện pop-up xóa
   const [deleteAmount, setDeleteAmount] = useState(1);           // Số lượng ghế muốn xóa
   const [blacklistIds, setBlacklistIds] = useState([]); // Kho lưu ID ghế đã chọn để xóa (nếu có)
+  const [isSavingSeats, setIsSavingSeats] = useState(false);
+  const originalSeatsRef = useRef([]);
   const navigate = useNavigate();
   const [images, setImages] = useState([]);
   const [coupons, setCoupons] = useState([]);
@@ -35,6 +37,17 @@ const OwnerDashboardPage = () => {
   // ==========================================
   // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
   // ==========================================
+  const getOverallSeatStatus = (seatList) => {
+    if (!seatList || seatList.length === 0) return 'FULL';
+
+    const total = seatList.length;
+    const available = seatList.filter(seat => seat.status === 'AVAILABLE').length;
+
+    if (available === 0) return 'FULL';
+    if ((available / total) * 100 <= 30) return 'ALMOST_FULL';
+    return 'AVAILABLE';
+  };
+
   const fetchAllCafeData = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -52,22 +65,10 @@ const OwnerDashboardPage = () => {
       
       // Nhận hàng về và cất vào kho
       setSeats(seatsRes.data);
+      originalSeatsRef.current = seatsRes.data;
       setImages(imagesRes.data);
       setCoupons(couponsRes.data);
-      const fetchedSeats = seatsRes.data;
-      if (fetchedSeats && fetchedSeats.length > 0) {
-        const total = fetchedSeats.length;
-        const available = fetchedSeats.filter(s => s.status === 'AVAILABLE').length;
-        
-        let initialStatus = 'AVAILABLE';
-        if (available === 0) {
-          initialStatus = 'FULL';
-        } else if ((available / total) * 100 <= 30) {
-          initialStatus = 'ALMOST_FULL';
-        }
-        // Thắp sáng đúng màu nút trạng thái dựa theo số liệu thực
-        handleStatusUpdate(initialStatus);
-      }
+      setCafeStatus(getOverallSeatStatus(seatsRes.data));
     } catch (error) {
       console.error("Lỗi khi tải tài sản quán:", error);
     }
@@ -323,46 +324,76 @@ const OwnerDashboardPage = () => {
   };
   // Chiêu 4: Lưu toàn bộ trạng thái ghế hiện tại về Database
   const saveSeats = async () => {
+    if (isSavingSeats) return;
+
     try {
+      setIsSavingSeats(true);
       const token = localStorage.getItem('token');
       const cafeId = localStorage.getItem('cafeId') || '30000000-0000-0000-0000-000000000001';
-      
-      // 👉 BƯỚC MỚI: Nếu có ghế trong danh sách đen, bắt Backend xóa trước!
-      if (blacklistIds.length > 0) {
-        await axiosClient.post(
-          `/cafes/${cafeId}/seats/batch-delete`, 
-          blacklistIds, // Gửi mảng các ID cần xóa đi
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setBlacklistIds([]); // Xóa xong thì làm sạch danh sách đen
-      }
-
-      // Xử lý gửi mảng ghế hiện tại (Giữ nguyên logic cũ của bệ hạ)
-      const seatsToSend = seats.map(seat => {
-        if (String(seat.id).startsWith('temp-')) {
-          return { ...seat, id: null };
-        }
-        return seat;
-      });
-
-      await axiosClient.put(
-        `/cafes/${cafeId}/seats`, 
-        seatsToSend, 
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+      const nextCafeStatus = getOverallSeatStatus(seats);
+      const originalSeatsById = new Map(
+        originalSeatsRef.current.map(seat => [String(seat.id), seat])
       );
 
+      if (blacklistIds.length > 0) {
+        await axiosClient.post(
+          `/cafes/${cafeId}/seats/batch-delete`,
+          blacklistIds,
+          { headers }
+        );
+      }
+
+      setCafeStatus(nextCafeStatus);
+
+      const seatsToSend = seats
+        .filter(seat => {
+          const isTempSeat = String(seat.id).startsWith('temp-');
+          const originalSeat = originalSeatsById.get(String(seat.id));
+
+          return (
+            isTempSeat ||
+            !originalSeat ||
+            originalSeat.status !== seat.status ||
+            originalSeat.seatNumber !== seat.seatNumber
+          );
+        })
+        .map(seat => {
+          if (String(seat.id).startsWith('temp-')) {
+            return { ...seat, id: null };
+          }
+          return seat;
+        });
+
+      const [seatsResponse] = await Promise.all([
+        axiosClient.put(
+          `/cafes/${cafeId}/seats`,
+          seatsToSend,
+          { headers }
+        ),
+        axiosClient.patch(
+          `/cafes/${cafeId}/seat-status`,
+          { seatStatus: nextCafeStatus },
+          { headers }
+        )
+      ]);
+
+      setSeats(seatsResponse.data);
+      originalSeatsRef.current = seatsResponse.data;
+      setBlacklistIds([]);
+
       toast.success(t('saveSeatsSuccess'));
-      fetchAllCafeData(); // Tải lại dữ liệu chuẩn từ DB
     } catch (error) {
-      console.error("Lưu thất bại:", error);
+      console.error("Luu ghe that bai:", error);
       toast.error(t('saveSeatsFailed'));
+    } finally {
+      setIsSavingSeats(false);
     }
   };
+
   const handleAddNewSeats = () => {
     const amount = parseInt(addAmount, 10);
     if (isNaN(amount) || amount <= 0) {
@@ -500,7 +531,14 @@ const OwnerDashboardPage = () => {
               </p>
             </div>
             {/* Tích hợp nút update gọi lại API lấy ghế mới nhất */}
-            <button style={styles.autoUpdateButton} onClick={saveSeats}>
+            <button
+              style={{
+                ...styles.autoUpdateButton,
+                ...(isSavingSeats ? styles.disabledButton : {})
+              }}
+              onClick={saveSeats}
+              disabled={isSavingSeats}
+            >
               {t('updateLatest')}
             </button>
           </div>
@@ -832,6 +870,10 @@ const styles = {
   autoUpdateButton: {
     fontSize: '12px', padding: '6px 16px', borderRadius: '16px', border: '1px solid #ccc',
     backgroundColor: '#fff', color: '#666', cursor: 'pointer',
+  },
+  disabledButton: {
+    opacity: 0.6,
+    cursor: 'not-allowed',
   },
   seatGridBox: {
     backgroundColor: '#f9f9f9', padding: '24px', borderRadius: '8px', border: '1px solid #eaeaea', marginBottom: '16px',

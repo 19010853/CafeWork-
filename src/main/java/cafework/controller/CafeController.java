@@ -1,13 +1,19 @@
 package cafework.controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import cafework.dto.SeatStatusUpdateRequest;
@@ -145,58 +151,68 @@ public class CafeController {
     }
 
     @PutMapping("/{id}/seats")
+    @Transactional
     public ResponseEntity<?> updateCafeSeats(@PathVariable UUID id, @RequestBody List<Seat> updatedSeats) {
-        
-        // 1. Tìm thực thể quán cafe hiện tại để làm điểm tựa khóa ngoại
         Cafe cafe = cafeRepository.findById(id).orElse(null);
         if (cafe == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy quán cafe này!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cafe not found.");
         }
 
-        // 2. Duyệt qua từng chiếc ghế từ mật sớ Frontend gửi lên
+        List<UUID> existingSeatIds = updatedSeats.stream()
+                .map(Seat::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        Map<UUID, Seat> existingSeatsById = seatRepository.findAllById(existingSeatIds)
+                .stream()
+                .filter(seat -> cafe.getId().equals(seat.getCafeId()))
+                .collect(Collectors.toMap(Seat::getId, Function.identity()));
+        List<Seat> seatsToSave = new ArrayList<>();
+
         for (Seat incomingSeat : updatedSeats) {
-            
             if (incomingSeat.getId() == null) {
-                // ------------ CHẾ ĐỘ 1: INSERT (GHẾ MỚI TINH) ------------
                 Seat newSeat = new Seat();
-                
-                // 👇 CHÉM THÊM NHÁT NÀY ĐỂ CẤP ID TRỰC TIẾP CHO CHIẾC GHẾ 👇
-                newSeat.setId(java.util.UUID.randomUUID()); 
-                newSeat.setCafeId(cafe.getId()); 
-                newSeat.setSeatNumber(incomingSeat.getSeatNumber()); 
-                newSeat.setStatus(incomingSeat.getStatus());         
-                
-                seatRepository.save(newSeat);
-            } else {
-                // ------------ CHẾ ĐỘ 2: UPDATE (GHẾ CŨ ĐÃ CÓ) ------------
-                Seat existingSeat = seatRepository.findById(incomingSeat.getId()).orElse(null);
-                if (existingSeat != null) {
-                    existingSeat.setStatus(incomingSeat.getStatus()); // Cập nhật trạng thái
-                    // Nếu bệ hạ muốn cho phép đổi cả số ghế cũ thì bật dòng dưới:
-                    // existingSeat.setSeatNumber(incomingSeat.getSeatNumber());
-                    
-                    seatRepository.save(existingSeat); // Đúc lệnh UPDATE xuống DB
-                }
+                newSeat.setId(UUID.randomUUID());
+                newSeat.setCafeId(cafe.getId());
+                newSeat.setSeatNumber(incomingSeat.getSeatNumber());
+                newSeat.setStatus(incomingSeat.getStatus());
+                seatsToSave.add(newSeat);
+                continue;
+            }
+
+            Seat existingSeat = existingSeatsById.get(incomingSeat.getId());
+            if (existingSeat != null) {
+                existingSeat.setStatus(incomingSeat.getStatus());
+                seatsToSave.add(existingSeat);
             }
         }
 
-        return ResponseEntity.ok().body("Vương quốc thái bình, toàn bộ ghế cũ và mới đã được ghi sổ!");
+        if (!seatsToSave.isEmpty()) {
+            seatRepository.saveAll(seatsToSave);
+        }
+
+        return ResponseEntity.ok(seatRepository.findByCafeIdOrderBySeatNumberAsc(id));
     }
-    // Lộ trình tiếp nhận danh sách đen để xóa ghế hàng loạt
+
     @PostMapping("/{id}/seats/batch-delete")
+    @Transactional
     public ResponseEntity<?> batchDeleteSeats(@PathVariable UUID id, @RequestBody List<UUID> seatIds) {
         try {
-            // Duyệt qua từng cái ID trong danh sách đen và cho bay đầu khỏi DB
-            for (UUID seatId : seatIds) {
-                if (seatRepository.existsById(seatId)) {
-                    seatRepository.deleteById(seatId);
-                }
+            if (seatIds == null || seatIds.isEmpty()) {
+                return ResponseEntity.ok().build();
             }
-            return ResponseEntity.ok().body("Cấm vệ quân báo cáo: Đã dọn dẹp các ghế cũ thành công!");
+
+            List<Seat> seatsToDelete = seatRepository.findAllById(seatIds)
+                    .stream()
+                    .filter(seat -> id.equals(seat.getCafeId()))
+                    .toList();
+            seatRepository.deleteAllInBatch(seatsToDelete);
+
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa ghế: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete seats: " + e.getMessage());
         }
     }
+
     // ==========================================
     // 👇 2. CÁC LỘ TRÌNH CHO ẢNH VÀ KHUYẾN MÃI 👇
     // ==========================================
