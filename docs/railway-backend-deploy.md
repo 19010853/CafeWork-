@@ -30,12 +30,44 @@ Set these variables on the Railway backend service:
 DB_URL=jdbc:postgresql://<railway-postgres-host>:<railway-postgres-port>/<railway-postgres-db>?stringtype=unspecified
 DB_USERNAME=<railway-postgres-user>
 DB_PASSWORD=<railway-postgres-password>
-MAIL_USERNAME=<smtp-user>
-MAIL_PASSWORD=<smtp-app-password>
+BREVO_API_KEY=<brevo-api-key>
+BREVO_FROM_EMAIL=<verified-sender-email>
+BREVO_FROM_NAME=CafeWork
 APP_CORS_ALLOWED_ORIGINS=https://cafe-work.vercel.app,https://*.vercel.app
 ```
 
 `APP_CORS_ALLOWED_ORIGINS` supports comma-separated origin patterns. Keep `https://*.vercel.app` when you want Vercel preview deployments to call the Railway backend.
+
+CafeWork sends OTP emails through Brevo's HTTPS Transactional Email API. Do not use Gmail SMTP on Railway Trial/Hobby because outbound SMTP is blocked on those plans.
+
+To get the Brevo variables:
+
+1. Create or open a Brevo account.
+2. Go to `Senders, Domains & Dedicated IPs` or `Settings -> Senders`.
+3. Create a sender with:
+
+```text
+From name: CafeWork
+From email: <email-address-you-control>
+```
+
+4. Verify the sender from the confirmation email Brevo sends.
+5. Go to `Settings -> SMTP & API -> API Keys`.
+6. Create a new API key and copy it once.
+7. Add these variables to Railway backend service `CafeWork-`:
+
+```env
+BREVO_API_KEY=<api-key-from-brevo>
+BREVO_FROM_EMAIL=<verified-sender-email>
+BREVO_FROM_NAME=CafeWork
+```
+
+Remove old SMTP variables from Railway if they exist:
+
+```env
+MAIL_USERNAME
+MAIL_PASSWORD
+```
 
 Use the PostgreSQL service values from Railway's `Connect` or `Variables` tab:
 
@@ -142,4 +174,4 @@ http://localhost:8081/api/...
 ## Security Notes
 
 - Do not commit `.env`, `.env.local`, `.env.production`, or `.vercel`.
-- Rotate any SMTP app password or Vercel token that was copied into logs, screenshots, chats, or shared files.
+- Rotate any SMTP app password, Brevo API key, database URL, or Vercel token that was copied into logs, screenshots, chats, or shared files.
