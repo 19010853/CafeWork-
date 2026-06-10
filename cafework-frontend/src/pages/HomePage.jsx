@@ -6,6 +6,19 @@ import { t } from '../utils/i18n';
 import styles from './HomePage.module.css';
 import { getLang } from '../utils/userLocalStore';
 
+const getSavedCafes = () => {
+    const savedCafes = sessionStorage.getItem('savedCafes');
+    const savedLang = sessionStorage.getItem('savedCafeLang');
+    if (!savedCafes || savedLang !== getLang()) return [];
+
+    try {
+        const parsed = JSON.parse(savedCafes);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+};
+
 const HomePage = () => {
     const navigation = useNavigate();
 
@@ -22,11 +35,7 @@ const HomePage = () => {
         }
     }, [navigation]);
 
-    const [cafes, setCafes] = useState(() => {
-        const savedCafes = sessionStorage.getItem('savedCafes');
-        const savedLang = sessionStorage.getItem('savedCafeLang');
-        return savedCafes && savedLang === getLang() ? JSON.parse(savedCafes) : [];
-    });
+    const [cafes, setCafes] = useState(getSavedCafes);
     const [routeData, setRouteData] = useState(null);
     const [searchKeyword, setSearchKeyword] = useState(() => {
         return sessionStorage.getItem('savedKeyword') || '';

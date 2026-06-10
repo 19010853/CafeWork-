@@ -6,17 +6,27 @@ import { addSearchHistory, getLang, isBookmarked, toggleBookmark } from '../../u
 import './SearchBar.css';
 import { t } from '../../utils/i18n';
 import { getCafeAddress, getCafeName } from '../../services/translationService';
+
+const getSavedCafes = () => {
+    const savedCafes = sessionStorage.getItem('savedCafes');
+    const savedLang = sessionStorage.getItem('savedCafeLang');
+    if (!savedCafes || savedLang !== getLang()) return [];
+
+    try {
+        const parsed = JSON.parse(savedCafes);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+};
+
 const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
     const navigate = useNavigate();
     const userRole = localStorage.getItem('role');
     const [keyword, setKeyword] = useState(() => {
         return initialKeyword || sessionStorage.getItem('savedKeyword') || '';
     });
-    const [results, setResults] = useState(() => {
-        const savedCafes = sessionStorage.getItem('savedCafes');
-        const savedLang = sessionStorage.getItem('savedCafeLang');
-        return savedCafes && savedLang === getLang() ? JSON.parse(savedCafes) : [];
-    });
+    const [results, setResults] = useState(getSavedCafes);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -74,7 +84,8 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
             if (shouldRecordHistory) {
                 addSearchHistory(searchKeyword);
             }
-            const cachedData = getCachedSearch(searchKeyword);
+            const shouldUseCache = !options.forceNetwork;
+            const cachedData = shouldUseCache ? getCachedSearch(searchKeyword) : null;
             const data = cachedData || await searchCafes(searchKeyword, { recordHistory: shouldRecordHistory });
             if (!cachedData) {
                 setCachedSearch(searchKeyword, data);
@@ -122,19 +133,14 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
 
         if (didInitRef.current) return;
         didInitRef.current = true;
-        const savedCafes = sessionStorage.getItem('savedCafes');
-        const savedLang = sessionStorage.getItem('savedCafeLang');
-        const hasRestoredData = savedCafes && savedLang === getLang() && JSON.parse(savedCafes).length > 0;
-        if (!hasRestoredData) {
-            const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
-            handleSearchEvent(kw, { recordHistory: false });
-        }
+        const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
+        handleSearchEvent(kw, { recordHistory: false, forceNetwork: true });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialKeyword]);
 
     const onSubmit = (e) => {
         e.preventDefault();
-        handleSearchEvent(keyword);
+        handleSearchEvent(keyword, { forceNetwork: true });
     };
 
     // --- AUTOCOMPLETE VỚI DEBOUNCE ---
@@ -179,7 +185,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
 
             // When cleared, show all cafes
             if (value.trim().length === 0) {
-                handleSearchEvent('', { recordHistory: false });
+                handleSearchEvent('', { recordHistory: false, forceNetwork: true });
             }
         }
     };
@@ -188,7 +194,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
         const cafeName = getCafeName(cafe);
         setKeyword(cafeName);
         setShowDropdown(false);
-        handleSearchEvent(cafeName);
+        handleSearchEvent(cafeName, { forceNetwork: true });
     };
 
     // --- THUẬT TOÁN SẮP XẾP ---
