@@ -16,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import cafework.dto.SeatStatusUpdateRequest;
 import cafework.dto.SeatStatusUpdateResponse;
@@ -251,24 +252,63 @@ public class CafeController {
     // Lộ trình 3: Tạo Khuyến mãi mới
     @PostMapping("/{id}/coupons")
     public ResponseEntity<?> addCoupon(@PathVariable UUID id, @RequestBody Coupon coupon) {
-        Cafe cafe = cafeRepository.findById(id).orElse(null);
-        if (cafe == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy quán cafe!");
-        }
+        Cafe cafe = requireOwnedCafe(id);
         
+        coupon.setId(null);
         coupon.setCafeId(cafe.getId());
+        if (coupon.getCreatedAt() == null) {
+            coupon.setCreatedAt(LocalDateTime.now());
+        }
         Coupon savedCoupon = couponRepository.save(coupon);
         return ResponseEntity.ok(savedCoupon);
+    }
+
+    @PutMapping("/{cafeId}/coupons/{couponId}")
+    public ResponseEntity<?> updateCoupon(
+            @PathVariable UUID cafeId,
+            @PathVariable UUID couponId,
+            @RequestBody Coupon couponRequest) {
+        Cafe cafe = requireOwnedCafe(cafeId);
+        Coupon existingCoupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy vé này!"));
+
+        if (!cafe.getId().equals(existingCoupon.getCafeId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Coupon không thuộc quán của bạn!");
+        }
+
+        if (!isActiveCoupon(existingCoupon)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ có thể sửa coupon đang trong thời gian khuyến mãi!");
+        }
+
+        existingCoupon.setCode(couponRequest.getCode());
+        existingCoupon.setDescription(couponRequest.getDescription());
+        existingCoupon.setDiscountValue(couponRequest.getDiscountValue());
+        existingCoupon.setValidFrom(couponRequest.getValidFrom());
+        existingCoupon.setValidTo(couponRequest.getValidTo());
+
+        return ResponseEntity.ok(couponRepository.save(existingCoupon));
     }
 
     // Lộ trình 4: Xóa Khuyến mãi
     @DeleteMapping("/{cafeId}/coupons/{couponId}")
     public ResponseEntity<?> deleteCoupon(@PathVariable UUID cafeId, @PathVariable UUID couponId) {
-        if (couponRepository.existsById(couponId)) {
-            couponRepository.deleteById(couponId);
-            return ResponseEntity.ok().body("Đã hủy vé khuyến mãi thành công!");
+        Cafe cafe = requireOwnedCafe(cafeId);
+        Coupon coupon = couponRepository.findById(couponId).orElse(null);
+
+        if (coupon == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy vé này!");
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy vé này!");
+
+        if (!cafe.getId().equals(coupon.getCafeId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Coupon không thuộc quán của bạn!");
+        }
+
+        if (!isActiveCoupon(coupon)) {
+            return ResponseEntity.badRequest().body("Chỉ có thể xóa coupon đang trong thời gian khuyến mãi!");
+        }
+
+        couponRepository.deleteById(couponId);
+        return ResponseEntity.ok().body("Đã hủy vé khuyến mãi thành công!");
     }
 
     // Lộ trình lưu đường link ảnh vào DB
@@ -313,5 +353,24 @@ public class CafeController {
                 && coupon.getValidTo() != null
                 && !now.isBefore(coupon.getValidFrom())
                 && !now.isAfter(coupon.getValidTo());
+    }
+
+    private Cafe requireOwnedCafe(UUID cafeId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        if (user.getRole() != User.Role.OWNER) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only cafe owners can manage coupons");
+        }
+
+        Cafe cafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy quán cafe!"));
+
+        if (!user.getId().equals(cafe.getOwnerId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền quản lý quán này!");
+        }
+
+        return cafe;
     }
 }

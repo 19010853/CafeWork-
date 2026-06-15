@@ -353,6 +353,15 @@ const isActiveCoupon = (coupon) => {
   const validTo = new Date(coupon.validTo);
   return validFrom <= now && now <= validTo;
 };
+
+const getCurrentUserId = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user?.id ? String(user.id) : '';
+  } catch {
+    return '';
+  }
+};
 // ============================================================
 // COMPONENT
 // ============================================================
@@ -389,6 +398,7 @@ const CafeDetailPage = () => {
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState(null);
   const [translations, setTranslations] = useState({});
   const [translatingIds, setTranslatingIds] = useState({});
 
@@ -459,6 +469,27 @@ const CafeDetailPage = () => {
     };
   }, [coupons]);
 
+  const resetReviewForm = () => {
+    setShowReviewModal(false);
+    setNewReviewContent('');
+    setNewReviewRating(5);
+    setEditingReviewId(null);
+  };
+
+  const openCreateReviewModal = () => {
+    setNewReviewContent('');
+    setNewReviewRating(5);
+    setEditingReviewId(null);
+    setShowReviewModal(true);
+  };
+
+  const openEditReviewModal = (review) => {
+    setNewReviewContent(review.content || '');
+    setNewReviewRating(parseInt(review.rating, 10) || 5);
+    setEditingReviewId(review.id);
+    setShowReviewModal(true);
+  };
+
   const handleSubmitReview = async () => {
     if (!newReviewContent.trim()) return;
 
@@ -471,22 +502,55 @@ const CafeDetailPage = () => {
         content: newReviewContent,
       };
 
+      if (editingReviewId) {
+        const res = await axiosClient.put(`/reviews/${editingReviewId}`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        setReviews(prevReviews => prevReviews.map(review => (
+          review.id === editingReviewId ? res.data : review
+        )));
+        setTranslations(prev => {
+          const next = { ...prev };
+          delete next[editingReviewId];
+          return next;
+        });
+        toast.success(t('reviewUpdated'));
+        resetReviewForm();
+        return;
+      }
+
       const res = await axiosClient.post('/reviews', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setNewReviewContent('');
-      setNewReviewRating(5);
-      setShowReviewModal(false);
       setReviews(prevReviews => [res.data, ...prevReviews]);
-      
       toast.success(t('reviewSubmitted'));
+      resetReviewForm();
 
     } catch (error) {
       console.error("Lỗi khi gửi tấu chương:", error);
-      toast.error(t('reviewSubmitFailed'));
+      toast.error(editingReviewId ? t('reviewUpdateFailed') : t('reviewSubmitFailed'));
     } finally {
       setReviewSubmitting(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm(t('confirmDeleteReview'))) return;
+
+    try {
+      await axiosClient.delete(`/reviews/${reviewId}`);
+      setReviews(prevReviews => prevReviews.filter(review => review.id !== reviewId));
+      setTranslations(prev => {
+        const next = { ...prev };
+        delete next[reviewId];
+        return next;
+      });
+      toast.success(t('reviewDeleted'));
+    } catch (error) {
+      console.error('Lỗi khi xóa đánh giá:', error);
+      toast.error(t('reviewDeleteFailed'));
     }
   };
 
@@ -538,6 +602,8 @@ const CafeDetailPage = () => {
   const displayAddress = getCafeAddress(cafe);
   const displayDescription = getCafeDescription(cafe);
   const mapLanguage = getIsoLang(getLang());
+  const currentUserId = getCurrentUserId();
+  const currentUserRole = localStorage.getItem('role');
 
   // Gọi trực tiếp đến HomePage với các tham số chỉ đường
   const goToDirectionsPage = () => {
@@ -814,7 +880,7 @@ const CafeDetailPage = () => {
                 )}
               </h2>
               {isLoggedIn && (
-                <button style={styles.btnWriteReview} onClick={() => setShowReviewModal(true)}>
+                <button style={styles.btnWriteReview} onClick={openCreateReviewModal}>
                   {t('writeReview')}
                 </button>
               )}
@@ -828,6 +894,7 @@ const CafeDetailPage = () => {
             ) : (
               reviews.map((r) => {
                 const ratingNum = parseInt(r.rating, 10) || 0;
+                const canManageReview = currentUserRole === 'USER' && currentUserId && String(r.userId) === currentUserId;
                 
                 // 👑 1. THIẾT LẬP CHỐT CHẶN DỊCH THUẬT CHO TỪNG BÌNH LUẬN 👑
                 const currentAppLang = getLang() || 'JP'; // Lấy ngôn ngữ App (JP, VI, EN)
@@ -851,6 +918,41 @@ const CafeDetailPage = () => {
                         {'★'.repeat(Math.min(ratingNum, 5))}{'☆'.repeat(Math.max(0, 5 - ratingNum))}
                       </span>
                     </div>
+
+                    {canManageReview && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => openEditReviewModal(r)}
+                          style={{
+                            padding: '5px 10px',
+                            borderRadius: '6px',
+                            border: '1px solid #ddd',
+                            backgroundColor: '#fff',
+                            color: '#555',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                          }}
+                        >
+                          {t('edit')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReview(r.id)}
+                          style={{
+                            padding: '5px 10px',
+                            borderRadius: '6px',
+                            border: '1px solid #f4c7c7',
+                            backgroundColor: '#fff5f5',
+                            color: '#c62828',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                          }}
+                        >
+                          {t('delete')}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Dòng này luôn hiện bản gốc trước tiên */}
                     <p style={styles.reviewContent}>{r.content}</p>
@@ -953,7 +1055,7 @@ const CafeDetailPage = () => {
             position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
           }}
-          onClick={() => setShowReviewModal(false)}
+          onClick={resetReviewForm}
         >
           <div
             className="detail-modal-card"
@@ -964,7 +1066,7 @@ const CafeDetailPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '18px', color: '#333' }}>
-              ✍️ {t('writeReview')}
+              ✍️ {editingReviewId ? t('editReview') : t('writeReview')}
             </h3>
 
             {/* Star Rating Picker */}
@@ -1016,7 +1118,7 @@ const CafeDetailPage = () => {
             <div className="detail-modal-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 style={{ ...styles.btnLogin, padding: '9px 20px' }}
-                onClick={() => { setShowReviewModal(false); setNewReviewContent(''); setNewReviewRating(5); }}
+                onClick={resetReviewForm}
                 disabled={reviewSubmitting}
               >
                 {t('cancel')}
@@ -1030,7 +1132,7 @@ const CafeDetailPage = () => {
                 onClick={handleSubmitReview}
                 disabled={!newReviewContent.trim() || reviewSubmitting}
               >
-                {reviewSubmitting ? t('submittingReview') : t('submitReview')}
+                {reviewSubmitting ? t('submittingReview') : (editingReviewId ? t('updateReview') : t('submitReview'))}
               </button>
             </div>
           </div>

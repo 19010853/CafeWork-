@@ -44,6 +44,7 @@ const OwnerDashboardPage = () => {
     validFrom: '',
     validTo: ''    
   });
+  const [editingCouponId, setEditingCouponId] = useState(null);
   // ==========================================
   // 2. CÁC CHIÊU THỨC (PHẢI ĐẶT TRƯỚC KHI GỌI)
   // ==========================================
@@ -135,6 +136,35 @@ const OwnerDashboardPage = () => {
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}/${month}/${day}`;
+  };
+
+  const toDateInputValue = (dateString) => {
+    if (!dateString) return '';
+    return String(dateString).split('T')[0];
+  };
+
+  const resetCouponForm = () => {
+    setShowCouponModal(false);
+    setEditingCouponId(null);
+    setCouponForm({ code: '', description: '', discountValue: '', validFrom: '', validTo: '' });
+  };
+
+  const openCreateCouponModal = () => {
+    setEditingCouponId(null);
+    setCouponForm({ code: '', description: '', discountValue: '', validFrom: '', validTo: '' });
+    setShowCouponModal(true);
+  };
+
+  const openEditCouponModal = (coupon) => {
+    setEditingCouponId(coupon.id);
+    setCouponForm({
+      code: coupon.code || '',
+      description: coupon.description || '',
+      discountValue: coupon.discountValue || '',
+      validFrom: toDateInputValue(coupon.validFrom),
+      validTo: toDateInputValue(coupon.validTo)
+    });
+    setShowCouponModal(true);
   };
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
@@ -231,7 +261,7 @@ const OwnerDashboardPage = () => {
   };
   
   // Chiêu thức 9: Gửi lệnh đúc Coupon xuống Database
-  const handleCreateCoupon = async () => {
+  const handleSaveCoupon = async () => {
     if (!couponForm.code || !couponForm.discountValue || !couponForm.validFrom || !couponForm.validTo) {
       toast.error(t('fillAllFields'));
       return;
@@ -249,6 +279,21 @@ const OwnerDashboardPage = () => {
       };
 
       // Sứ giả mang tờ khai chuẩn (submitData) xuống Spring Boot
+      if (editingCouponId) {
+        const response = await axiosClient.put(
+          `/cafes/${cafeId}/coupons/${editingCouponId}`,
+          submitData,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+
+        setCoupons(prevCoupons => prevCoupons.map(coupon => (
+          coupon.id === editingCouponId ? response.data : coupon
+        )).filter(isActiveCoupon));
+        toast.success(t('updateCouponSuccess'));
+        resetCouponForm();
+        return;
+      }
+
       await axiosClient.post(
         `/cafes/${cafeId}/coupons`,
         submitData, // 👈 Truyền submitData thay vì couponForm
@@ -256,14 +301,12 @@ const OwnerDashboardPage = () => {
       );
 
       toast.success(t('createCouponSuccess'));
-      
-      setShowCouponModal(false);
-      setCouponForm({ code: '', description: '', discountValue: '', validFrom: '', validTo: '' });
+      resetCouponForm();
       fetchAllCafeData();
 
     } catch (error) {
       console.error('Lỗi khi đúc vé:', error);
-      toast.error(t('createCouponFailed'));
+      toast.error(editingCouponId ? t('updateCouponFailed') : t('createCouponFailed'));
     }
   };
 
@@ -290,6 +333,7 @@ const OwnerDashboardPage = () => {
 
       // Cập nhật lại giao diện: Lọc bỏ tấm vé vừa bị xé ra khỏi danh sách
       setCoupons(prevCoupons => prevCoupons.filter(coupon => coupon.id !== couponId));
+      toast.success(t('deleteCouponSuccess'));
 
     } catch (error) {
       console.error("Lỗi khi xé vé:", error);
@@ -700,7 +744,7 @@ const OwnerDashboardPage = () => {
         <div style={styles.card}>
           <div className="owner-coupon-header" style={styles.couponHeader}>
             <h2 style={styles.sectionTitle}>{t('couponManagement')}</h2>
-            <button style={styles.createCouponBtn} onClick={() => setShowCouponModal(true)}>
+            <button style={styles.createCouponBtn} onClick={openCreateCouponModal}>
               {t('createCoupon')}
             </button>
           </div>
@@ -726,6 +770,11 @@ const OwnerDashboardPage = () => {
                 {/* Cột phải: Trạng thái & Nút xóa */}
                 <div className="owner-coupon-actions" style={styles.couponActions}>
                   <span style={styles.validBadge}>{coupon.status || t('valid')}</span>
+                  <button style={styles.editCouponBtn}
+                    onClick={() => openEditCouponModal(coupon)}
+                  >
+                    {t('edit')}
+                  </button>
                   <button style={styles.deleteCouponBtn}
                     onClick={() => handleDeleteCoupon(coupon.id)}
                   >
@@ -762,7 +811,9 @@ const OwnerDashboardPage = () => {
       {showCouponModal && (
         <div style={styles.fullscreenModal}>
           <div className="owner-form-modal" style={styles.formModalCard}>
-            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>{t('createCouponTitle')}</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>
+              {editingCouponId ? t('editCouponTitle') : t('createCouponTitle')}
+            </h3>
             
             <label style={styles.formLabel}>{t('couponCode')}*</label>
             <input 
@@ -815,15 +866,15 @@ const OwnerDashboardPage = () => {
             <div className="owner-form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
               <button 
                 style={{ ...styles.popupBtn, backgroundColor: '#ccc', color: '#333' }} 
-                onClick={() => setShowCouponModal(false)}
+                onClick={resetCouponForm}
               >
                 {t('cancel')}
               </button>
               <button 
                 style={styles.popupBtn} 
-                onClick={handleCreateCoupon}
+                onClick={handleSaveCoupon}
               >
-                {t('createTicket')}
+                {editingCouponId ? t('update') : t('createTicket')}
               </button>
             </div>
           </div>
@@ -1048,6 +1099,15 @@ const styles = {
     borderRadius: '20px',
     fontSize: '12px',
     fontWeight: 'bold'
+  },
+  editCouponBtn: {
+    backgroundColor: '#fff',
+    border: '1px solid #ddd',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    color: '#555',
+    padding: '6px 10px',
   },
   deleteCouponBtn: {
     background: 'none',

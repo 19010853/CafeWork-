@@ -10,6 +10,7 @@ import java.util.UUID; // Thần thêm thư viện này để xử lý ID của 
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -86,14 +87,61 @@ public class ReviewController {
     }
 
     @PutMapping("/{id}")
-    public Review updateReview(@PathVariable String id, @RequestBody Review review) {
-        review.setId(id);
-        return reviewRepository.save(review);
+    public ResponseEntity<?> updateReview(@PathVariable String id, @RequestBody Review requestReview) {
+        try {
+            User currentUser = getCurrentUser();
+            Review existingReview = reviewRepository.findById(id)
+                    .orElse(null);
+
+            if (existingReview == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Review not found");
+            }
+
+            if (!currentUser.getId().toString().equals(existingReview.getUserId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only update your own review");
+            }
+
+            existingReview.setRating(requestReview.getRating());
+            existingReview.setContent(requestReview.getContent());
+            existingReview.setLanguage(requestReview.getLanguage());
+
+            Review savedReview = reviewRepository.save(existingReview);
+            savedReview.setUserName(currentUser.getFullName());
+
+            return ResponseEntity.ok(savedReview);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteReview(@PathVariable String id) {
-        reviewRepository.deleteById(id);
+    public ResponseEntity<?> deleteReview(@PathVariable String id) {
+        try {
+            User currentUser = getCurrentUser();
+            Review existingReview = reviewRepository.findById(id)
+                    .orElse(null);
+
+            if (existingReview == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Review not found");
+            }
+
+            if (!currentUser.getId().toString().equals(existingReview.getUserId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only delete your own review");
+            }
+
+            reviewRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserEmail = authentication.getName();
+
+        return userRepository.findByEmailIgnoreCase(currentUserEmail)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
     }
 
     private void enrichReviewsWithUserNames(List<Review> reviews) {
