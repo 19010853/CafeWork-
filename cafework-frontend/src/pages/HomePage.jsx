@@ -6,7 +6,35 @@ import { t } from '../utils/i18n';
 import styles from './HomePage.module.css';
 import { getLang } from '../utils/userLocalStore';
 
+const HOME_FLOW_KEY = 'cafework.homeFlow';
+
+const getSavedHomeFlow = () => {
+    const savedFlow = sessionStorage.getItem(HOME_FLOW_KEY);
+    if (!savedFlow) return null;
+
+    try {
+        const parsed = JSON.parse(savedFlow);
+        if (parsed?.lang !== getLang()) return null;
+        return parsed;
+    } catch {
+        return null;
+    }
+};
+
+const saveHomeFlowPatch = (patch) => {
+    const current = getSavedHomeFlow() || {};
+    sessionStorage.setItem(HOME_FLOW_KEY, JSON.stringify({
+        ...current,
+        ...patch,
+        lang: getLang(),
+        updatedAt: Date.now(),
+    }));
+};
+
 const getSavedCafes = () => {
+    const savedFlow = getSavedHomeFlow();
+    if (Array.isArray(savedFlow?.cafes)) return savedFlow.cafes;
+
     const savedCafes = sessionStorage.getItem('savedCafes');
     const savedLang = sessionStorage.getItem('savedCafeLang');
     if (!savedCafes || savedLang !== getLang()) return [];
@@ -21,6 +49,7 @@ const getSavedCafes = () => {
 
 const HomePage = () => {
     const navigation = useNavigate();
+    const savedHomeFlow = getSavedHomeFlow();
 
     useEffect(() => {
         const userRole = localStorage.getItem('role');
@@ -38,9 +67,9 @@ const HomePage = () => {
     const [cafes, setCafes] = useState(getSavedCafes);
     const [routeData, setRouteData] = useState(null);
     const [searchKeyword, setSearchKeyword] = useState(() => {
-        return sessionStorage.getItem('savedKeyword') || '';
+        return savedHomeFlow?.keyword || sessionStorage.getItem('savedKeyword') || '';
     });
-    const [sheetExpanded, setSheetExpanded] = useState(false);
+    const [sheetExpanded, setSheetExpanded] = useState(() => Boolean(savedHomeFlow?.sheetExpanded));
 
     const [searchParams, setSearchParams] = useSearchParams();
     const keywordFromUrl = searchParams.get('keyword');
@@ -74,7 +103,8 @@ const HomePage = () => {
         sessionStorage.setItem('savedCafes', JSON.stringify(cafes));
         sessionStorage.setItem('savedKeyword', searchKeyword);
         sessionStorage.setItem('savedCafeLang', getLang());
-    }, [cafes, searchKeyword]);
+        saveHomeFlowPatch({ cafes, keyword: searchKeyword, sheetExpanded });
+    }, [cafes, searchKeyword, sheetExpanded]);
 
     const translateStep = (step) => {
         if (step.maneuver.type === 'depart') return t('depart');

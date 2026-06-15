@@ -7,7 +7,36 @@ import './SearchBar.css';
 import { t } from '../../utils/i18n';
 import { getCafeAddress, getCafeName } from '../../services/translationService';
 
+const HOME_FLOW_KEY = 'cafework.homeFlow';
+const DEFAULT_LOCATION = { lat: 21.0071, lng: 105.8431 };
+
+const getSavedHomeFlow = () => {
+    const savedFlow = sessionStorage.getItem(HOME_FLOW_KEY);
+    if (!savedFlow) return null;
+
+    try {
+        const parsed = JSON.parse(savedFlow);
+        if (parsed?.lang !== getLang()) return null;
+        return parsed;
+    } catch {
+        return null;
+    }
+};
+
+const saveHomeFlowPatch = (patch) => {
+    const current = getSavedHomeFlow() || {};
+    sessionStorage.setItem(HOME_FLOW_KEY, JSON.stringify({
+        ...current,
+        ...patch,
+        lang: getLang(),
+        updatedAt: Date.now(),
+    }));
+};
+
 const getSavedCafes = () => {
+    const savedFlow = getSavedHomeFlow();
+    if (Array.isArray(savedFlow?.cafes)) return savedFlow.cafes;
+
     const savedCafes = sessionStorage.getItem('savedCafes');
     const savedLang = sessionStorage.getItem('savedCafeLang');
     if (!savedCafes || savedLang !== getLang()) return [];
@@ -23,8 +52,9 @@ const getSavedCafes = () => {
 const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
     const navigate = useNavigate();
     const userRole = localStorage.getItem('role');
+    const savedHomeFlow = getSavedHomeFlow();
     const [keyword, setKeyword] = useState(() => {
-        return initialKeyword || sessionStorage.getItem('savedKeyword') || '';
+        return initialKeyword || savedHomeFlow?.keyword || sessionStorage.getItem('savedKeyword') || '';
     });
     const [results, setResults] = useState(getSavedCafes);
     const [loading, setLoading] = useState(false);
@@ -38,18 +68,27 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
 
     // --- STATE MỚI CHO SẮP XẾP VÀ GPS ---
     const [showSortMenu, setShowSortMenu] = useState(false);
-    const [sortBy, setSortBy] = useState('default');
-    const [userLocation, setUserLocation] = useState({ lat: 21.0071, lng: 105.8431 }); // Mặc định là Bách Khoa
+    const [sortBy, setSortBy] = useState(() => savedHomeFlow?.sortBy || 'default');
+    const [userLocation, setUserLocation] = useState(() => savedHomeFlow?.userLocation || DEFAULT_LOCATION); // Mặc định là Bách Khoa
 
     const searchBoxRef = useRef(null);
     const sortMenuRef = useRef(null);
+    const scrollAreaRef = useRef(null);
     const typingTimeoutRef = useRef(null); // Debounce cho Autocomplete
     const autocompleteAbortRef = useRef(null);
     const didInitRef = useRef(false);
+    const restoredFlowRef = useRef(Boolean(savedHomeFlow?.cafes?.length));
     useEffect(() => {
         // Nếu vừa mở trang mà đã có kết quả trong bụng (do phục hồi trí nhớ)
         if (results.length > 0) {
             onSearchData(results); 
+        }
+        if (scrollAreaRef.current && Number.isFinite(savedHomeFlow?.scrollTop)) {
+            window.setTimeout(() => {
+                if (scrollAreaRef.current) {
+                    scrollAreaRef.current.scrollTop = savedHomeFlow.scrollTop;
+                }
+            }, 0);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -92,6 +131,7 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
             }
             setResults(data);
             onSearchData(data);
+            saveHomeFlowPatch({ cafes: data, keyword: searchKeyword, sortBy });
         } catch (err) {
             console.error("Lỗi:", err);
             setError(t('searchError'));
@@ -104,7 +144,16 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
         if (onKeywordChange) {
             onKeywordChange(keyword);
         }
+        saveHomeFlowPatch({ keyword });
     }, [keyword]);
+
+    useEffect(() => {
+        sessionStorage.setItem('savedCafes', JSON.stringify(results));
+        sessionStorage.setItem('savedKeyword', keyword);
+        sessionStorage.setItem('savedCafeLang', getLang());
+        saveHomeFlowPatch({ cafes: results, keyword, sortBy, userLocation });
+    }, [results, keyword, sortBy, userLocation]);
+
     useEffect(() => {
         // Xin quyền lấy GPS thực tế của trình duyệt
         if ("geolocation" in navigator) {
@@ -134,9 +183,31 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
         if (didInitRef.current) return;
         didInitRef.current = true;
         const kw = (typeof initialKeyword === 'string' ? initialKeyword : '').trim();
+        const savedKeyword = (savedHomeFlow?.keyword || '').trim();
+        if (restoredFlowRef.current && (!kw || kw === savedKeyword)) {
+            if (results.length > 0) {
+                onSearchData(results);
+            }
+            return;
+        }
         handleSearchEvent(kw, { recordHistory: false, forceNetwork: true });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialKeyword]);
+
+    const rememberScroll = (scrollTop) => {
+        saveHomeFlowPatch({ scrollTop });
+    };
+
+    const navigateToCafe = (cafeId) => {
+        saveHomeFlowPatch({
+            cafes: results,
+            keyword,
+            sortBy,
+            userLocation,
+            scrollTop: scrollAreaRef.current?.scrollTop || 0,
+        });
+        navigate(`/cafes/${cafeId}`);
+    };
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -272,7 +343,12 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
                 </form>
             </div>
 
-            <div className="results-scroll-area" style={scrollAreaStyle}>
+            <div
+                className="results-scroll-area"
+                style={scrollAreaStyle}
+                ref={scrollAreaRef}
+                onScroll={(e) => rememberScroll(e.currentTarget.scrollTop)}
+            >
                 {loading && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>{t('loadingResults')}</p>}
                 {!loading && sortedResults.length === 0 && keyword && <p style={{ textAlign: 'center', color: '#666', fontSize: '13px' }}>{t('noCafeFound')}</p>}
 
@@ -286,10 +362,10 @@ const SearchBar = ({ onSearchData, initialKeyword = '', onKeywordChange }) => {
                             style={{ ...cardStyle, cursor: 'pointer' }}
                             role="button"
                             tabIndex={0}
-                            onClick={() => navigate(`/cafes/${cafe.id}`)}
+                            onClick={() => navigateToCafe(cafe.id)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
-                                    navigate(`/cafes/${cafe.id}`);
+                                    navigateToCafe(cafe.id);
                                 }
                             }}
                         >
